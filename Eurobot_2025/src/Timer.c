@@ -11,9 +11,6 @@ u32 Timer_ms1 = 0;
 
 u32 old_Timer = 0;
 
-static int TimerSetupIntrSystem(XScuGic *IntcInstancePtr,
-				XScuTimer *TimerInstancePtr, u16 TimerIntrId);
-static void TimerDisableIntrSystem(XScuGic *IntcInstancePtr, u16 TimerIntrId);
 
 
 int Init_Timer_ms1(void){
@@ -72,79 +69,6 @@ int Init_Timer_ms1(void){
 /*****************************************************************************/
 /**
 *
-* This function sets up the interrupt system such that interrupts can occur
-* for the device.
-*
-* @param	IntcInstancePtr is a pointer to the instance of XScuGic driver.
-* @param	TimerInstancePtr is a pointer to the instance of XScuTimer
-*		driver.
-* @param	TimerIntrId is the Interrupt Id of the XScuTimer device.
-*
-* @return	XST_SUCCESS if successful, otherwise XST_FAILURE.
-*
-* @note		None.
-*
-******************************************************************************/
-static int TimerSetupIntrSystem(XScuGic *IntcInstancePtr,
-								XScuTimer *TimerInstancePtr, u16 TimerIntrId)
-{
-	int Status;
-	/*
-	 * Initialize the interrupt controller driver so that it is ready to
-	 * use.
-	 */
-	IntcConfig = XScuGic_LookupConfig(INTC_DEVICE_ID);
-	if (NULL == IntcConfig) {
-		return XST_FAILURE;
-	}
-
-	Status = XScuGic_CfgInitialize(IntcInstancePtr, IntcConfig,
-					IntcConfig->CpuBaseAddress);
-	if (Status != XST_SUCCESS) {
-		return XST_FAILURE;
-	}
-
-	Xil_ExceptionInit();
-
-	/*
-	 * Connect the interrupt controller interrupt handler to the hardware
-	 * interrupt handling logic in the processor.
-	 */
-	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_IRQ_INT,
-				(Xil_ExceptionHandler)XScuGic_InterruptHandler,
-				IntcInstancePtr);
-
-	/*
-	 * Connect the device driver handler that will be called when an
-	 * interrupt for the device occurs, the handler defined above performs
-	 * the specific interrupt processing for the device.
-	 */
-	Status = XScuGic_Connect(IntcInstancePtr, TimerIntrId,
-				(Xil_ExceptionHandler)TimerIntrHandler,
-				(void *)TimerInstancePtr);
-	if (Status != XST_SUCCESS) {
-		return Status;
-	}
-
-	/*
-	 * Enable the interrupt for the device.
-	 */
-	XScuGic_Enable(IntcInstancePtr, TimerIntrId);
-
-	/*
-	 * Enable the timer interrupts for timer mode.
-	 */
-	XScuTimer_EnableInterrupt(TimerInstancePtr);
-
-	/*
-	 * Enable interrupts in the Processor.
-	 */
-	// Xil_ExceptionEnable();
-	return XST_SUCCESS;
-}
-/*****************************************************************************/
-/**
-*
 * This function is the Interrupt handler for the Timer interrupt of the
 * Timer device. It is called on the expiration of the timer counter in
 * interrupt context.
@@ -173,24 +97,3 @@ void TimerIntrHandler(void *CallBackRef)
 	}
 }
 
-/*****************************************************************************/
-/**
-*
-* This function disables the interrupts that occur for the device.
-*
-* @param	IntcInstancePtr is the pointer to the instance of XScuGic
-*		driver.
-* @param	TimerIntrId is the Interrupt Id for the device.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-static void TimerDisableIntrSystem(XScuGic *IntcInstancePtr, u16 TimerIntrId)
-{
-	/*
-	 * Disconnect and disable the interrupt for the Timer.
-	 */
-	XScuGic_Disconnect(IntcInstancePtr, TimerIntrId);
-}
