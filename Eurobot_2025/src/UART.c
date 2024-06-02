@@ -57,9 +57,6 @@ int UART_Init(void) {
 		XUARTPS_IXR_RXOVR;
 
     XUartPs_SetInterruptMask(UartInstPtr, IntrMask);
-
-    XUartPs_SetOperMode(UartInstPtr, XUARTPS_OPER_MODE_LOCAL_LOOP);
-
     /*
 	 * Set the receiver timeout. If it is not set, and the last few bytes
 	 * of data do not trigger the over-water or full interrupt, the bytes
@@ -76,43 +73,9 @@ int UART_Init(void) {
      * the receive buffer.
      */
     for (Index = 0; Index < UART_BUFFER_SIZE; Index++) {
-        SendBuffer[Index] = Index;
+        SendBuffer[Index] = 0;
         RecvBuffer[Index] = 0;
     }
-    /*
-	 * Start receiving data before sending it since there is a loopback,
-	 * ignoring the number of bytes received as the return value since we
-	 * know it will be zero
-	 */
-	XUartPs_Recv(UartInstPtr, RecvBuffer, UART_BUFFER_SIZE);
-
-	/*
-	 * Send the buffer using the UART and ignore the number of bytes sent
-	 * as the return value since we are using it in interrupt mode.
-	 */
-	XUartPs_Send(UartInstPtr, SendBuffer, UART_BUFFER_SIZE);
-
-	/*
-	 * Wait for the entire buffer to be received, letting the interrupt
-	 * processing work in the background, this function may get locked
-	 * up in this loop if the interrupts are not working correctly.
-	 */
-	while (1) {
-		if ((TotalSentCount == UART_BUFFER_SIZE) &&
-		    (TotalReceivedCount == UART_BUFFER_SIZE)) {
-			break;
-		}
-	}
-
-	/* Verify the entire receive buffer was successfully received */
-	for (Index = 0; Index < UART_BUFFER_SIZE; Index++) {
-		if (RecvBuffer[Index] != SendBuffer[Index]) {
-			BadByteCount++;
-		}
-	}
-
-
-
 	/* Set the UART in Normal Mode */
 	XUartPs_SetOperMode(UartInstPtr, XUARTPS_OPER_MODE_NORMAL);
 
