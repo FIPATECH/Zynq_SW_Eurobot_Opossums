@@ -21,6 +21,7 @@
 #include "PWM.h"
 #include "CAN.h"
 #include "UART.h"
+#include "interpreteur.h"
 
 #include "xscugic.h"
 
