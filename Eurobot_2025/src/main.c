@@ -38,6 +38,10 @@ int main()
     print("Init done\n\r");
 
     while(1){
+        if (Timer_ms1 - old_timer_ms1 >= 1000){
+            old_timer_ms1 = Timer_ms1;
+            xil_printf("Timer_ms1 = %d\n", Timer_ms1);
+        }
         // Asserv_Loop();
         PWM_Loop();
         // Can_Loop();
