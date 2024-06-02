@@ -21,6 +21,12 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
         (Xil_ExceptionHandler)XScuGic_InterruptHandler,
         GicInstancePtr);
 
+
+    // --------------------------------------------------------
+    // ---------------------- Interrupts ----------------------
+    // --------------------------------------------------------
+
+    // ---------------------- Timer ----------------------
     // Connect and enable Timer interrupt
     Status = XScuGic_Connect(GicInstancePtr, TIMER_IRPT_INTR,
         (Xil_InterruptHandler)TimerIntrHandler, &TimerInstance);
@@ -29,6 +35,7 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
     }
     XScuGic_Enable(GicInstancePtr, TIMER_IRPT_INTR);
 
+    // ---------------------- CAN ----------------------
     // Connect and enable CAN interrupt
     Status = XScuGic_Connect(GicInstancePtr, CAN_IRPT_INTR,
         (Xil_InterruptHandler)XCanPs_IntrHandler, &CanInstance);
@@ -37,6 +44,18 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
     }
     XScuGic_Enable(GicInstancePtr, CAN_IRPT_INTR);
 
+    // ---------------------- UART ----------------------
+    // Connect and enable UART interrupt
+    Status = XScuGic_Connect(GicInstancePtr, UART_IRPT_INTR,
+        (Xil_InterruptHandler)XUartPs_InterruptHandler, &UartInstance);
+    if (Status != XST_SUCCESS) {
+        return XST_FAILURE;
+    }
+    XScuGic_Enable(GicInstancePtr, UART_IRPT_INTR);
+
+    // --------------------------------------------------------
+
+    // Enable interrupts in the Processor.
     Xil_ExceptionEnable();
 
     return XST_SUCCESS;

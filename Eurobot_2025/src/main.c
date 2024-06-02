@@ -23,6 +23,14 @@ int main()
     //     print("CAN init done\n\r");
     //     Status = 0;
     // }
+    // Status = UART_Init();
+    // if (Status != XST_SUCCESS) {
+    //     print("UART init failed\n\r");
+    //     Status = 0;
+    // } else {
+    //     print("UART init done\n\r");
+    //     Status = 0;
+    // }
     Status = SetupInterruptSystem(&InterruptController);
     if (Status != XST_SUCCESS) {
         xil_printf("Interrupt Setup Failed\r\n");
@@ -31,10 +39,14 @@ int main()
     }
 
     // init_QEI();
-    // PWM_Init();
+    PWM_Init();
     print("Init done\n\r");
 
     while(1){
+        if (Timer_ms1 - old_timer_ms1 >= 1000) {
+            old_timer_ms1 = Timer_ms1;
+            xil_printf("Timer_ms1: %d\n\r", Timer_ms1);
+        }
         // Asserv_Loop();
         PWM_Loop();
         // Can_Loop();
