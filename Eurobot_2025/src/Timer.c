@@ -39,10 +39,12 @@ int Init_Timer_ms1(void){
 		return XST_FAILURE;
 	}
 
-	Status = TimerSetupIntrSystem(&IntcInstance, TimerInstancePtr, TIMER_IRPT_INTR);
-	if (Status != XST_SUCCESS) {
-		return XST_FAILURE;
-	}
+	// Status = TimerSetupIntrSystem(&IntcInstance, TimerInstancePtr, TIMER_IRPT_INTR);
+	// if (Status != XST_SUCCESS) {
+	// 	return XST_FAILURE;
+	// }
+
+	XScuTimer_EnableInterrupt(TimerInstancePtr);
 
 	/*
 	 * Steup prescaler
