@@ -221,12 +221,14 @@ uint8_t Get_Param_String(char Dest_Str[], uint8_t Max_Len)
 uint8_t Print_All_CMD_Cmd(void) {
     uint16_t i;
     for (i = 0; i < Command_List_Length; i++) {
-        printf("%s\n", Command_List[i].Name);
+        xil_printf("%s\n\r", Command_List[i].Name);
         uint8_t j;
         for (j = 0; j < 10; j++) {
             Delay_ms(1);
-            Std_Com_Loop();    // moche, mais permet de faire sortir les printf
         }
     }
     return 0;
 }
+
+
+
