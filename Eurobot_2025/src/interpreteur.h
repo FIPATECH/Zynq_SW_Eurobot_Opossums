@@ -28,3 +28,6 @@ uint8_t Get_Param_x32(u32 *retour);
 uint8_t Get_Param_String(char Dest_Str[], uint8_t Max_Len);
 
 uint8_t Print_All_CMD_Cmd (void);
+
+
+uint8_t Test_Interpreteur(void);

@@ -11,6 +11,7 @@ const Command Command_List[] = {
 
     { "PRINTCMD", Print_All_CMD_Cmd},
     { "HELP", Print_All_CMD_Cmd},
+    { "TEST", Test_Interpreteur},
 
 };
 
@@ -227,6 +228,16 @@ uint8_t Print_All_CMD_Cmd(void) {
             Delay_ms(1);
         }
     }
+    return 0;
+}
+
+uint8_t Test_Interpreteur(void) {
+    u32 val32;
+    if (Get_Param_u32(&val32)){
+        return PARAM_ERROR_CODE;
+    }
+	xil_printf("test_interpreteur\n\r");
+	xil_printf("val32: %d\n\r", val32);
     return 0;
 }
 
