@@ -13,7 +13,7 @@
 
 typedef struct {
     char* Name;
-    u8 (*Func)(void);
+    uint8_t (*Func)(void);
 } Command;
 
 
@@ -21,10 +21,10 @@ void Interp(char c);
 
 char To_UpperCase (char c);
 
-u8 Get_Param_Float (float *retour);
-u8 Get_Param_u32(u32 *retour);
-u8 Get_Param_x32(u32 *retour);
+uint8_t Get_Param_Float (float *retour);
+uint8_t Get_Param_u32(u32 *retour);
+uint8_t Get_Param_x32(u32 *retour);
 
-u8 Get_Param_String(char Dest_Str[], u8 Max_Len);
+uint8_t Get_Param_String(char Dest_Str[], uint8_t Max_Len);
 
-u8 Print_All_CMD_Cmd (void);
+uint8_t Print_All_CMD_Cmd (void);

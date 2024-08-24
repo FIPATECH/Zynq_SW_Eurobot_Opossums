@@ -2,8 +2,13 @@
 
 XUartPs UartInstance;
 
-static u8 SendBuffer[UART_BUFFER_SIZE];
-static u8 RecvBuffer[UART_BUFFER_SIZE];
+u8 SendBuffer[UART_BUFFER_SIZE];
+u16 i_TX_CMD_Buff_TODO = 0;
+u16 i_TX_CMD_Buff_DONE = 0;
+
+u8 RecvBuffer[UART_BUFFER_SIZE];
+u16 i_RX_CMD_Buff_TODO = 0;
+u16 i_RX_CMD_Buff_DONE = 0;
 
 /*
  * The following counters are used to determine when the entire buffer has
@@ -16,59 +21,11 @@ int TotalErrorCount;
 int UART_Init(void) {
     XUartPs_Config *ConfigPtr;
     XUartPs *UartInstPtr = &UartInstance;
+
     int Status;
     int Index;
-	u32 IntrMask;
-	int BadByteCount = 0;
 
-    ConfigPtr = XUartPs_LookupConfig(UART_DEVICE_ID);
-    if (NULL == ConfigPtr) {
-        return XST_FAILURE;
-    }
-
-    Status = XUartPs_CfgInitialize(UartInstPtr, ConfigPtr, ConfigPtr->BaseAddress);
-    if (Status != XST_SUCCESS) {
-        return XST_FAILURE;
-    }
-
-    /* Check hardware build */
-	Status = XUartPs_SelfTest(UartInstPtr);
-	if (Status != XST_SUCCESS) {
-		return XST_FAILURE;
-	}
-
-    XUartPs_SetBaudRate(UartInstPtr, BAUDRATE);
-    
-    /*
-	 * Setup the handlers for the UART that will be called from the
-	 * interrupt context when data has been sent and received, specify
-	 * a pointer to the UART driver instance as the callback reference
-	 * so the handlers are able to access the instance data
-	 */
-    XUartPs_SetHandler(UartInstPtr, (XUartPs_Handler)Handler, UartInstPtr);
-
-    /*
-	 * Enable the interrupt of the UART so interrupts will occur, setup
-	 * a local loopback so data that is sent will be received.
-	 */
-	IntrMask =
-		XUARTPS_IXR_TOUT | XUARTPS_IXR_PARITY | XUARTPS_IXR_FRAMING |
-		XUARTPS_IXR_OVER | XUARTPS_IXR_TXEMPTY | XUARTPS_IXR_RXFULL |
-		XUARTPS_IXR_RXOVR;
-
-    XUartPs_SetInterruptMask(UartInstPtr, IntrMask);
-    /*
-	 * Set the receiver timeout. If it is not set, and the last few bytes
-	 * of data do not trigger the over-water or full interrupt, the bytes
-	 * will not be received. By default it is disabled.
-	 *
-	 * The setting of 8 will timeout after 8 x 4 = 32 bit periods.
-	 * Increase the time out value if baud rate is high, decrease it if
-	 * baud rate is low.
-	 */
-	XUartPs_SetRecvTimeout(UartInstPtr, 8);
-
-    /*
+	/*
      * Initialize the send buffer bytes and
      * the receive buffer.
      */
@@ -76,14 +33,43 @@ int UART_Init(void) {
         SendBuffer[Index] = 0;
         RecvBuffer[Index] = 0;
     }
+
+	// Initialize the UART driver
+    ConfigPtr = XUartPs_LookupConfig(UART_DEVICE_ID);
+    if (ConfigPtr == NULL) {
+		xil_printf("Unable to find UART device\r\n");
+        return XST_FAILURE;
+    }else{
+		xil_printf("UART device found\r\n");
+	}
+
+    XUartPs_CfgInitialize(UartInstPtr, ConfigPtr, ConfigPtr->BaseAddress);
+	Status = XUartPs_SelfTest(UartInstPtr);
+    if (Status != XST_SUCCESS) {
+		xil_printf("Error: Unable to initialize UART device\r\n");
+        return XST_FAILURE;
+    }else{
+		xil_printf("UART device initialized\r\n");
+	}
+
+    XUartPs_SetBaudRate(UartInstPtr, BAUDRATE);
+    
+	XUartPs_SetRecvTimeout(UartInstPtr, 8);
+    // XUartPs_SetHandler(UartInstPtr, (XUartPs_Handler)Handler, UartInstPtr); // Set the handler for the UART that will be called from the interrupt context
+	XUartPs_SetHandler(UartInstPtr, (XUartPs_Handler)Handler, UartInstPtr); 
+
+    /*
+	 * Enable the interrupt of the UART so interrupts will occur, setup
+	 * a local loopback so data that is sent will be received.
+	 */
+    XUartPs_SetInterruptMask(UartInstPtr, XUARTPS_IXR_TOUT | XUARTPS_IXR_PARITY | XUARTPS_IXR_FRAMING |
+										XUARTPS_IXR_OVER | XUARTPS_IXR_TXEMPTY | XUARTPS_IXR_RXFULL |
+										XUARTPS_IXR_RXOVR);
+
+
 	/* Set the UART in Normal Mode */
 	XUartPs_SetOperMode(UartInstPtr, XUARTPS_OPER_MODE_NORMAL);
 
-
-    /* If any bytes were not correct, return an error */
-	if (BadByteCount != 0) {
-		return XST_FAILURE;
-	}
 	return XST_SUCCESS;
 
 }
@@ -112,14 +98,24 @@ int UART_Init(void) {
 ***************************************************************************/
 void Handler(void *CallBackRef, u32 Event, unsigned int EventData)
 {
+	XUartPs *UartInstancePtr = (XUartPs *)CallBackRef;
 	/* All of the data has been sent */
 	if (Event == XUARTPS_EVENT_SENT_DATA) {
-		TotalSentCount = EventData;
+		// xil_printf("Data sent\r\n");
 	}
 
 	/* All of the data has been received */
 	if (Event == XUARTPS_EVENT_RECV_DATA) {
-		TotalReceivedCount = EventData;
+		// xil_printf("Data received\r\n");
+		u16 i = i_RX_CMD_Buff_TODO;
+		while (XUartPs_IsReceiveData(UartInstancePtr->Config.BaseAddress)) {
+            RecvBuffer[i] = XUartPs_ReadReg(UartInstancePtr->Config.BaseAddress, XUARTPS_FIFO_OFFSET);
+            i++;
+            if (i == UART_BUFFER_SIZE) {  // Check buffer overflow
+                i = 0;
+            }
+        }
+		i_RX_CMD_Buff_TODO = i;
 	}
 
 	/*
@@ -158,3 +154,29 @@ void Handler(void *CallBackRef, u32 Event, unsigned int EventData)
 		TotalErrorCount++;
 	}
 }
+
+u16 Place_In_Uart_Cmd(void) {
+	u16 In_Buff = (UART_BUFFER_SIZE + i_TX_CMD_Buff_TODO - i_TX_CMD_Buff_DONE) % UART_BUFFER_SIZE;
+	return (UART_BUFFER_SIZE - 1 - In_Buff);
+}
+
+void Send_Uart_Cmd(uint8_t symbole) {
+	XUartPs_Send(&UartInstance, &symbole, 1);
+}
+
+void Send_Uart_Buff_Cmd(uint8_t Buff[], uint8_t Len) {
+	XUartPs_Send(&UartInstance, Buff, Len);
+}
+
+uint8_t Get_Uart_Cmd(uint8_t *c) {
+	if (i_RX_CMD_Buff_DONE != i_RX_CMD_Buff_TODO) { 
+		*c = RecvBuffer[i_RX_CMD_Buff_DONE];
+		i_RX_CMD_Buff_DONE++;
+		if (i_RX_CMD_Buff_DONE >= UART_BUFFER_SIZE)
+			i_RX_CMD_Buff_DONE = 0;
+		return 1;
+	} else {
+		return 0;
+	}
+}
+

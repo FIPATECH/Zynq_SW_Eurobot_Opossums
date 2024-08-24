@@ -21,19 +21,6 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
         return XST_FAILURE;
     }
 
-    /*
-     * Connect the interrupt controller interrupt handler to the hardware
-     * interrupt handling logic in the processor.
-    */
-    Xil_ExceptionInit();
-
-    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,
-                                (Xil_ExceptionHandler)XScuGic_InterruptHandler,
-                                GicInstancePtr);
-    Xil_ExceptionEnable();
-
-
-
     // --------------------------------------------------------
     // ---------------------- Interrupts ----------------------
     // --------------------------------------------------------
@@ -59,7 +46,7 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
     // ---------------------- UART ----------------------
     // Connect and enable UART interrupt
     Status = XScuGic_Connect(GicInstancePtr, UART_IRPT_INTR,
-        (Xil_InterruptHandler)XUartPs_InterruptHandler, &UartInstance);
+                    (Xil_InterruptHandler)XUartPs_InterruptHandler, &UartInstance);
     if (Status != XST_SUCCESS) {
         return XST_FAILURE;
     }
@@ -67,5 +54,17 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
 
     // --------------------------------------------------------
 
+
+    /*
+     * Connect the interrupt controller interrupt handler to the hardware
+     * interrupt handling logic in the processor.
+    */
+    Xil_ExceptionInit();
+
+    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,
+                                (Xil_ExceptionHandler)XScuGic_InterruptHandler,
+                                GicInstancePtr);
+    Xil_ExceptionEnable();
+    
     return XST_SUCCESS;
 }

@@ -2,8 +2,8 @@
 
 
 char Current_Cmd[MAX_CMD_LENGTH + 1];
-u16 i_Current_Cmd = 0;
-u16 i_Lecture_Current_Cmd = 0;
+uint16_t i_Current_Cmd = 0;
+uint16_t i_Lecture_Current_Cmd = 0;
 
 
 
@@ -14,7 +14,7 @@ const Command Command_List[] = {
 
 };
 
-const u16 Command_List_Length = sizeof (Command_List) / sizeof (Command_List[0]);
+const uint16_t Command_List_Length = sizeof (Command_List) / sizeof (Command_List[0]);
 
 void Interp(char c) {
     // fin de commande = entree
@@ -40,9 +40,9 @@ void Interp(char c) {
                 #endif
             } else {
                 // on recherche combien de caracteres fait la commande en elle meme (sans les PARAM)
-                u16 Len = 0;
-                u16 Ind = 0;
-                u8 Found = 0;
+                uint16_t Len = 0;
+                uint16_t Ind = 0;
+                uint8_t Found = 0;
                 while ( (Current_Cmd[Len] >= 'a' && Current_Cmd[Len] <= 'z') || 
                         (Current_Cmd[Len] >= 'A' && Current_Cmd[Len] <= 'Z') || 
                         (Current_Cmd[Len] >= '0' && Current_Cmd[Len] <= '9')    ) {
@@ -67,7 +67,7 @@ void Interp(char c) {
                         printf("\n");
                     #endif
                 } else {
-                    u8 val8 = (*Command_List[Ind].Func)();
+                    uint8_t val8 = (*Command_List[Ind].Func)();
                     #ifndef WORLD_OF_SILENCE
                         if (val8) 
                             printf("Cmd_Error %d\r\n", val8);
@@ -86,11 +86,11 @@ char To_UpperCase(char c) {
         return c;
 }
 
-u8 Get_Param_Float(float *retour) {
+uint8_t Get_Param_Float(float *retour) {
     float valf = 0;
     float div = 0;
-    u8 Is_Neg = 0;
-    u8 Result_Is_Error = 1;
+    uint8_t Is_Neg = 0;
+    uint8_t Result_Is_Error = 1;
     
     // tant qu'on est sur un caractere, et qu'on a pas trouve un chiffre ou le signe
     while ((Current_Cmd[i_Lecture_Current_Cmd] != '\0') && (Current_Cmd[i_Lecture_Current_Cmd] != '-') &&
@@ -129,9 +129,9 @@ u8 Get_Param_Float(float *retour) {
     return Result_Is_Error;
 }
 
-u8 Get_Param_u32(u32 *retour) {
+uint8_t Get_Param_u32(u32 *retour) {
     u32 val = 0;
-    u8 Result_Is_Error = 1;
+    uint8_t Result_Is_Error = 1;
     
     // tant qu'on est sur un caractere, et qu'on a pas trouve un chiffre
     while ((Current_Cmd[i_Lecture_Current_Cmd] != '\0') && 
@@ -152,9 +152,9 @@ u8 Get_Param_u32(u32 *retour) {
     return Result_Is_Error;
 }
 
-u8 Get_Param_x32(u32 *retour) {
+uint8_t Get_Param_x32(u32 *retour) {
     u32 val = 0;
-    u8 Result_Is_Error = 1;
+    uint8_t Result_Is_Error = 1;
     
     // tant qu'on est sur un caractere, et qu'on a pas trouve un chiffre
     while ((Current_Cmd[i_Lecture_Current_Cmd] != '\0') && 
@@ -183,11 +183,11 @@ u8 Get_Param_x32(u32 *retour) {
     return Result_Is_Error;
 }
 
-u8 Get_Param_String(char Dest_Str[], u8 Max_Len)
+uint8_t Get_Param_String(char Dest_Str[], uint8_t Max_Len)
 {
-    u8 Len = 0;
+    uint8_t Len = 0;
     
-    u16 i_Start = 0, i_End = 0;
+    uint16_t i_Start = 0, i_End = 0;
     
     while ((Current_Cmd[i_Lecture_Current_Cmd] != '"') && (Current_Cmd[i_Lecture_Current_Cmd] != '\0')) {
         i_Lecture_Current_Cmd ++;   // recherche du premier "
@@ -205,7 +205,7 @@ u8 Get_Param_String(char Dest_Str[], u8 Max_Len)
     }
     if (i_End > i_Start) {  // si on a bien trouve 2 "
         if ((i_End - i_Start) < (Max_Len - 1)) {    // et que ca rentre dans le truc
-            u16 i = i_Start;
+            uint16_t i = i_Start;
             while (i != i_End) {
                 Dest_Str[Len] = Current_Cmd[i];
                 Len ++;
@@ -218,11 +218,11 @@ u8 Get_Param_String(char Dest_Str[], u8 Max_Len)
     return Len;
 }
 
-u8 Print_All_CMD_Cmd(void) {
-    u16 i;
+uint8_t Print_All_CMD_Cmd(void) {
+    uint16_t i;
     for (i = 0; i < Command_List_Length; i++) {
         printf("%s\n", Command_List[i].Name);
-        u8 j;
+        uint8_t j;
         for (j = 0; j < 10; j++) {
             Delay_ms(1);
             Std_Com_Loop();    // moche, mais permet de faire sortir les printf
