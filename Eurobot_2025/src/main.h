@@ -11,6 +11,8 @@
 #include "xparameters_ps.h"
 #include "xscugic.h"
 #include "xcanps.h"
+#include "xuartps.h"
+#include "xplatform_info.h"
 
 #include "QEI.h"
 #include "Timer.h"
@@ -18,6 +20,10 @@
 #include "Asserv_Loop.h"
 #include "PWM.h"
 #include "CAN.h"
+#include "UART.h"
+#include "Std_Com.h"
+#include "interpreteur.h"
+#include "User.h"
 
 #include "xscugic.h"
 

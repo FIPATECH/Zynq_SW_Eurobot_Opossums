@@ -21,6 +21,40 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
         return XST_FAILURE;
     }
 
+    // --------------------------------------------------------
+    // ---------------------- Interrupts ----------------------
+    // --------------------------------------------------------
+
+    // ---------------------- Timer ----------------------
+    // Connect and enable Timer interrupt
+    Status = XScuGic_Connect(GicInstancePtr, TIMER_IRPT_INTR,
+                    (Xil_InterruptHandler)TimerIntrHandler, &TimerInstance);
+    if (Status != XST_SUCCESS) {
+        return XST_FAILURE;
+    }
+    XScuGic_Enable(GicInstancePtr, TIMER_IRPT_INTR);
+
+    // ---------------------- CAN ----------------------
+    // Connect and enable CAN interrupt
+    Status = XScuGic_Connect(GicInstancePtr, CAN_IRPT_INTR,
+                    (Xil_InterruptHandler)XCanPs_IntrHandler, &CanInstance);
+    if (Status != XST_SUCCESS) {
+        return XST_FAILURE;
+    }
+    XScuGic_Enable(GicInstancePtr, CAN_IRPT_INTR);
+
+    // ---------------------- UART ----------------------
+    // Connect and enable UART interrupt
+    Status = XScuGic_Connect(GicInstancePtr, UART_IRPT_INTR,
+                    (Xil_InterruptHandler)XUartPs_InterruptHandler, &UartInstance);
+    if (Status != XST_SUCCESS) {
+        return XST_FAILURE;
+    }
+    XScuGic_Enable(GicInstancePtr, UART_IRPT_INTR);
+
+    // --------------------------------------------------------
+
+
     /*
      * Connect the interrupt controller interrupt handler to the hardware
      * interrupt handling logic in the processor.
@@ -31,24 +65,6 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
                                 (Xil_ExceptionHandler)XScuGic_InterruptHandler,
                                 GicInstancePtr);
     Xil_ExceptionEnable();
-
-
-    // Connect and enable Timer interrupt
-    Status = XScuGic_Connect(GicInstancePtr, TIMER_IRPT_INTR,
-                    (Xil_InterruptHandler)TimerIntrHandler, &TimerInstance);
-    if (Status != XST_SUCCESS) {
-        return XST_FAILURE;
-    }
-    XScuGic_Enable(GicInstancePtr, TIMER_IRPT_INTR);
-
-    // Connect and enable CAN interrupt
-    Status = XScuGic_Connect(GicInstancePtr, CAN_IRPT_INTR,
-                    (Xil_InterruptHandler)XCanPs_IntrHandler, &CanInstance);
-    if (Status != XST_SUCCESS) {
-        return XST_FAILURE;
-    }
-    XScuGic_Enable(GicInstancePtr, CAN_IRPT_INTR);
-
-
+    
     return XST_SUCCESS;
 }

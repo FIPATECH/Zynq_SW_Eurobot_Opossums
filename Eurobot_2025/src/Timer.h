@@ -11,3 +11,5 @@ extern u32 Timer_ms1;
 
 int Init_Timer_ms1(void);
 void TimerIntrHandler(void *CallBackRef);
+
+void Delay_ms(u32 ms);

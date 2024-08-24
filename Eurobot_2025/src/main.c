@@ -5,45 +5,62 @@ int Status = 0;
 
 int main()
 {
-
+    u8 c;
     init_platform();
 
     Status = SetupInterruptSystem(&InterruptController);
+
     if (Status != XST_SUCCESS) {
         xil_printf("Interrupt Setup Failed\r\n");
     } else {
         xil_printf("Interrupt Setup Done\r\n");
     }
 
-    Status = Init_Timer_ms1();
+    Status = UART_Init();
     if (Status != XST_SUCCESS) {
-        print("Timer init failed\n\r");
+        xil_printf("UART init failed\n\r");
         Status = 0;
     } else {
-        print("Timer init done\n\r");
+        xil_printf("UART init done\n\r");
         Status = 0;
     }
 
-    // Status = init_CAN();
-    // if (Status != XST_SUCCESS) {
-    //     print("CAN init failed\n\r");
-    //     Status = 0;
-    // } else {
-    //     print("CAN init done\n\r");
-    //     Status = 0;
-    // }
+    Status = Init_Timer_ms1();
+    if (Status != XST_SUCCESS) {
+        xil_printf("Timer init failed\n\r");
+        Status = 0;
+    } else {
+        xil_printf("Timer init done\n\r");
+        Status = 0;
+    }
+
+    Status = init_CAN();
+    if (Status != XST_SUCCESS) {
+        xil_printf("CAN init failed\n\r");
+        Status = 0;
+    } else {
+        xil_printf("CAN init done\n\r");
+        Status = 0;
+    }
 
     // init_QEI();
-    // PWM_Init();
-    print("Init done\n\r");
+    PWM_Init();
+    Std_Com_Init();
+    xil_printf("Init done\n\r");
 
     while(1){
-        if (Timer_ms1 - old_timer_ms1 >= 1000){
+        if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            xil_printf("Timer_ms1 = %d\n", Timer_ms1);
+            xil_printf("Timer_ms1: %d\n\r", Timer_ms1);
         }
+
+        if (Get_Std_In(&c)) {
+            Interp(c);
+        }
+
         // Asserv_Loop();
         PWM_Loop();
+        Std_Com_Loop();
         // Can_Loop();
     }
     cleanup_platform();
