@@ -43,8 +43,8 @@ void Can_Loop(void){
 		case 0: 
 			if (Timer_ms1 - old_Can_Timer_ms1 > 100){
 				#ifdef DEBUG_CAN
-					xil_printf("Motor 1: angle = %d, torque = %d, speed = %d\n", angle_motor_1, torque_motor_1, speed_motor_1);
-					xil_printf("Motor 2: angle = %d, torque = %d, speed = %d\n", angle_motor_2, torque_motor_2, speed_motor_2);
+					xil_printf("Motor 1: angle = %d, torque = %d, speed = %d\r\n", angle_motor_1, torque_motor_1, speed_motor_1);
+					xil_printf("Motor 2: angle = %d, torque = %d, speed = %d\r\n", angle_motor_2, torque_motor_2, speed_motor_2);
 				#endif
 				old_Can_Timer_ms1 = Timer_ms1;
 
@@ -69,7 +69,7 @@ void Can_Loop(void){
 				SendDone = FALSE;
 				RecvDone = FALSE;
 				if (LoopbackError == TRUE) {
-					xil_printf("Error: Loopback Error occurred\n");
+					xil_printf("Error: Loopback Error occurred\r\n");
 					LoopbackError = FALSE;
 				}
 			}
@@ -105,19 +105,19 @@ int init_CAN(void){
 	// Initialize the CAN driver
 	ConfigPtr = XCanPs_LookupConfig(CAN_DEVICE_ID);
 	if (ConfigPtr == NULL) {
-		xil_printf("Error: Unable to lookup CAN device\n");
+		xil_printf("Error: Unable to lookup CAN device\r\n");
 		return XST_FAILURE;
 	}else{
-		xil_printf("CAN device found\n");
+		xil_printf("CAN device found\r\n");
 	}
 
 	XCanPs_CfgInitialize(CanInstPtr, ConfigPtr, ConfigPtr->BaseAddr);
 	Status = XCanPs_SelfTest(CanInstPtr);
 	if (Status != XST_SUCCESS) {
-		xil_printf("Error: Unable to initialize CAN device\n");
+		xil_printf("Error: Unable to initialize CAN device\r\n");
 		return XST_FAILURE;
 	} else {
-		xil_printf("CAN device initialized\n");
+		xil_printf("CAN device initialized\r\n");
 	}
 
 	/*
@@ -125,10 +125,10 @@ int init_CAN(void){
 	 */
 	Status = Config(CanInstPtr);
 	if (Status != XST_SUCCESS) {
-		xil_printf("Error: Unable to configure CAN device\n");
+		xil_printf("Error: Unable to configure CAN device\r\n");
 		return XST_FAILURE;
 	} else {
-		xil_printf("CAN device configured\n");
+		xil_printf("CAN device configured\r\n");
 	}
     
     /*
@@ -136,10 +136,10 @@ int init_CAN(void){
 	*/
     Status = CAN_configure_filters();
 	if (Status != XST_SUCCESS) {
-		xil_printf("Error: Unable to configure filters\n");
+		xil_printf("Error: Unable to configure filters\r\n");
 		return XST_FAILURE;
 	} else {
-		xil_printf("Filters configured\n");
+		xil_printf("Filters configured\r\n");
 	}
 
 	/*
@@ -169,7 +169,7 @@ int init_CAN(void){
 	XCanPs_EnterMode(CanInstPtr, XCANPS_MODE_NORMAL);
 	while (XCanPs_GetMode(CanInstPtr) != XCANPS_MODE_NORMAL);
 	// Perform any other initialization steps or start your application here
-	xil_printf("CAN initialized successfully\n");
+	xil_printf("CAN initialized successfully\r\n");
 	return XST_SUCCESS;
 }
 
@@ -177,7 +177,7 @@ int CAN_configure_filters(void){
     int Status;
 	Status = XCanPs_IsAcceptFilterBusy(&CanInstance);
 	if (Status != XST_SUCCESS) {
-		xil_printf("Error: Acceptance filter is busy\n");
+		xil_printf("Error: Acceptance filter is busy\r\n");
 		return XST_FAILURE;
 	}
     // configure acceptance filter 0
@@ -235,7 +235,7 @@ void CAN_transmit(XCanPs *InstancePtr){
 
 	Status = XCanPs_Send(InstancePtr, TxFrame);
 	if (Status != XST_SUCCESS) {
-		xil_printf("Error: Unable to send frame\n");
+		xil_printf("Error: Unable to send frame\r\n");
 		/*
 		 * The frame could not be sent successfully.
 		 */
@@ -267,21 +267,21 @@ int Config(XCanPs *InstancePtr){
 	int status;
 	XCanPs_EnterMode(InstancePtr, XCANPS_MODE_CONFIG);
 	while(XCanPs_GetMode(InstancePtr) != XCANPS_MODE_CONFIG);
-	xil_printf("CAN in config mode\n");
+	xil_printf("CAN in config mode\r\n");
 	/*
 	 * Set Baud Rate Prescalar BRPR
 	 * and Bit Timing Register 0 (BTR0) and Bit Timing Register 1 (BTR1)
 	 */
 	status = XCanPs_SetBaudRatePrescaler(InstancePtr, BRPR_BAUD_PRESCALAR);
 	if (status != XST_SUCCESS) {
-		xil_printf("Error: Unable to set the baud rate prescalar\n");
+		xil_printf("Error: Unable to set the baud rate prescalar\r\n");
 		return XST_FAILURE;
 	}
 	status = XCanPs_SetBitTiming(InstancePtr, 	BTR_SYNCJUMPWIDTH,
 										BTR_SECOND_TIMESEGMENT, 
 										BTR_FIRST_TIMESEGMENT);
 	if (status != XST_SUCCESS) {
-		xil_printf("Error: Unable to set the bit timing\n");
+		xil_printf("Error: Unable to set the bit timing\r\n");
 		return XST_FAILURE;
 	}
 	return XST_SUCCESS;
@@ -314,7 +314,7 @@ void SendFrame(XCanPs *InstancePtr){
 	
 	Status = XCanPs_Send(InstancePtr, TxFrame);
 	if (Status != XST_SUCCESS) {
-		xil_printf("Error: Unable to send frame\n");
+		xil_printf("Error: Unable to send frame\r\n");
 		/*
 		 * The frame could not be sent successfully.
 		 */
@@ -344,7 +344,7 @@ void SendHandler(void *CallBackRef)
 	 * The frame was sent successfully. Notify the task context.
 	 */
 	#ifdef DEBUG_CAN
-		xil_printf("Frame sent\n");
+		xil_printf("Frame sent\r\n");
 	#endif
 	SendDone = TRUE;
 }
@@ -371,7 +371,7 @@ void RecvHandler(void *CallBackRef)
 
 	Status = XCanPs_Recv(CanPtr, RxFrame);
 	if (Status != XST_SUCCESS) {
-		xil_printf("Error: Unable to receive frame\n");
+		xil_printf("Error: Unable to receive frame\r\n");
 		LoopbackError = TRUE;
 		RecvDone = TRUE;
 		return;
@@ -435,35 +435,35 @@ void ErrorHandler(void *CallBackRef, u32 ErrorMask)
 		/*
 		 * ACK Error handling code should be put here.
 		 */
-		xil_printf("ACK Error\n");
+		xil_printf("ACK Error\r\n");
 	}
 
 	if (ErrorMask & XCANPS_ESR_BERR_MASK) {
 		/*
 		 * Bit Error handling code should be put here.
 		 */
-		xil_printf("Bit Error\n");
+		xil_printf("Bit Error\r\n");
 	}
 
 	if (ErrorMask & XCANPS_ESR_STER_MASK) {
 		/*
 		 * Stuff Error handling code should be put here.
 		 */
-		xil_printf("Stuff Error\n");
+		xil_printf("Stuff Error\r\n");
 	}
 
 	if (ErrorMask & XCANPS_ESR_FMER_MASK) {
 		/*
 		 * Form Error handling code should be put here.
 		 */
-		xil_printf("Form Error\n");
+		xil_printf("Form Error\r\n");
 	}
 
 	if (ErrorMask & XCANPS_ESR_CRCER_MASK) {
 		/*
 		 * CRC Error handling code should be put here.
 		 */
-		xil_printf("CRC Error\n");
+		xil_printf("CRC Error\r\n");
 	}
 	XCanPs_ClearBusErrorStatus(CanPtr, ErrorMask);
 
@@ -523,7 +523,7 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle RX FIFO Overflow Interrupt should be put here.
 		 */
 		XCanPs_IntrClear(CanPtr, XCANPS_IXR_RXOFLW_MASK);
-		xil_printf("RX FIFO Overflow\n");
+		xil_printf("RX FIFO Overflow\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_RXUFLW_MASK) {
@@ -531,7 +531,7 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle RX FIFO Underflow Interrupt
 		 * should be put here.
 		 */
-		xil_printf("RX FIFO Underflow\n");
+		xil_printf("RX FIFO Underflow\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_TXBFLL_MASK) {
@@ -539,14 +539,14 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle TX High Priority Buffer Full
 		 * Interrupt should be put here.
 		 */
-		xil_printf("TX High Priority Buffer Full\n");
+		xil_printf("TX High Priority Buffer Full\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_TXFLL_MASK) {
 		/*
 		 * Code to handle TX FIFO Full Interrupt should be put here.
 		 */
-		xil_printf("TX FIFO Full\n");
+		xil_printf("TX FIFO Full\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_WKUP_MASK) {
@@ -554,14 +554,14 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle Wake up from sleep mode Interrupt
 		 * should be put here.
 		 */
-		xil_printf("Wake up from sleep mode\n");
+		xil_printf("Wake up from sleep mode\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_SLP_MASK) {
 		/*
 		 * Code to handle Enter sleep mode Interrupt should be put here.
 		 */
-		xil_printf("Enter sleep mode\n");
+		xil_printf("Enter sleep mode\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_ARBLST_MASK) {
@@ -569,6 +569,6 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle Lost bus arbitration Interrupt
 		 * should be put here.
 		 */
-		xil_printf("Lost bus arbitration\n");
+		xil_printf("Lost bus arbitration\r\n");
 	}
 }
