@@ -20,7 +20,7 @@
 /* Maximum CAN frame length in word */
 #define XCANPS_MAX_FRAME_SIZE_IN_WORDS (XCANPS_MAX_FRAME_SIZE / sizeof(u32))
 #define FRAME_DATA_LENGTH	8 /* Frame Data field length */
-#define TEST_MESSAGE_ID 0x200
+#define ESC_TX_MESSAGE_ID 0x200
 
 // #define DEBUG_CAN
 

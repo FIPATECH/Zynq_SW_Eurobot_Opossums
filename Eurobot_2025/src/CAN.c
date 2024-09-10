@@ -232,7 +232,7 @@ void CAN_transmit(XCanPs *InstancePtr){
 	/*
 	 * Create correct values for Identifier and Data Length Code Register.
 	 */
-	TxFrame[0] = (u32)XCanPs_CreateIdValue((u32)TEST_MESSAGE_ID, 0, 0, 0, 0);
+	TxFrame[0] = (u32)XCanPs_CreateIdValue((u32)ESC_TX_MESSAGE_ID, 0, 0, 0, 0);
 	TxFrame[1] = (u32)XCanPs_CreateDlcValue((u32)FRAME_DATA_LENGTH);
 
 	/*
@@ -320,7 +320,7 @@ void SendFrame(XCanPs *InstancePtr){
 	/*
 	 * Create correct values for Identifier and Data Length Code Register.
 	 */
-	TxFrame[0] = (u32)XCanPs_CreateIdValue((u32)TEST_MESSAGE_ID, 0, 0, 0, 0);
+	TxFrame[0] = (u32)XCanPs_CreateIdValue((u32)ESC_TX_MESSAGE_ID, 0, 0, 0, 0);
 	TxFrame[1] = (u32)XCanPs_CreateDlcValue((u32)FRAME_DATA_LENGTH);
 
 	/*
