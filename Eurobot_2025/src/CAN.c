@@ -601,3 +601,23 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		xil_printf("Lost bus arbitration\r\n");
 	}
 }
+
+uint8_t Motor_cmd(void) {
+    u32 id;
+    if (Get_Param_u32(&id)){
+        return PARAM_ERROR_CODE;
+    }
+	float current;
+    if (Get_Param_Float(&current)){
+        return PARAM_ERROR_CODE;
+    }
+	xil_printf("motor %d, current: %f\n\r", id, current);
+	if (id == 1){
+		motor1_current_order = (int)(current * 1000);
+	}else if (id == 2){
+		motor2_current_order = (int)(current * 1000);
+	}else if (id == 3){
+		motor3_current_order = (int)(current * 1000);
+	}
+    return 0;
+}

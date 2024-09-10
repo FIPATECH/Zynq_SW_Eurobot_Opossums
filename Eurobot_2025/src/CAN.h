@@ -53,3 +53,5 @@ void ErrorHandler(void *CallBackRef, u32 ErrorMask);
 void EventHandler(void *CallBackRef, u32 IntrMask);
 
 void Can_Loop(void);
+
+uint8_t Motor_cmd(void);
