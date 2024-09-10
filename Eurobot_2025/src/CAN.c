@@ -11,12 +11,15 @@ static u32 RxFrame[XCANPS_MAX_FRAME_SIZE_IN_WORDS];
 
 int angle_motor_1 = 0;
 int angle_motor_2 = 0;
+int angle_motor_3 = 0;
 
 int torque_motor_1 = 0;
 int torque_motor_2 = 0;
+int torque_motor_3 = 0;
 
 int speed_motor_1 = 0;
 int speed_motor_2 = 0;
+int speed_motor_3 = 0;
 
 /*
  * Shared variables used to test the callbacks.
@@ -36,6 +39,7 @@ int nbr_loop = 0;
 
 int motor1_current_order = 0;
 int motor2_current_order = 0;
+int motor3_current_order = 0;
 
 
 void Can_Loop(void){
@@ -45,6 +49,7 @@ void Can_Loop(void){
 				#ifdef DEBUG_CAN
 					xil_printf("Motor 1: angle = %d, torque = %d, speed = %d\r\n", angle_motor_1, torque_motor_1, speed_motor_1);
 					xil_printf("Motor 2: angle = %d, torque = %d, speed = %d\r\n", angle_motor_2, torque_motor_2, speed_motor_2);
+					xil_printf("Motor 3: angle = %d, torque = %d, speed = %d\r\n", angle_motor_3, torque_motor_3, speed_motor_3);
 				#endif
 				old_Can_Timer_ms1 = Timer_ms1;
 
@@ -54,6 +59,8 @@ void Can_Loop(void){
 										((motor2_current_order >> 8) & 0xFF) << 16 | 
 										((motor1_current_order & 0xFF) << 8) | 
 										((motor1_current_order >> 8) & 0xFF);
+					TxFrame[3] = (u32)(motor3_current_order & 0xFF) << 8 | 
+										((motor3_current_order >> 8) & 0xFF);
 				}
 				can_loop_state++;
 			}
@@ -195,6 +202,15 @@ int CAN_configure_filters(void){
         return XST_FAILURE;
     }
     XCanPs_AcceptFilterEnable(&CanInstance, XCANPS_AFR_UAF2_MASK);
+
+	// configure acceptance filter 2
+	XCanPs_AcceptFilterDisable(&CanInstance, XCANPS_AFR_UAF3_MASK);
+	Status = XCanPs_AcceptFilterSet(&CanInstance, XCANPS_AFR_UAF3_MASK, CAN_MOTOR_FILTER_MASK, CAN_MOTOR_3_ID); // FilterIndex = 2, MaskValue = 0x0203 , IdValue = 0
+	if (Status != XST_SUCCESS) {
+		return XST_FAILURE;
+	}
+	XCanPs_AcceptFilterEnable(&CanInstance, XCANPS_AFR_UAF3_MASK);
+
 	return XST_SUCCESS;
 }
 
@@ -406,6 +422,19 @@ void RecvHandler(void *CallBackRef)
 		byte2 = RxFrame[3] & 0xFF;
 
 		torque_motor_2 = (int)((byte2 << 8) | byte1);
+	}else if(RxFrame[0] == (u32)XCanPs_CreateIdValue((u32)CAN_MOTOR_3_ID, 0, 0, 0, 0)){
+		byte1 = (RxFrame[2] >> 24) & 0xFF;
+		byte2 = (RxFrame[2] >> 16) & 0xFF;
+		byte3 = (RxFrame[2] >> 8) & 0xFF;
+		byte4 = RxFrame[2] & 0xFF;
+
+		angle_motor_3 = (int)((byte4 << 8) | byte3);
+		speed_motor_3 = (int)((byte2 << 8) | byte1);
+
+		byte1 = (RxFrame[3] >> 8) & 0xFF;
+		byte2 = RxFrame[3] & 0xFF;
+
+		torque_motor_3 = (int)((byte2 << 8) | byte1);
 	}
 	RecvDone = TRUE;
 }
