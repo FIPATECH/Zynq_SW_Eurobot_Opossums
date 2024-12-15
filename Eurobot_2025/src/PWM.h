@@ -22,5 +22,7 @@ void Init_Servo(Servo *servo, int axi_id, int default_pos, int min_pos, int max_
 void PWM_Init(void);
 void PWM_Loop(void);
 
+void write_servo(int id, int angle);
+
 // interpreter functions
 uint8_t Servo_cmd(void);

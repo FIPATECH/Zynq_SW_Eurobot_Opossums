@@ -99,6 +99,15 @@ void PWM_Loop(void){
     }
 }
 
+void write_servo(int id, int angle){
+    if (angle < 0 || angle > 180 || id < 1 || id > NBR_SERVO){
+        xil_printf("Command invalid \n\r");
+        return;
+    }
+    servo[id-1].pos = angle;
+    servo[id-1].to_do = 1;
+}
+
 uint8_t Servo_cmd(void) {
     u32 id;
     if (Get_Param_u32(&id)){
