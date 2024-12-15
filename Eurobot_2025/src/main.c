@@ -51,7 +51,7 @@ int main()
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            xil_printf("Timer_ms1: %d\n\r", Timer_ms1);
+//            xil_printf("Timer_ms1: %d\n\r", Timer_ms1);
         }
 
         if (Get_Std_In(&c)) {
