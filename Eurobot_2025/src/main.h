@@ -24,6 +24,7 @@
 #include "Std_Com.h"
 #include "interpreteur.h"
 #include "User.h"
+#include "AU.h"
 
 #include "xscugic.h"
 

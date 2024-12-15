@@ -46,6 +46,7 @@ int main()
     // init_QEI();
     PWM_Init();
     Std_Com_Init();
+    init_AU();
     xil_printf("Init done\n\r");
 
     while(1){
@@ -57,10 +58,14 @@ int main()
             Interp(c);
         }
 
-        // Asserv_Loop();
-        PWM_Loop();
+        AU_Loop();
         Std_Com_Loop();
-        // Can_Loop();
+
+        if(AU_state == 1){
+            // Asserv_Loop();
+            PWM_Loop();
+            // Can_Loop();
+        }
     }
     cleanup_platform();
     return 0;
