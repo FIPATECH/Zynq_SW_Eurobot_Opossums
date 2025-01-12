@@ -64,7 +64,7 @@ int main()
         if(AU_state == 1){
             // Asserv_Loop();
             PWM_Loop();
-            // Can_Loop();
+            Can_Loop();
         }
     }
     cleanup_platform();
