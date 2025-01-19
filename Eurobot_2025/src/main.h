@@ -25,6 +25,7 @@
 #include "interpreteur.h"
 #include "User.h"
 #include "AU.h"
+#include "ws2812b.h"
 
 #include "xscugic.h"
 

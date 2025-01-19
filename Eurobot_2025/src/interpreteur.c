@@ -13,7 +13,8 @@ const Command Command_List[] = {
     { "HELP", Print_All_CMD_Cmd},
     { "TEST", Test_Interpreteur},
 
-    { "SERVO", Servo_cmd}
+    { "SERVO", Servo_cmd},
+    { "LED", LED_cmd}         
 };
 
 const uint16_t Command_List_Length = sizeof (Command_List) / sizeof (Command_List[0]);

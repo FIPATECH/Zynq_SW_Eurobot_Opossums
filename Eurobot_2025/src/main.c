@@ -57,8 +57,8 @@ int main()
         if (Get_Std_In(&c)) {
             Interp(c);
         }
-
         AU_Loop();
+        LED_loop();
         Std_Com_Loop();
 
         if(AU_state == 1){
