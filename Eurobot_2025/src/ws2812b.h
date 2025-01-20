@@ -1,6 +1,6 @@
 #define WS2812_BASEADDR XPAR_WS2812B_AXI_CONTROLL_0_BASEADDR
 
-#define NBR_LED 10
+#define NBR_LED 44
 
 #define DEFAULT_RED 0xFF0000
 #define DEFAULT_GREEN 0x00FF00
@@ -20,3 +20,5 @@ void start_transfer();
 void LED_loop();
 
 uint8_t LED_cmd(void);
+
+void AU_led_loop();

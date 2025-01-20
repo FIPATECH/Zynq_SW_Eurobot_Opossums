@@ -14,6 +14,6 @@ void init_AU(void){
 void AU_Loop(void){
 	AU_state = XGpio_DiscreteRead(&AU, 1);
     if (AU_state == 0){
-        xil_printf("AU 0");
+        // xil_printf("AU 0");
     }
 }

@@ -7,9 +7,15 @@ int LED_old_timer_ms1 = 0;
 
 void ws2812b_init(){
     for (int i = 0; i < NBR_LED; i++){
-        led[i].red = 0;
-        led[i].green = 0;
-        led[i].blue = 0;
+        if (i % 2 == 0){
+            led[i].red = 255;
+            led[i].green = 0;
+            led[i].blue = 0;
+        }else{
+            led[i].red = 0;
+            led[i].green = 255;
+            led[i].blue = 0;
+        }
     }
 }
 
@@ -65,4 +71,37 @@ uint8_t LED_cmd(void) {
         led[id].blue = blue;
     }
     return 0;
+}
+
+
+int AU_led_counter = 0;
+int AU_led_old_timer_ms1 = 0;
+int on_off_loop_status = 0;
+// chenillard led rouge 
+void AU_led_loop(){
+    if (Timer_ms1 - AU_led_old_timer_ms1 >= 100) {
+        xil_printf("AU_led_loop\n\r");
+        AU_led_old_timer_ms1 = Timer_ms1;
+        if (on_off_loop_status == 0){
+            led[AU_led_counter].red = 0;
+            led[AU_led_counter].green = 0;
+            led[AU_led_counter].blue = 0;
+            ws2812b_set_color(AU_led_counter, led[AU_led_counter]);
+            AU_led_counter++;
+            if (AU_led_counter == NBR_LED - 1){
+                on_off_loop_status = 1;
+                AU_led_counter = 0;
+            }
+        }else{
+            led[AU_led_counter].red = 255;
+            led[AU_led_counter].green = 0;
+            led[AU_led_counter].blue = 0;
+            ws2812b_set_color(AU_led_counter, led[AU_led_counter]);
+            AU_led_counter++;
+            if (AU_led_counter == NBR_LED - 1){
+                on_off_loop_status = 0;
+                AU_led_counter = 0;
+            }
+        }
+    }
 }

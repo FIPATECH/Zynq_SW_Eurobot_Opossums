@@ -34,19 +34,20 @@ int main()
         Status = 0;
     }
 
-    Status = init_CAN();
-    if (Status != XST_SUCCESS) {
-        xil_printf("CAN init failed\n\r");
-        Status = 0;
-    } else {
-        xil_printf("CAN init done\n\r");
-        Status = 0;
-    }
+    // Status = init_CAN();
+    // if (Status != XST_SUCCESS) {
+    //     xil_printf("CAN init failed\n\r");
+    //     Status = 0;
+    // } else {
+    //     xil_printf("CAN init done\n\r");
+    //     Status = 0;
+    // }
 
     // init_QEI();
     PWM_Init();
     Std_Com_Init();
     init_AU();
+    ws2812b_init();
     xil_printf("Init done\n\r");
 
     while(1){
@@ -64,7 +65,9 @@ int main()
         if(AU_state == 1){
             // Asserv_Loop();
             PWM_Loop();
-            Can_Loop();
+            // Can_Loop();
+        }else{
+            AU_led_loop();
         }
     }
     cleanup_platform();
