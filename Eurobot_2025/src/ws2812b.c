@@ -5,6 +5,10 @@ LED color;
 
 int LED_old_timer_ms1 = 0;
 
+volatile uint32_t* ws2812 = (uint32_t*)WS2812_BASEADDR;
+
+#define LED_ADDR ((volatile uint32_t*)0x60000000)
+
 void ws2812b_init(){
     for (int i = 0; i < NBR_LED; i++){
         if (i % 2 == 0){
@@ -20,17 +24,19 @@ void ws2812b_init(){
 }
 
 void ws2812b_set_color(int led_id, LED color){
-    volatile uint32_t* ws2812 = (uint32_t*)WS2812_BASEADDR;
+
     if (led_id < 0 || led_id > NBR_LED){
         xil_printf("LED id out of range\n\r");
     }else{
         uint32_t led_color = (color.red << 16) | (color.green << 8) | color.blue;
-        ws2812[led_id] = led_color;
+        // ws2812[led_id] = led_color; 
+        LED_ADDR[led_id] = led_color;   
     }
 }
+
 void start_transfer(){
-    volatile uint32_t* ws2812 = (uint32_t*)WS2812_BASEADDR;
-    ws2812[NBR_LED] = 1;
+//    volatile uint32_t* ws2812 = (uint32_t*)WS2812_BASEADDR;
+//    ws2812[NBR_LED] = 1;
 }
 
 
@@ -80,17 +86,23 @@ int on_off_loop_status = 0;
 // chenillard led rouge 
 void AU_led_loop(){
     if (Timer_ms1 - AU_led_old_timer_ms1 >= 100) {
-        xil_printf("AU_led_loop\n\r");
+        // xil_printf("AU_led_loop\n\r");
         AU_led_old_timer_ms1 = Timer_ms1;
         if (on_off_loop_status == 0){
-            led[AU_led_counter].red = 0;
-            led[AU_led_counter].green = 0;
-            led[AU_led_counter].blue = 0;
-            ws2812b_set_color(AU_led_counter, led[AU_led_counter]);
-            AU_led_counter++;
-            if (AU_led_counter == NBR_LED - 1){
-                on_off_loop_status = 1;
-                AU_led_counter = 0;
+            // led[AU_led_counter].red = 0;
+            // led[AU_led_counter].green = 100;
+            // led[AU_led_counter].blue = 0;
+            // ws2812b_set_color(AU_led_counter, led[AU_led_counter]);
+            // AU_led_counter++;
+            // if (AU_led_counter == NBR_LED - 1){
+            //     on_off_loop_status = 1;
+            //     AU_led_counter = 0;
+            // }
+            for (int i = 0; i < NBR_LED; i++){
+                led[i].red = 0;
+                led[i].green = 255;
+                led[i].blue = 0;
+                ws2812b_set_color(i, led[i]);
             }
         }else{
             led[AU_led_counter].red = 255;
