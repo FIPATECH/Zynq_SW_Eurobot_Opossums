@@ -53,15 +53,13 @@ void Can_Loop(void){
 				#endif
 				old_Can_Timer_ms1 = Timer_ms1;
 
-				if (nbr_loop < 10){
-					nbr_loop++;
-					TxFrame[2] = (u32)(motor2_current_order & 0xFF) << 24 | 
-										((motor2_current_order >> 8) & 0xFF) << 16 | 
-										((motor1_current_order & 0xFF) << 8) | 
-										((motor1_current_order >> 8) & 0xFF);
-					TxFrame[3] = (u32)(motor3_current_order & 0xFF) << 8 | 
-										((motor3_current_order >> 8) & 0xFF);
-				}
+				TxFrame[2] = (u32)(motor2_current_order & 0xFF) << 24 | 
+									((motor2_current_order >> 8) & 0xFF) << 16 | 
+									((motor1_current_order & 0xFF) << 8) | 
+									((motor1_current_order >> 8) & 0xFF);
+				TxFrame[3] = (u32)(motor3_current_order & 0xFF) << 8 | 
+									((motor3_current_order >> 8) & 0xFF);
+				
 				can_loop_state++;
 			}
 			break;
@@ -195,7 +193,7 @@ int CAN_configure_filters(void){
     }
     XCanPs_AcceptFilterEnable(&CanInstance, XCANPS_AFR_UAF1_MASK);
 
-    // configure acceptance filter 1
+     // configure acceptance filter 1
     XCanPs_AcceptFilterDisable(&CanInstance, XCANPS_AFR_UAF2_MASK);
     Status = XCanPs_AcceptFilterSet(&CanInstance, XCANPS_AFR_UAF2_MASK, CAN_MOTOR_FILTER_MASK, CAN_MOTOR_2_ID); // FilterIndex = 1, MaskValue = 0x0203 , IdValue = 0
     if (Status != XST_SUCCESS) {
@@ -611,7 +609,7 @@ uint8_t Motor_cmd(void) {
     if (Get_Param_Float(&current)){
         return PARAM_ERROR_CODE;
     }
-	xil_printf("motor %d, current: %f\n\r", id, current);
+	xil_printf("motor %d, current: %d\n\r", id, current);
 	if (id == 1){
 		motor1_current_order = (int)(current * 1000);
 	}else if (id == 2){
