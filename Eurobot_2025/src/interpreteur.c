@@ -13,6 +13,7 @@ const Command Command_List[] = {
     { "HELP", Print_All_CMD_Cmd},
     { "TEST", Test_Interpreteur},
 
+    { "MOTOR", Motor_cmd},
     { "SERVO", Servo_cmd}
 };
 
