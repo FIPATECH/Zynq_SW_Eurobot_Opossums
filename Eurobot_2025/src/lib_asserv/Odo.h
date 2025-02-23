@@ -1,10 +1,13 @@
-extern int tics_g;
-extern int tics_d;
+#ifndef __ODO_H_
+#define __ODO_H_
+
 
 extern Acceleration acceleration_robot;
 extern Speed speed_robot;
+extern float Speed_1, Speed_2, Speed_3;
 extern Position position_robot;
 
+extern float robot_wheel_distance;
 
 /******************************    Fonctions    *******************************/
 
@@ -12,16 +15,16 @@ extern Position position_robot;
 void odo_init(void);
 
 // assigner des valeurs aux coefs (relations tic/metre et entraxe)
-void odo_set_tic_by_meter(double param_tic_by_meter_droit, double param_tic_by_meter_gauche);
+void odo_set_tic_by_meter(double param_tic_by_meter);
 
 // assigner une valeur a l'ecart entre les roues d'odometrie
 void odo_set_spacing(float param_spacing);
 
 // maj de la position du robot
-void odo_position_step(int qei_g, int qei_d);
+void odo_position_step(float period);
 
 // maj de la vitesse/acceleration  du robot
-void odo_speed_step(float period);
+void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3);
 
 
 
@@ -36,3 +39,5 @@ void set_position(Position pos);
 void set_position_x(float x);
 void set_position_y(float y);
 void set_position_t(float t);
+
+#endif // _ODO_H_

@@ -7,9 +7,9 @@ XScuTimer *TimerInstancePtr = &TimerInstance;
 XScuGic IntcInstance;
 XScuGic_Config *IntcConfig;
 
-u32 Timer_ms1 = 0;
+int Timer_ms1 = 0;
 
-u32 old_Timer = 0;
+int old_Timer = 0;
 
 
 

@@ -30,6 +30,42 @@ extern int motor1_current_order;
 extern int motor2_current_order;
 extern int motor3_current_order;
 
+extern int angle_motor_1;
+extern int angle_motor_2;
+extern int angle_motor_3;
+ 
+extern int torque_motor_1;
+extern int torque_motor_2;
+extern int torque_motor_3;
+ 
+extern int speed_motor_1;
+extern int speed_motor_2;
+extern int speed_motor_3;
+
+typedef struct {
+    float motor1;   
+    float motor2;
+    float motor3;
+} ESC_Torque;
+
+typedef struct {
+    float motor1;   
+    float motor2;
+    float motor3;
+} ESC_Speed;
+
+typedef struct {
+    float motor1;   
+    float motor2;
+    float motor3;
+} ESC_Angle;
+
+typedef struct {
+    ESC_Torque torque;
+    ESC_Speed speed;
+    ESC_Angle angle;
+} ESC_Info;
+
 typedef struct {
     uint16_t id;             // the 11-bit message ID
     uint8_t buffer;          // the buffer the message is stored in

@@ -47,6 +47,7 @@ int main()
 //    PWM_Init();
     Std_Com_Init();
     // init_AU();
+    Init_Asserv();
     xil_printf("Init done\n\r");
 
     while(1){
@@ -64,7 +65,7 @@ int main()
 
         // if(AU_state == 0){
             // xil_printf("AU_state = 0\n\r");
-            // Asserv_Loop();
+            Asserv_Loop();
             PWM_Loop();
             Can_Loop();
         // }
