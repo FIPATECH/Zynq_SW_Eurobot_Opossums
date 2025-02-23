@@ -1,7 +1,6 @@
 #include "main.h"
 #include "Lib_Asserv/lib_asserv.h"
 
-extern float Wanted_Forced_Consigne1, Wanted_Forced_Consigne2, Wanted_Forced_Consigne3;
 
 //MOVE
 uint8_t Move_Cmd(void) {
@@ -49,18 +48,18 @@ uint8_t Absolute_SPEED_Cmd(void) {
 // FREE
 uint8_t FREE_Cmd(void) {
     motion_free();
-    Wanted_Forced_Consigne1 = 0;
-    Wanted_Forced_Consigne2 = 0;
-    Wanted_Forced_Consigne3 = 0;
+    Wanted_Forced_Consigne.command1 = 0;
+    Wanted_Forced_Consigne.command2 = 0;
+    Wanted_Forced_Consigne.command3 = 0;
     return 0;
 }
 
 // HOLD
 uint8_t BLOCK_Cmd(void) {
     motion_block();
-    Wanted_Forced_Consigne1 = 0;
-    Wanted_Forced_Consigne2 = 0;
-    Wanted_Forced_Consigne3 = 0;
+    Wanted_Forced_Consigne.command1 = 0;
+    Wanted_Forced_Consigne.command2 = 0;
+    Wanted_Forced_Consigne.command3 = 0;
     return 0;
 }
 
@@ -172,17 +171,18 @@ uint8_t AMAX_Cmd(void) {
 uint8_t PWM_Func(void)
 {
     float valfa, valfb, valfc;
-    Wanted_Forced_Consigne1 = 0;
-    Wanted_Forced_Consigne2 = 0;
-    Wanted_Forced_Consigne3 = 0;
+    Wanted_Forced_Consigne.command1 = 0;
+    Wanted_Forced_Consigne.command2 = 0;
+    Wanted_Forced_Consigne.command3 = 0;
+    
     if (Get_Param_Float(&valfa))    return PARAM_ERROR_CODE;    // front
     if (Get_Param_Float(&valfb))    return PARAM_ERROR_CODE;    // back left
     if (Get_Param_Float(&valfc))    return PARAM_ERROR_CODE;    // back right
     
     
-    Wanted_Forced_Consigne1 = limit_float(valfa, -10000.0, 10000.0);
-    Wanted_Forced_Consigne2 = limit_float(valfb, -10000.0, 10000.0);
-    Wanted_Forced_Consigne3 = limit_float(valfc, -10000.0, 10000.0);
+    Wanted_Forced_Consigne.command1 = limit_float(valfa, -10000.0, 10000.0);
+    Wanted_Forced_Consigne.command2 = limit_float(valfb, -10000.0, 10000.0);
+    Wanted_Forced_Consigne.command3 = limit_float(valfc, -10000.0, 10000.0);
     
     return 0;
 }
@@ -190,27 +190,27 @@ uint8_t PWM_Func(void)
 uint8_t PWM1_Func(void)
 {
     float valfa;
-    Wanted_Forced_Consigne1 = 0;
+    Wanted_Forced_Consigne.command1 = 0;
     if (Get_Param_Float(&valfa))    return PARAM_ERROR_CODE;    // front
-    Wanted_Forced_Consigne1 = limit_float(valfa, -10000.0, 10000.0);
+    Wanted_Forced_Consigne.command1 = limit_float(valfa, -10000.0, 10000.0);
     return 0;
 }
 
 uint8_t PWM2_Func(void)
 {
     float valfa;
-    Wanted_Forced_Consigne2 = 0;
+    Wanted_Forced_Consigne.command2 = 0;
     if (Get_Param_Float(&valfa))    return PARAM_ERROR_CODE;    // front
-    Wanted_Forced_Consigne2 = limit_float(valfa, -10000.0, 10000.0);
+    Wanted_Forced_Consigne.command2 = limit_float(valfa, -10000.0, 10000.0);
     return 0;
 }
 
 uint8_t PWM3_Func(void)
 {
     float valfa;
-    Wanted_Forced_Consigne3 = 0;
+    Wanted_Forced_Consigne.command3 = 0;
     if (Get_Param_Float(&valfa))    return PARAM_ERROR_CODE;    // front
-    Wanted_Forced_Consigne3 = limit_float(valfa, -10000.0, 10000.0);
+    Wanted_Forced_Consigne.command3 = limit_float(valfa, -10000.0, 10000.0);
     return 0;
 }
 
@@ -226,7 +226,7 @@ uint8_t MaP_Asserv_State = 0;
 uint16_t MaP_Asserv_Count = 0;
 uint16_t MaP_Asserv_Count_Max = 0;
 uint32_t MaP_Asserv_Timer = 0;
-float Param_Map_Asserv = 1;
+float Param_Map_Asserv = 0.3;
 
 
 uint8_t Param_Asserv_Cmd(void) {

@@ -3,9 +3,9 @@
 
 
 // calcul d'un step d'odometrie toutes les 2 ms
-#define ODO_EVERY_MS 100
+#define ODO_EVERY_MS 2
 // asserv tous les 5 steps d'odo
-#define ASSERV_EVERY 500
+#define ASSERV_EVERY 5
 
 #define PWM_BLOCK_LIMIT 90      // % de PWM qui declenche la limite
 #define BLOCK_MAX_TIME  2000    // temps en ms au bout duquel il se verouille
@@ -16,12 +16,16 @@ extern int16_t Rotor_RPM1;
 extern int16_t Rotor_RPM2;
 extern int16_t Rotor_RPM3;
 
-
 typedef struct{
     float command1;
     float command2;
     float command3;
 } ESC_Command;
+
+extern ESC_Command Consigne;
+extern ESC_Command Wanted_Forced_Consigne;
+extern ESC_Command old_Consigne;
+
 
 void Init_Asserv(void);
 

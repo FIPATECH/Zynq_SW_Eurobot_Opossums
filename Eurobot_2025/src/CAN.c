@@ -462,35 +462,35 @@ void ErrorHandler(void *CallBackRef, u32 ErrorMask)
 		/*
 		 * ACK Error handling code should be put here.
 		 */
-		xil_printf("ACK Error\r\n");
+		// xil_printf("ACK Error\r\n");
 	}
 
 	if (ErrorMask & XCANPS_ESR_BERR_MASK) {
 		/*
 		 * Bit Error handling code should be put here.
 		 */
-		xil_printf("Bit Error\r\n");
+		// xil_printf("Bit Error\r\n");
 	}
 
 	if (ErrorMask & XCANPS_ESR_STER_MASK) {
 		/*
 		 * Stuff Error handling code should be put here.
 		 */
-		xil_printf("Stuff Error\r\n");
+		// xil_printf("Stuff Error\r\n");
 	}
 
 	if (ErrorMask & XCANPS_ESR_FMER_MASK) {
 		/*
 		 * Form Error handling code should be put here.
 		 */
-		xil_printf("Form Error\r\n");
+		// xil_printf("Form Error\r\n");
 	}
 
 	if (ErrorMask & XCANPS_ESR_CRCER_MASK) {
 		/*
 		 * CRC Error handling code should be put here.
 		 */
-		xil_printf("CRC Error\r\n");
+		// xil_printf("CRC Error\r\n");
 	}
 	XCanPs_ClearBusErrorStatus(CanPtr, ErrorMask);
 

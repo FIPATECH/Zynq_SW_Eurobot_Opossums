@@ -52,7 +52,6 @@ void odo_set_spacing(float param_spacing) {
 
 void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2, int16_t delta_angle_motor_3) {   
     // calcul de la distance linéaire parcourue par chaque roues
-    printf("delta_angle_motor_1 = %d, delta_angle_motor_2 = %d, delta_angle_motor_3 = %d\n", delta_angle_motor_1, delta_angle_motor_2, delta_angle_motor_3);
     float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
     float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
     float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);

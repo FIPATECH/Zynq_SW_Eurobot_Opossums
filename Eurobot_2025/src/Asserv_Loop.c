@@ -2,10 +2,6 @@
 #include "lib_asserv/lib_asserv.h"
 
 
-float Consigne1 = 0, Consigne2 = 0, Consigne3 = 0;
-float Wanted_Forced_Consigne1 = 0, Wanted_Forced_Consigne2 = 0, Wanted_Forced_Consigne3 = 0;
-float old_Consigne1 = 0, old_Consigne2 = 0, old_Consigne3 = 0;
-
 u32 Last_Timer_print_pos = 0;
 
 uint8_t auto_printpos_en = 1;
@@ -117,7 +113,7 @@ void Asserv_Loop(void)
         //-----------------------------------
         // consigne
         //-----------------------------------
-        Asserv_PWM_calculator(&Consigne1, &Consigne2, &Consigne3);
+        Asserv_PWM_calculator(&Consigne.command1, &Consigne.command2, &Consigne.command3);
         Asserv_State ++;
 
 
@@ -154,15 +150,15 @@ void Asserv_Loop(void)
 
     } else if (Asserv_State == 6) {
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
-            // printf("motor,");
-            // printf("%d,",Timer_ms1);
-            // printf("%d,",motion_done);
-            // printf("%.2f,", (float)(position_robot.x));
-            // printf("%.2f,", (float)(position_robot.y));
-            // printf("%.2f,", (float)(position_robot.t));
-            // printf("%.2f,", (float)(speed_robot.vx));
-            // printf("%.2f,", (float)(speed_robot.vy)); 
-            // printf("\n");
+            printf("motor,");
+            printf("%d,",Timer_ms1);
+            printf("%d,",motion_done);
+            printf("%.2f,", (float)(position_robot.x));
+            printf("%.2f,", (float)(position_robot.y));
+            printf("%.2f,", (float)(position_robot.t));
+            printf("%.2f,", (float)(speed_robot.vx));
+            printf("%.2f,", (float)(speed_robot.vy)); 
+            printf("\n");
             Last_Timer_print_pos += auto_printpos_delay;
         }
         Asserv_State = 0;

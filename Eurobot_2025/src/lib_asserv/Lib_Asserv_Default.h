@@ -16,7 +16,7 @@
 /*############################################################################*/
 
 // {v, vt} v = 0.9 * v max moteur, vt = v/(entre roues/2)
-#define DEFAULT_CONSTRAINT_V_MAX  0.05//1.0
+#define DEFAULT_CONSTRAINT_V_MAX  0.5//1.0
 #define DEFAULT_CONSTRAINT_VT_MAX 0.1
 
 #define DEFAULT_AUTHORIZED_V_MAX 0.5
@@ -60,8 +60,8 @@
 
 
 // 2 PID lies a l'asserve en vitesse (vitesse lineaire et vitesse angulaire)
-#define DEFAULT_PID_V_LIN_KP 100000 // kp
-#define DEFAULT_PID_V_LIN_KI 500   //ki
+#define DEFAULT_PID_V_LIN_KP 10000 // kp
+#define DEFAULT_PID_V_LIN_KI 0   //ki
 #define DEFAULT_PID_V_LIN_KD 0   //kd   
 
 #endif // _LIB_ASSERV_DEFAULT_H_
