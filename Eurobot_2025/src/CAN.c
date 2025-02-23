@@ -399,13 +399,13 @@ void RecvHandler(void *CallBackRef)
 		byte3 = (RxFrame[2] >> 8) & 0xFF;
 		byte4 = RxFrame[2] & 0xFF;
 
-		angle_motor_1 = (int)((byte4 << 8) | byte3);
-		speed_motor_1 = (int)((byte2 << 8) | byte1);
+		angle_motor_1 = (int16_t)((byte4 << 8) | byte3);
+		speed_motor_1 = (int16_t)((byte2 << 8) | byte1);
 
 		byte1 = (RxFrame[3] >> 8) & 0xFF;
 		byte2 = RxFrame[3] & 0xFF;
 
-		torque_motor_1 = (int)((byte2 << 8) | byte1);
+		torque_motor_1 = (int16_t)((byte2 << 8) | byte1);
 
 	}else if (RxFrame[0] == (u32)XCanPs_CreateIdValue((u32)CAN_MOTOR_2_ID, 0, 0, 0, 0)){
 		byte1 = (RxFrame[2] >> 24) & 0xFF;
@@ -413,26 +413,26 @@ void RecvHandler(void *CallBackRef)
 		byte3 = (RxFrame[2] >> 8) & 0xFF;
 		byte4 = RxFrame[2] & 0xFF;
 
-		angle_motor_2 = (int)((byte4 << 8) | byte3);
-		speed_motor_2 = (int)((byte2 << 8) | byte1);
+		angle_motor_2 = (int16_t)((byte4 << 8) | byte3);
+		speed_motor_2 = (int16_t)((byte2 << 8) | byte1);
 
 		byte1 = (RxFrame[3] >> 8) & 0xFF;
 		byte2 = RxFrame[3] & 0xFF;
 
-		torque_motor_2 = (int)((byte2 << 8) | byte1);
+		torque_motor_2 = (int16_t)((byte2 << 8) | byte1);
 	}else if(RxFrame[0] == (u32)XCanPs_CreateIdValue((u32)CAN_MOTOR_3_ID, 0, 0, 0, 0)){
 		byte1 = (RxFrame[2] >> 24) & 0xFF;
 		byte2 = (RxFrame[2] >> 16) & 0xFF;
 		byte3 = (RxFrame[2] >> 8) & 0xFF;
 		byte4 = RxFrame[2] & 0xFF;
 
-		angle_motor_3 = (int)((byte4 << 8) | byte3);
-		speed_motor_3 = (int)((byte2 << 8) | byte1);
+		angle_motor_3 = (int16_t)((byte4 << 8) | byte3);
+		speed_motor_3 = (int16_t)((byte2 << 8) | byte1);
 
 		byte1 = (RxFrame[3] >> 8) & 0xFF;
 		byte2 = RxFrame[3] & 0xFF;
 
-		torque_motor_3 = (int)((byte2 << 8) | byte1);
+		torque_motor_3 = (int16_t)((byte2 << 8) | byte1);
 	}
 	RecvDone = TRUE;
 }

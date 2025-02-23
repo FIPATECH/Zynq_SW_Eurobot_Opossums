@@ -38,13 +38,13 @@ int Last_Timer_Asserv = 0;
 int Asserv_State = 0;
 int Asserv_Odo_Count = 0;
 
-int previous_angle_motor_1 = 0;
-int previous_angle_motor_2 = 0;
-int previous_angle_motor_3 = 0;
+int16_t previous_angle_motor_1 = 0;
+int16_t previous_angle_motor_2 = 0;
+int16_t previous_angle_motor_3 = 0;
 
-int delta_angle_motor_1 = 0;
-int delta_angle_motor_2 = 0;
-int delta_angle_motor_3 = 0;
+int16_t delta_angle_motor_1 = 0;
+int16_t delta_angle_motor_2 = 0;
+int16_t delta_angle_motor_3 = 0;
 
 ESC_Command Consigne;
 ESC_Command Wanted_Forced_Consigne;
@@ -154,21 +154,15 @@ void Asserv_Loop(void)
 
     } else if (Asserv_State == 6) {
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
-            // xil_printf("motor,");
-            // // xil_printf("%d,",Timer_ms1);
-            // // xil_printf("%d,",motion_done);
-            // // xil_printf("%d,",angle_motor_1);
-            // // xil_printf("%d,",angle_motor_2);
-            // // xil_printf("%d,",angle_motor_3);
-            // // xil_printf("%d,",speed_motor_1);
-            // // xil_printf("%d,",speed_motor_2);
-            // // xil_printf("%d,",speed_motor_3);
-            // // xil_printf("%.2f,", (double)(position_robot.x));
-            // // xil_printf("%.2f,", (double)(position_robot.y));
-            // // xil_printf("%.2f,", (double)(position_robot.t));
-            // xil_printf("%.2f,", speed_robot.vx);
-            // xil_printf("%.2f,", speed_robot.vy); 
-            // xil_printf("\n");
+            // printf("motor,");
+            // printf("%d,",Timer_ms1);
+            // printf("%d,",motion_done);
+            // printf("%.2f,", (float)(position_robot.x));
+            // printf("%.2f,", (float)(position_robot.y));
+            // printf("%.2f,", (float)(position_robot.t));
+            // printf("%.2f,", (float)(speed_robot.vx));
+            // printf("%.2f,", (float)(speed_robot.vy)); 
+            // printf("\n");
             Last_Timer_print_pos += auto_printpos_delay;
         }
         Asserv_State = 0;
