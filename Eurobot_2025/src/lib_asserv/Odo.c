@@ -2,8 +2,6 @@
 
 
 /******************************    Variables    *******************************/
-
-float meter_by_tic;
 float robot_wheel_distance;
 
 int16_t old_qeif, old_qeibl, old_qeibr;
@@ -27,15 +25,10 @@ float Speed_1, Speed_2, Speed_3;
 
 // initialiser l'odometrie
 void odo_init(void) {
-    odo_set_tic_by_meter(DEFAULT_ODO_TIC_BY_M);
     odo_set_spacing(DEFAULT_ODO_SPACING);
     old_qeif  = 0;
     old_qeibl = 0;
     old_qeibr = 0;
-}
-// assigner des valeurs aux coefs (relations tic/metre et entraxe)
-void odo_set_tic_by_meter(double param_tic_by_meter) {
-    meter_by_tic      = 1 / (param_tic_by_meter);
 }
 
 // assigner une valeur e l'ecart entre les roues d'odometrie
@@ -43,17 +36,16 @@ void odo_set_spacing(float param_spacing) {
     robot_wheel_distance = param_spacing;
 }
 
-void odo_position_step(float period) {   
-    float dx = (speed_robot.vx * period);
-    float dy = (speed_robot.vy * period);
-    float dt = (speed_robot.vt * period);
-    
-    float rdx = dx*cos(position_robot.t) - dy*sin(position_robot.t);
-    float rdy = dx*sin(position_robot.t) + dy*cos(position_robot.t);
-    // maj des positions
-    position_robot.x += rdx;
-    position_robot.y += rdy;
-    position_robot.t = principal_angle(position_robot.t + dt);
+void odo_position_step(int delta_angle_motor_1, int delta_angle_motor_2, int delta_angle_motor_3) {   
+    // calcul de la distance linéaire parcourue par chaque roues
+    float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
+    float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
+    float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
+
+    // calcul de la distance parcourue par le robot dx dy et dt
+    position_robot.y = 0.5*(dist_motor_1 -(dist_motor_2 + dist_motor_3));
+    position_robot.t = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3*robot_wheel_distance);
+    position_robot.x = -0.5*(dist_motor_2 - dist_motor_3)/sin(PI/3);
 }
 
 void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) {
@@ -76,6 +68,27 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
     acceleration_robot.ax = speed_robot.vx - vx;
     acceleration_robot.ay = speed_robot.vy - vy;
     acceleration_robot.at = speed_robot.vt - vt;
+}
+
+
+float normalisation_angle(int delta_angle) {
+    // convertie l'angle entre 0 et 8191 en angle entre 0 et 360
+    delta_angle = (float)((delta_angle * 360) / 8191);
+    if(delta_angle > 180){
+        delta_angle -= 360;
+    }else if(delta_angle < -180){
+        delta_angle += 360;
+    }
+    return delta_angle;
+}
+
+float odo_dist_roue(int delta_angle_motor) {
+    float delta_angle_norm = normalisation_angle(delta_angle_motor);
+    // Conversion de la variation d'angle en radians
+    float deltaAngleRad = delta_angle_norm * (PI / 180.0);
+    // Calcul de la distance parcourue : arc = rayon * angle
+    double distance = DEFAULT_WHEEL_RADIUS * deltaAngleRad;
+    return distance; // Retourne la distance parcourue
 }
 
 

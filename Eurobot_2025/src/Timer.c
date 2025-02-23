@@ -97,7 +97,7 @@ void TimerIntrHandler(void *CallBackRef)
 	}
 }
 
-void Delay_ms(u32 ms) {
+void Delay_ms(int ms) {
 	u32 old_Timer = Timer_ms1;
 	while (Timer_ms1 - old_Timer < ms);
 }
