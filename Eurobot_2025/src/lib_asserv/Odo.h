@@ -24,7 +24,7 @@ void odo_set_spacing(float param_spacing);
 void odo_position_step(int delta_angle_motor_1, int delta_angle_motor_2, int delta_angle_motor_3);
 
 // maj de la vitesse/acceleration  du robot
-void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3);
+void odo_speed_step(int Rotor_RPM1, int Rotor_RPM2, int Rotor_RPM3);
 
 float normalisation_angle(int delta_angle);
 float odo_dist_roue(int delta_angle_motor);

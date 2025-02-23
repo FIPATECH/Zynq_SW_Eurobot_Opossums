@@ -7,6 +7,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "xil_printf.h"
 
 #include "asserv.h"
 #include "lib_asserv_default.h"

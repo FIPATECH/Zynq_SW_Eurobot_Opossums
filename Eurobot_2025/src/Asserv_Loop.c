@@ -62,6 +62,10 @@ void Init_Asserv(void) {
     old_Consigne.command1 = 0;
     old_Consigne.command2 = 0;
     old_Consigne.command3 = 0;
+
+    asserv_init();
+
+    xil_printf("Asserv Init done\n");
 }
 
 void Asserv_Loop(void)
@@ -74,6 +78,7 @@ void Asserv_Loop(void)
         //-----------------------------------
         if ((Timer_ms1 - Last_Timer_Asserv) > ODO_EVERY_MS) {
             Last_Timer_Asserv += ODO_EVERY_MS;
+            Asserv_Odo_Count ++;
 
             delta_angle_motor_1 = angle_motor_1 - previous_angle_motor_1;
             delta_angle_motor_2 = angle_motor_2 - previous_angle_motor_2;
@@ -142,20 +147,31 @@ void Asserv_Loop(void)
         Asserv_State ++;
 
     } else if (Asserv_State == 5) {
-        
+        motor1_current_order = Consigne.command1;
+        motor2_current_order = Consigne.command2;
+        motor3_current_order = Consigne.command3;
+        Asserv_State ++;
+
+    } else if (Asserv_State == 6) {
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
-            printf("motor,");
-            printf("%d,",Timer_ms1);
-            printf("%d,",motion_done);
-            printf("%.2f,", (double)(position_robot.x));
-            printf("%.2f,", (double)(position_robot.y));
-            printf("%.2f,", (double)(position_robot.t));
-            printf("%.2f,", (double)(speed_robot.vx));
-            printf("%.2f,", (double)(speed_robot.vy)); 
-            printf("\n");
+            // xil_printf("motor,");
+            // // xil_printf("%d,",Timer_ms1);
+            // // xil_printf("%d,",motion_done);
+            // // xil_printf("%d,",angle_motor_1);
+            // // xil_printf("%d,",angle_motor_2);
+            // // xil_printf("%d,",angle_motor_3);
+            // // xil_printf("%d,",speed_motor_1);
+            // // xil_printf("%d,",speed_motor_2);
+            // // xil_printf("%d,",speed_motor_3);
+            // // xil_printf("%.2f,", (double)(position_robot.x));
+            // // xil_printf("%.2f,", (double)(position_robot.y));
+            // // xil_printf("%.2f,", (double)(position_robot.t));
+            // xil_printf("%.2f,", speed_robot.vx);
+            // xil_printf("%.2f,", speed_robot.vy); 
+            // xil_printf("\n");
             Last_Timer_print_pos += auto_printpos_delay;
         }
-        Asserv_State ++;
+        Asserv_State = 0;
         
     } else {
         Asserv_State = 0;

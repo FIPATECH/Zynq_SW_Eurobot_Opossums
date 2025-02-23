@@ -4,15 +4,10 @@
 
 
 uint8_t Move_Cmd(void);
-//uint8_t Move_Avant_Cmd(void);
-//uint8_t Move_Arriere_Cmd(void);
-//uint8_t Move_Seg_Cmd(void);
-//uint8_t Move_Seg_Avant_Cmd(void);
-//uint8_t Move_Seg_Arriere_Cmd(void);
-//uint8_t Move_Courbe_Cmd(void);
+
 uint8_t SPEED_Cmd(void);
 uint8_t Absolute_SPEED_Cmd(void);
-//uint8_t ANGLE_Cmd(void);
+
 uint8_t FREE_Cmd(void);
 uint8_t BLOCK_Cmd(void);
 uint8_t Asserv_Done_Cmd(void);
@@ -23,7 +18,7 @@ uint8_t SETX_Cmd(void);
 uint8_t SETY_Cmd(void);
 uint8_t SETT_Cmd(void);
 uint8_t SET0_Cmd(void);
-//uint8_t Set_Rayon_Courbe_Cmd(void);
+
 uint8_t VMAX_Cmd(void);
 uint8_t VTMAX_Cmd(void);
 uint8_t AMAX_Cmd(void);
@@ -36,7 +31,7 @@ uint8_t Asserv_Mode_Cmd(void);
 uint8_t Param_Asserv_Cmd(void);
 
 uint8_t MaP_Asserv_Cmd(void);
-//uint8_t MaP_PWM_Cmd(void);
+
 void MaP_Asserv_Loop(void);
 
 

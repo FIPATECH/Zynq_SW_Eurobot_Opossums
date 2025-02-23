@@ -13,6 +13,25 @@ const Command Command_List[] = {
     { "HELP", Print_All_CMD_Cmd},
     { "TEST", Test_Interpreteur},
 
+    { "SETX", SETX_Cmd},
+    { "SETY", SETY_Cmd},
+    { "SETT", SETT_Cmd},
+    { "SET0", SET0_Cmd},
+    { "VMAX", VMAX_Cmd},
+    { "VTMAX", VTMAX_Cmd},
+    { "MOVE", Move_Cmd},
+    { "SPEED", SPEED_Cmd},
+    { "ASPEED", Absolute_SPEED_Cmd},
+    { "FREE", FREE_Cmd},
+    { "BLOCK", BLOCK_Cmd},
+    { "PWM1", PWM1_Func},
+    { "PWM2", PWM2_Func},
+    { "PWM3", PWM3_Func},
+    { "ASSERV_MODE", Asserv_Mode_Cmd},
+    { "PARAM", Param_Asserv_Cmd},
+    { "MAP", MaP_Asserv_Cmd},
+    { "GET_POS", Get_Pos_Cmd},
+
     { "MOTOR", Motor_cmd},
     { "SERVO", Servo_cmd}
 };

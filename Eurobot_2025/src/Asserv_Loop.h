@@ -3,17 +3,13 @@
 
 
 // calcul d'un step d'odometrie toutes les 2 ms
-#define ODO_EVERY_MS 1
+#define ODO_EVERY_MS 100
 // asserv tous les 5 steps d'odo
-#define ASSERV_EVERY 5
+#define ASSERV_EVERY 500
 
 #define PWM_BLOCK_LIMIT 90      // % de PWM qui declenche la limite
 #define BLOCK_MAX_TIME  2000    // temps en ms au bout duquel il se verouille
 extern uint16_t Asserv_Full_Count;  // variable a remettre a 0 pour recuperer le droit de bouger en cas de pb..
-
-#define CARD_MOT1_I2C_ADD  0x30
-#define CARD_MOT2_I2C_ADD  0x31
-#define CARD_MOT3_I2C_ADD  0x32
 
 extern float Consigne1, Consigne2, Consigne3;
 extern int16_t Rotor_RPM1;

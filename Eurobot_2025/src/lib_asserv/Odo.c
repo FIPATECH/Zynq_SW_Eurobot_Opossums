@@ -29,6 +29,20 @@ void odo_init(void) {
     old_qeif  = 0;
     old_qeibl = 0;
     old_qeibr = 0;
+
+    position_robot.x = 0;
+    position_robot.y = 0;
+    position_robot.t = 0;
+
+    speed_robot.vx = 0;
+    speed_robot.vy = 0;
+    speed_robot.vt = 0;
+
+    acceleration_robot.ax = 0;
+    acceleration_robot.ay = 0;
+    acceleration_robot.at = 0;
+
+    xil_printf("Odo init done\n");
 }
 
 // assigner une valeur e l'ecart entre les roues d'odometrie
@@ -42,13 +56,16 @@ void odo_position_step(int delta_angle_motor_1, int delta_angle_motor_2, int del
     float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
     float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
 
+    // xil_printf("dist_motor_1 = %f, dist_motor_2 = %f, dist_motor_3 = %f\n", dist_motor_1, dist_motor_2, dist_motor_3);
+
     // calcul de la distance parcourue par le robot dx dy et dt
     position_robot.y = 0.5*(dist_motor_1 -(dist_motor_2 + dist_motor_3));
     position_robot.t = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3*robot_wheel_distance);
     position_robot.x = -0.5*(dist_motor_2 - dist_motor_3)/sin(PI/3);
 }
 
-void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) {
+void odo_speed_step(int Rotor_RPM1, int Rotor_RPM2, int Rotor_RPM3) {
+    printf ("Rotor_RPM1 = %f, Rotor_RPM2 = %f, Rotor_RPM3 = %f\n", (float)Rotor_RPM1, (float)Rotor_RPM2, (float)Rotor_RPM3);
     // vitesse roues en m/s
     Speed_1 = (float)((Rotor_RPM1*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
     Speed_2 = (float)((Rotor_RPM2*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
@@ -73,21 +90,21 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
 
 float normalisation_angle(int delta_angle) {
     // convertie l'angle entre 0 et 8191 en angle entre 0 et 360
-    delta_angle = (float)((delta_angle * 360) / 8191);
-    if(delta_angle > 180){
-        delta_angle -= 360;
-    }else if(delta_angle < -180){
-        delta_angle += 360;
-    }
-    return delta_angle;
+    if (delta_angle == 0) return 0.0;
+
+    return ((float)delta_angle / 360.0) * 8192 - 180.0; 
 }
 
 float odo_dist_roue(int delta_angle_motor) {
+    xil_printf("debug = %d, ", delta_angle_motor);
     float delta_angle_norm = normalisation_angle(delta_angle_motor);
+    xil_printf("%f, ", delta_angle_norm);
     // Conversion de la variation d'angle en radians
     float deltaAngleRad = delta_angle_norm * (PI / 180.0);
+    xil_printf("%f, ", deltaAngleRad);
     // Calcul de la distance parcourue : arc = rayon * angle
-    double distance = DEFAULT_WHEEL_RADIUS * deltaAngleRad;
+    float distance = DEFAULT_WHEEL_RADIUS * deltaAngleRad;
+    xil_printf("%f\n", distance);
     return distance; // Retourne la distance parcourue
 }
 

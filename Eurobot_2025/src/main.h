@@ -32,6 +32,7 @@
 
 //asserv part 
 #include "Asserv_Loop.h"
+#include "Cmd_For_Move.h"
 
 
 //com part
