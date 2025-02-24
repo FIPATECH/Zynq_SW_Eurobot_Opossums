@@ -152,6 +152,7 @@ void Asserv_Loop(void)
             printf("motor,");
             printf("%d,",Timer_ms1);
             printf("%d,",motion_done);
+            // print angle_motor
             printf("%.2f,", (float)(position_robot.x));
             printf("%.2f,", (float)(position_robot.y));
             printf("%.2f,", (float)(position_robot.t));

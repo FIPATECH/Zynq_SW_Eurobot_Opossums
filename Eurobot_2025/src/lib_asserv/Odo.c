@@ -4,17 +4,6 @@
 /******************************    Variables    *******************************/
 float robot_wheel_distance;
 
-int16_t old_qeif, old_qeibl, old_qeibr;
-
-float Odo_Cumul_dx = 0;
-float Odo_Cumul_dy = 0;
-float Odo_Cumul_dt = 0;
-
-float Odo_Cumul_d1  = 0;
-float Odo_Cumul_d2 = 0;
-float Odo_Cumul_d3 = 0;
-
-
 Position position_robot;    // en repere absolu
 Speed speed_robot;                  // en repere relatif
 Acceleration acceleration_robot;    // en repere relatif
@@ -26,9 +15,6 @@ float Speed_1, Speed_2, Speed_3;
 // initialiser l'odometrie
 void odo_init(void) {
     odo_set_spacing(DEFAULT_ODO_SPACING);
-    old_qeif  = 0;
-    old_qeibl = 0;
-    old_qeibr = 0;
 
     position_robot.x = 0;
     position_robot.y = 0;
@@ -52,36 +38,17 @@ void odo_set_spacing(float param_spacing) {
 
 void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2, int16_t delta_angle_motor_3) {   
     // calcul de la distance linéaire parcourue par chaque roues
-    // float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
-    // float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
-    // float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
+    float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
+    float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
+    float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
 
-    // Odo_Cumul_d1 += dist_motor_1;
-    // Odo_Cumul_d2 += dist_motor_2;
-    // Odo_Cumul_d3 += dist_motor_3;
+    float dx = -0.5*(dist_motor_2 - dist_motor_3)/sin(PI/3);
+    float dy = 0.5*(dist_motor_1 -(dist_motor_2 + dist_motor_3));
+    float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3*robot_wheel_distance);
 
-    // float dx = -0.5*(dist_motor_2 - dist_motor_3)/sin(PI/3);
-    // float dy = 0.5*(dist_motor_1 -(dist_motor_2 + dist_motor_3));
-    // float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3*robot_wheel_distance);
-
-    // Odo_Cumul_dx += dx;
-    // Odo_Cumul_dy += dy;
-    // Odo_Cumul_dt += dt;
-
-    // float rdx = dx*cos(position_robot.t) - dy*sin(position_robot.t);
-    // float rdy = dx*sin(position_robot.t) + dy*cos(position_robot.t);
-
-    // position_robot.x += rdx;
-    // position_robot.y += rdy;
-    // position_robot.t = principal_angle(position_robot.t + dt);
-
-    float dx = (speed_robot.vx * 0.001);
-    float dy = (speed_robot.vy * 0.001);
-    float dt = (speed_robot.vt * 0.001);
-    
     float rdx = dx*cos(position_robot.t) - dy*sin(position_robot.t);
     float rdy = dx*sin(position_robot.t) + dy*cos(position_robot.t);
-    // maj des positions
+
     position_robot.x += rdx;
     position_robot.y += rdy;
     position_robot.t = principal_angle(position_robot.t + dt);
@@ -89,7 +56,7 @@ void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2,
 }
 
 float odo_dist_roue(int16_t delta_angle_motor) {
-    static const float facteur_conversion = TWO_PI / MOTOR_ANGLE_CODEUR_MAX; // Conversion en radian
+    static const float facteur_conversion = TWO_PI / (MOTOR_ANGLE_CODEUR_MAX * 36); // Conversion en radian
 
     // Calcul de la variation d'angle normalisée
     if (delta_angle_motor > (MOTOR_ANGLE_CODEUR_MAX / 2)) {
@@ -105,7 +72,7 @@ float odo_dist_roue(int16_t delta_angle_motor) {
 
 void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) {
     // vitesse roues en m/s
-    Speed_1 = (float)((Rotor_RPM1*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
+    Speed_1 = (float)((Rotor_RPM1*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0)); //36 reducteur du moteur
     Speed_2 = (float)((Rotor_RPM2*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
     Speed_3 = (float)((Rotor_RPM3*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
 
