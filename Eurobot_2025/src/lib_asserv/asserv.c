@@ -3,6 +3,7 @@
 #include "../main.h"
 #include "lib_asserv.h"
 
+
 // ******************************    Variables    *******************************
 int asserv_mode;
 int motion_done;
@@ -174,8 +175,8 @@ void pos_asserv_step(void) {
     float cos_t = cos(t);
     float sin_t = sin(t);
     
-    speed_order_d = pid_distx(d);
- 
+    speed_order_d = pid_position_processing(&pid_dist, d);
+
     speed_order_d = limit_float(speed_order_d, -v_max, v_max);
     speed_order_d = limit_float(speed_order_d, v_constrained - a_max, v_constrained + a_max);
     v_constrained = speed_order_d;
@@ -185,7 +186,7 @@ void pos_asserv_step(void) {
         
     speed_order.vx = speed_order_dx*cos_t + speed_order_dy*sin_t;
     speed_order.vy = -speed_order_dx*sin_t + speed_order_dy*cos_t;
-    speed_order.vt = pid_angle(dt);
+    speed_order.vt = pid_position_processing(&pid_angle, dt);
     Pid_Speed_En = 1; 
     
     

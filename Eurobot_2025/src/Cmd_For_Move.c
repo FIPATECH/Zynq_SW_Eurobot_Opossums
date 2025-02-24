@@ -255,50 +255,34 @@ uint8_t Param_Asserv_Cmd(void) {
 
     else if(Param == 20){
         printf("PID_Dist_X\n");
-        printf("KP %f\n", (double)(distx_kp));
-        printf("KI %f\n", (double)(distx_ki));
-        printf("KD %f\n", (double)(distx_kd));
+        printf("KP %f\n", (double)(pid_dist.coef.kp));
+        printf("KI %f\n", (double)(pid_dist.coef.ki));
+        printf("KD %f\n", (double)(pid_dist.coef.kd));
     } else if(Param == 21){
-        distx_kp = valf2;
-        printf("Set PID_Dist_X KP to %f\n", (double)(distx_kp));
+        pid_dist.coef.kp = valf2;
+        printf("Set PID_Dist_X KP to %f\n", (double)(pid_dist.coef.kp));
     } else if(Param == 22){
-        distx_ki = valf2;
-        printf("Set PID_Dist_X KI to %f\n", (double)(distx_ki));
+        pid_dist.coef.ki = valf2;
+        printf("Set PID_Dist_X KI to %f\n", (double)(pid_dist.coef.ki));
     } else if(Param == 23){
-        distx_kd = valf2;
-        printf("Set PID_Dist_X KD to %f\n", (double)(distx_kd));
-    } 
-
-    else if(Param == 30){
-        printf("PID_Dist_Y\n");
-        printf("KP %f\n", (double)(disty_kp));
-        printf("KI %f\n", (double)(disty_ki));
-        printf("KD %f\n", (double)(disty_kd));
-    } else if(Param == 31){
-        disty_kp = valf2;
-        printf("Set PID_Dist_Y KP to %f\n", (double)(disty_kp));
-    } else if(Param == 32){
-        disty_ki = valf2;
-        printf("Set PID_Dist_Y KI to %f\n", (double)(disty_ki));
-    } else if(Param == 33){
-        disty_kd = valf2;
-        printf("Set PID_Dist_Y KD to %f\n", (double)(disty_kd));
+        pid_dist.coef.kd = valf2;
+        printf("Set PID_Dist_X KD to %f\n", (double)(pid_dist.coef.kd));
     } 
 
     else if(Param == 40){
         printf("PID_ANGLE\n");
-        printf("KP %f\n", (double)(angle_kp));
-        printf("KI %f\n", (double)(angle_ki));
-        printf("KD %f\n", (double)(angle_kd));
+        printf("KP %f\n", (double)(pid_angle.coef.kp));
+        printf("KI %f\n", (double)(pid_angle.coef.ki));
+        printf("KD %f\n", (double)(pid_angle.coef.kd));
     } else if(Param == 41){
-        angle_kp = valf2;
-        printf("Set PID_ANGLE KP to %f\n", (double)(angle_kp));
+        pid_angle.coef.kp = valf2;
+        printf("Set PID_ANGLE KP to %f\n", (double)(pid_angle.coef.kp));
     } else if(Param == 42){
-        angle_ki = valf2;
-        printf("Set PID_ANGLE KI to %f\n", (double)(angle_ki));
+        pid_angle.coef.ki = valf2;
+        printf("Set PID_ANGLE KI to %f\n", (double)(pid_angle.coef.ki));
     } else if(Param == 43){
-        angle_kd = valf2;
-        printf("Set PID_ANGLE KD to %f\n", (double)(angle_kd));
+        pid_angle.coef.kd = valf2;
+        printf("Set PID_ANGLE KD to %f\n", (double)(pid_angle.coef.kd));
     }
 
     return 0;
