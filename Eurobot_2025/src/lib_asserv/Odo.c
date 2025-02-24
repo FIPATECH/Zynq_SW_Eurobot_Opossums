@@ -86,19 +86,18 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
 }
 
 
-float normalisation_angle(int16_t delta_angle) {
-    // convertie l'angle entre 0 et 8191 en angle entre 0 et 360
-    if (delta_angle == 0) return 0.0;
-
-    return ((float)delta_angle / 360.0) * 8192 - 180.0; 
-}
-
 float odo_dist_roue(int16_t delta_angle_motor) {
-    float delta_angle_norm = normalisation_angle(delta_angle_motor);
-    // Conversion de la variation d'angle en radians
-    float deltaAngleRad = delta_angle_norm * (PI / 180.0);
-    // Calcul de la distance parcourue : arc = rayon * angle
-    float distance = DEFAULT_WHEEL_RADIUS * deltaAngleRad;
+    static const float facteur_conversion = TWO_PI / MOTOR_ANGLE_CODEUR_MAX;
+
+    // Calcul de la variation d'angle normalisée
+    if (delta_angle_motor > (MOTOR_ANGLE_CODEUR_MAX / 2)) {
+        delta_angle_motor -= MOTOR_ANGLE_CODEUR_MAX;
+    } else if (delta_angle_motor < -(MOTOR_ANGLE_CODEUR_MAX / 2)) {
+        delta_angle_motor += MOTOR_ANGLE_CODEUR_MAX;
+    }
+
+    float deltaAngleRad = delta_angle_motor * facteur_conversion; // Conversion en radian
+    float distance = DEFAULT_WHEEL_RADIUS * deltaAngleRad; // Calcul de la distance parcourue
     return distance; // Retourne la distance parcourue
 }
 

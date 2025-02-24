@@ -50,11 +50,11 @@
 /*############################################################################*/
 
 // 2 PID lies a l'asserv en position (dist: position absolue, angle: position angulaire)
-#define DEFAULT_PID_DIST_KP 3 // kp   
+#define DEFAULT_PID_DIST_KP 1 // kp   
 #define DEFAULT_PID_DIST_KI 0 //ki    
 #define DEFAULT_PID_DIST_KD 0  //kd     
 
-#define DEFAULT_PID_ANGLE_KP 3 // kp
+#define DEFAULT_PID_ANGLE_KP 1 // kp
 #define DEFAULT_PID_ANGLE_KI 0 //ki
 #define DEFAULT_PID_ANGLE_KD 0 //kd    
 

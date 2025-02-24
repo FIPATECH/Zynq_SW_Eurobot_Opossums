@@ -3,7 +3,7 @@
 
 
 // calcul d'un step d'odometrie toutes les 2 ms
-#define ODO_EVERY_MS 2
+#define ODO_EVERY_MS 1
 // asserv tous les 5 steps d'odo
 #define ASSERV_EVERY 5
 

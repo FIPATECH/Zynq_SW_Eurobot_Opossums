@@ -19,4 +19,6 @@
 #include "speed_constrainer.h"
 #include "tools_asserv.h"
 
+#include "Motor_info.h"
+
 #endif // _LIB_ASSERV_H_
