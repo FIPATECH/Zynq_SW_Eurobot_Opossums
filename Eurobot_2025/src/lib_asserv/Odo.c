@@ -10,9 +10,9 @@ float Odo_Cumul_dx = 0;
 float Odo_Cumul_dy = 0;
 float Odo_Cumul_dt = 0;
 
-float Odo_Cumul_df  = 0;
-float Odo_Cumul_dbl = 0;
-float Odo_Cumul_dbr = 0;
+float Odo_Cumul_d1  = 0;
+float Odo_Cumul_d2 = 0;
+float Odo_Cumul_d3 = 0;
 
 
 Position position_robot;    // en repere absolu
@@ -52,15 +52,55 @@ void odo_set_spacing(float param_spacing) {
 
 void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2, int16_t delta_angle_motor_3) {   
     // calcul de la distance linéaire parcourue par chaque roues
-    float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
-    float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
-    float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
-    // calcul de la distance parcourue par le robot dx dy et dt
-    position_robot.x += -0.5*(dist_motor_2 - dist_motor_3)/sin(PI/3);
-    position_robot.y += 0.5*(dist_motor_1 -(dist_motor_2 + dist_motor_3));
-    position_robot.t += -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3*robot_wheel_distance);
+    // float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
+    // float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
+    // float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
 
-    // printf("x = %f, y = %f, t = %f\n", position_robot.x, position_robot.y, position_robot.t);
+    // Odo_Cumul_d1 += dist_motor_1;
+    // Odo_Cumul_d2 += dist_motor_2;
+    // Odo_Cumul_d3 += dist_motor_3;
+
+    // float dx = -0.5*(dist_motor_2 - dist_motor_3)/sin(PI/3);
+    // float dy = 0.5*(dist_motor_1 -(dist_motor_2 + dist_motor_3));
+    // float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3*robot_wheel_distance);
+
+    // Odo_Cumul_dx += dx;
+    // Odo_Cumul_dy += dy;
+    // Odo_Cumul_dt += dt;
+
+    // float rdx = dx*cos(position_robot.t) - dy*sin(position_robot.t);
+    // float rdy = dx*sin(position_robot.t) + dy*cos(position_robot.t);
+
+    // position_robot.x += rdx;
+    // position_robot.y += rdy;
+    // position_robot.t = principal_angle(position_robot.t + dt);
+
+    float dx = (speed_robot.vx * 0.001);
+    float dy = (speed_robot.vy * 0.001);
+    float dt = (speed_robot.vt * 0.001);
+    
+    float rdx = dx*cos(position_robot.t) - dy*sin(position_robot.t);
+    float rdy = dx*sin(position_robot.t) + dy*cos(position_robot.t);
+    // maj des positions
+    position_robot.x += rdx;
+    position_robot.y += rdy;
+    position_robot.t = principal_angle(position_robot.t + dt);
+
+}
+
+float odo_dist_roue(int16_t delta_angle_motor) {
+    static const float facteur_conversion = TWO_PI / MOTOR_ANGLE_CODEUR_MAX; // Conversion en radian
+
+    // Calcul de la variation d'angle normalisée
+    if (delta_angle_motor > (MOTOR_ANGLE_CODEUR_MAX / 2)) {
+        delta_angle_motor -= MOTOR_ANGLE_CODEUR_MAX;
+    } else if (delta_angle_motor < -(MOTOR_ANGLE_CODEUR_MAX / 2)) {
+        delta_angle_motor += MOTOR_ANGLE_CODEUR_MAX;
+    }
+
+    float deltaAngleRad = delta_angle_motor * facteur_conversion; // Conversion en radian
+    float distance = DEFAULT_WHEEL_RADIUS * deltaAngleRad; // Calcul de la distance parcourue
+    return distance; // Retourne la distance parcourue
 }
 
 void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) {
@@ -83,22 +123,6 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
     acceleration_robot.ax = speed_robot.vx - vx;
     acceleration_robot.ay = speed_robot.vy - vy;
     acceleration_robot.at = speed_robot.vt - vt;
-}
-
-
-float odo_dist_roue(int16_t delta_angle_motor) {
-    static const float facteur_conversion = TWO_PI / MOTOR_ANGLE_CODEUR_MAX;
-
-    // Calcul de la variation d'angle normalisée
-    if (delta_angle_motor > (MOTOR_ANGLE_CODEUR_MAX / 2)) {
-        delta_angle_motor -= MOTOR_ANGLE_CODEUR_MAX;
-    } else if (delta_angle_motor < -(MOTOR_ANGLE_CODEUR_MAX / 2)) {
-        delta_angle_motor += MOTOR_ANGLE_CODEUR_MAX;
-    }
-
-    float deltaAngleRad = delta_angle_motor * facteur_conversion; // Conversion en radian
-    float distance = DEFAULT_WHEEL_RADIUS * deltaAngleRad; // Calcul de la distance parcourue
-    return distance; // Retourne la distance parcourue
 }
 
 

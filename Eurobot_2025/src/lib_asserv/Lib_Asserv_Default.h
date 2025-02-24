@@ -6,7 +6,6 @@
 /*############################################################################*/
 
 // {tic/m, m/tic, entre roues}
-#define DEFAULT_ODO_TIC_BY_M 6140
 #define DEFAULT_ODO_SPACING  0.115
 #define DEFAULT_SIZE_WHEEL 0.0575 // 6cm
 #define DEFAULT_WHEEL_RADIUS DEFAULT_SIZE_WHEEL/2 // 3cm
