@@ -3,10 +3,10 @@
 
 /******************************    Variables    *******************************/
 // coefficient du PID (proportionnel, integrale, derivee) et leurs coefs de moyennage pour l'asserv en position (dist)
-PID pid_dist;
+PID_pos pid_dist;
 
 //coefficient du PID (proportionnel, integrale, derivee) et leurs coefs de moyennage pour l'asserv en position (angle)
-PID pid_angle;
+PID_pos pid_angle;
 
 /******************************    Fonctions    *******************************/
 void pid_position_init(void) {
@@ -35,7 +35,7 @@ void pid_position_reset(void) {
 }
 
 /******************************    Fonctions Utilitaires   *******************************/
-float pid_position_processing (PID *pid, float err) {
+float pid_position_processing (PID_pos *pid, float err) {
 	// maj de la derivee de l'erreur du PID
     float pid_distx_derr = err - pid->err.err;
 
