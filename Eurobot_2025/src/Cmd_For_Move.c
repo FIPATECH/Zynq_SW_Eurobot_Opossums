@@ -238,19 +238,19 @@ uint8_t Param_Asserv_Cmd(void) {
 
     int Param = valf1;
     if (Param == 10) {
-       printf("V_Lin\n");
-       printf("KP %f\n", (double)(v_kp));
-       printf("KI %f\n", (double)(v_ki));
-       printf("KD %f\n", (double)(v_kd));
+        printf("V_Lin\n");
+        printf("KP %f\n", (double)(pid_speed.coef.kp));
+        printf("KI %f\n", (double)(pid_speed.coef.ki));
+        printf("KD %f\n", (double)(pid_speed.coef.kd));
     } else if (Param == 11) {
-       v_kp = valf2;
-       printf("Set V_Lin KP to %f\n", (double)(v_kp));
+        pid_speed.coef.kp = valf2;
+        printf("Set V_Lin KP to %f\n", (double)(pid_speed.coef.kp));
     } else if (Param == 12) {
-       v_ki = valf2;
-       printf("Set V_Lin KI to %f\n", (double)(v_ki));
+        pid_speed.coef.ki = valf2;
+        printf("Set V_Lin KI to %f\n", (double)(pid_speed.coef.ki));
     } else if (Param == 13) {
-       v_kd = valf2;
-       printf("Set V_Lin KD to %f\n", (double)(v_kd));
+        pid_speed.coef.kd = valf2;
+        printf("Set V_Lin KD to %f\n", (double)(pid_speed.coef.kd));
     }
 
     else if(Param == 20){
