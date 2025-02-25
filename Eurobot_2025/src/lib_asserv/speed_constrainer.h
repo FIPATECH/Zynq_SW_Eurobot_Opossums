@@ -23,10 +23,4 @@ void set_Constraint_vt_max(float vt_max);
 
 void set_Constraint_acceleration_xy_max(float a_max, float at_max);
 
-float tau_calculation(float step, float acc_max, float period);
-void third_order_profile_generator_vx(void);
-void third_order_profile_generator_vy(void);
-void third_order_profile_generator_vt(void);
-void third_order_profile_generator_v(void);
-
 #endif // _ASSERV_H_
