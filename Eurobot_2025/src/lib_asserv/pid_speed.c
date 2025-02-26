@@ -28,7 +28,8 @@ void pid_vitesse_reset (void) {
 }
 
 /******************************    Fonctions Utilitaires   *******************************/
-float pid_speed_processing (PID_speed *pid, float err1, float err2, float err3) {
+ESC_Command pid_speed_processing (PID_speed *pid, float err1, float err2, float err3) {
+    ESC_Command commande;
     if (Pid_Speed_En) {
         //maj de la derivee de l'erreur du PID
         pid->err1.err_der = err1 - pid->err1.err;
@@ -62,12 +63,16 @@ float pid_speed_processing (PID_speed *pid, float err1, float err2, float err3) 
             float min_int = (MOTOR_POWER_MIN - (pid->err3.err * pid->coef.kp)) / pid->coef.ki;
             pid->err3.err_int = limit_float(pid->err3.err_int, min_int, max_int);
         }
-        return (pid->err1.err * pid->coef.kp) + (pid->err1.err_int * pid->coef.ki) + (pid->err1.err_der * pid->coef.kd),
-               (pid->err2.err * pid->coef.kp) + (pid->err2.err_int * pid->coef.ki) + (pid->err2.err_der * pid->coef.kd),
-               (pid->err3.err * pid->coef.kp) + (pid->err3.err_int * pid->coef.ki) + (pid->err3.err_der * pid->coef.kd);
+        commande.command1 = pid->coef.kp * pid->err1.err + pid->coef.ki * pid->err1.err_int + pid->coef.kd * pid->err1.err_der;
+        commande.command2 = pid->coef.kp * pid->err2.err + pid->coef.ki * pid->err2.err_int + pid->coef.kd * pid->err2.err_der;
+        commande.command3 = pid->coef.kp * pid->err3.err + pid->coef.ki * pid->err3.err_int + pid->coef.kd * pid->err3.err_der;
+        return commande;
     } else {
         pid_vitesse_reset();
-        return 0, 0, 0;
+        commande.command1 = 0;
+        commande.command2 = 0;
+        commande.command3 = 0;
+        return commande;
     }
 }
 

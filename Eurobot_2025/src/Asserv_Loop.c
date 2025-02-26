@@ -1,6 +1,5 @@
 #include "main.h"
-#include "lib_asserv/lib_asserv.h"
-
+#include "lib_asserv/Lib_Asserv.h"
 
 u32 Last_Timer_print_pos = 0;
 
@@ -112,7 +111,7 @@ void Asserv_Loop(void)
         //-----------------------------------
         // consigne
         //-----------------------------------
-        Asserv_PWM_calculator(&Consigne.command1, &Consigne.command2, &Consigne.command3);
+        Asserv_PWM_calculator(&Consigne);
         Asserv_State ++;
 
 

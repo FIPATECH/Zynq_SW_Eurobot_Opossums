@@ -10,12 +10,17 @@ typedef struct {
     float t; // en radian
 } Position;
 
+
+
 // Vitesse et vitesse angulaire du robot
 typedef struct {
     float vx; // en m/s
     float vy; // en m/s
     float vt; // en rad/s
 } Speed;
+
+extern Position Wanted_Pos;
+extern Speed Wanted_Speed;
 
 // acceleration du robot (dv/dt,  d2theta/dt2   et   v*(dtheta/dt))
 typedef struct {
@@ -48,5 +53,16 @@ typedef struct {
     PID_err err2;
     PID_err err3;
 } PID_speed;
+
+
+typedef struct{
+    float command1;
+    float command2;
+    float command3;
+} ESC_Command;
+
+extern ESC_Command Consigne;
+extern ESC_Command Wanted_Forced_Consigne;
+extern ESC_Command old_Consigne;
 
 #endif

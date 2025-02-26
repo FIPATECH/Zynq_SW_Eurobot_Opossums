@@ -20,9 +20,6 @@ extern float blocked_time;
 extern float current_stop_distance;
 extern float default_stop_distance;
 
-extern Position Wanted_Pos;
-extern Speed Wanted_Speed;
-
 
 /******************************    Fonctions    *******************************/
 
