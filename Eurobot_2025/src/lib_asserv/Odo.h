@@ -1,10 +1,8 @@
 #ifndef __ODO_H_
 #define __ODO_H_
 
-extern Acceleration acceleration_robot;
-extern Speed speed_robot;
+
 extern float Speed_1, Speed_2, Speed_3;
-extern Position position_robot;
 
 extern float robot_wheel_distance;
 
