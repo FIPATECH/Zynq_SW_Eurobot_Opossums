@@ -7,6 +7,8 @@
 #include <string.h>
 #include <math.h>
 
+#include "Asserv_type.h"
+
 #include "xil_printf.h"
 
 #include "asserv.h"
@@ -20,5 +22,7 @@
 #include "tools_asserv.h"
 
 #include "Motor_info.h"
+
+
 
 #endif // _LIB_ASSERV_H_

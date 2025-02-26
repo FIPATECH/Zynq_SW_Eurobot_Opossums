@@ -16,16 +16,6 @@ extern int16_t Rotor_RPM1;
 extern int16_t Rotor_RPM2;
 extern int16_t Rotor_RPM3;
 
-typedef struct{
-    float command1;
-    float command2;
-    float command3;
-} ESC_Command;
-
-extern ESC_Command Consigne;
-extern ESC_Command Wanted_Forced_Consigne;
-extern ESC_Command old_Consigne;
-
 
 void Init_Asserv(void);
 

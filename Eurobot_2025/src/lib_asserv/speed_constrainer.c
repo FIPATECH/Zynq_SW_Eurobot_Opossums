@@ -73,67 +73,6 @@ void constrain_speed_order(float period) {
 
 }
 
-float tau_calculation(float step, float acc_max, float period) {
-    if(step != 0){
-        return (6*acc_max)/(1000.0*step);
-    }else{
-        return 0;
-    }
-}
-
-void third_order_profile_generator_v(void){
-    float v1, v2, v3;
-    v1 = old_vx1 + tau_x*(v_o - old_vx1);
-    v2 = old_vx2 + tau_x*(v1 - old_vx2);
-    v3 = old_vx3 + tau_x*(v2 - old_vx3);
-
-    old_vx1 = v1;
-    old_vx2 = v2;
-    old_vx3 = v3;
-    
-    v_o = v3; 
-}
-
-void third_order_profile_generator_vx(void){
-    float v1, v2, v3;
-    v1 = old_vx1 + tau_x*(vx_o - old_vx1);
-    v2 = old_vx2 + tau_x*(v1 - old_vx2);
-    v3 = old_vx3 + tau_x*(v2 - old_vx3);
-
-    old_vx1 = v1;
-    old_vx2 = v2;
-    old_vx3 = v3;
-    
-    vx_o = v3; 
-}
-
-void third_order_profile_generator_vy(void){
-    float v1, v2, v3;
-    v1 = old_vy1 + tau_y*(vy_o - old_vy1);
-    v2 = old_vy2 + tau_y*(v1 - old_vy2);
-    v3 = old_vy3 + tau_y*(v2 - old_vy3);
-
-    old_vy1 = v1;
-    old_vy2 = v2;
-    old_vy3 = v3;
-    
-    vy_o = v3;
-}
-
-void third_order_profile_generator_vt(void){
-    float v1, v2, v3;
-    v1 = old_vt1 + tau_t*(vt_o - old_vt1);
-    v2 = old_vt2 + tau_t*(v1 - old_vt2);
-    v3 = old_vt3 + tau_t*(v2 - old_vt3);
-
-    old_vt1 = v1;
-    old_vt2 = v2;
-    old_vt3 = v3;
-    
-    vt_o = v3;
-}
-
-
 void set_Constraint_vitesse_xy_max(float v_max) {
     if (v_max != 0) {
         if (v_max <= DEFAULT_CONSTRAINT_V_MAX) {

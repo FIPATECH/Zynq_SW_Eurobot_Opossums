@@ -7,37 +7,9 @@
 #define ASSERV_MODE_FREE 1
 
 #define ASSERV_MODE_POS 10
-//#define ASSERV_MODE_POS_COURBE 11
-//#define ASSERV_MODE_POS_SEGMENT 12
-
-//#define ASSERV_MODE_ANGLE 20
-
 #define ASSERV_MODE_SPEED 30
 #define ASSERV_MODE_ABSOLUTE_SPEED 31
 
-/*****************************    Structures    *******************************/
-
-// Position absolue du robot (x, y, et theta)
-typedef struct {
-    float x; // en metre
-    float y; // en metre
-    float t; // en radian
-} Position;
-
-// Vitesse et vitesse angulaire du robot
-typedef struct {
-    float vx; // en m/s
-    float vy; // en m/s
-    float vt; // en rad/s
-} Speed;
-
-
-// acc�l�ration du robot (dv/dt,  d2theta/dt2   et   v*(dtheta/dt))
-typedef struct {
-    float ax; // en m/s2
-    float ay; // en m/s2
-    float at; // en rad/s2
-} Acceleration;
 
 extern int motion_done;
 
@@ -47,9 +19,6 @@ extern float blocked_time;
 
 extern float current_stop_distance;
 extern float default_stop_distance;
-
-extern Position Wanted_Pos;
-extern Speed Wanted_Speed;
 
 
 /******************************    Fonctions    *******************************/
