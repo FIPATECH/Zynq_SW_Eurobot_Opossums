@@ -3,23 +3,22 @@
 LED led[NBR_LED];
 LED color;
 
+// XGpio LED_ADDR;
+XGpio LED_DATA;
+
 int LED_old_timer_ms1 = 0;
 
-volatile uint32_t* ws2812 = (uint32_t*)WS2812_BASEADDR;
-
-#define LED_ADDR ((volatile uint32_t*)0x60000000)
-
 void ws2812b_init(){
+    // XGpio_Initialize(&LED_ADDR, XPAR_AXI_GPIO_24_DEVICE_ID);
+    XGpio_Initialize(&LED_DATA, XPAR_AXI_GPIO_25_DEVICE_ID);
+
+    // XGpio_SetDataDirection(&LED_ADDR, 1, 0);
+    XGpio_SetDataDirection(&LED_DATA, 1, 0);
+
     for (int i = 0; i < NBR_LED; i++){
-        if (i % 2 == 0){
-            led[i].red = 255;
-            led[i].green = 0;
-            led[i].blue = 0;
-        }else{
-            led[i].red = 0;
-            led[i].green = 255;
-            led[i].blue = 0;
-        }
+        led[i].red = 0;
+        led[i].green = 0;
+        led[i].blue = 0;
     }
 }
 
@@ -28,27 +27,32 @@ void ws2812b_set_color(int led_id, LED color){
     if (led_id < 0 || led_id > NBR_LED){
         xil_printf("LED id out of range\n\r");
     }else{
-        uint32_t led_color = (color.red << 16) | (color.green << 8) | color.blue;
-        // ws2812[led_id] = led_color; 
-        LED_ADDR[led_id] = led_color;   
+        led[led_id] = color;   
     }
 }
 
-void start_transfer(){
-//    volatile uint32_t* ws2812 = (uint32_t*)WS2812_BASEADDR;
-//    ws2812[NBR_LED] = 1;
-}
 
-
+uint32_t led_id = 0;
+uint32_t led_color = 0;
 
 void LED_loop(){
-    if (Timer_ms1 - LED_old_timer_ms1 > 10){
+    if (Timer_ms1 - LED_old_timer_ms1 > 1){
         LED_old_timer_ms1 = Timer_ms1;
-        for (int i = 0; i < NBR_LED; i++){
-            ws2812b_set_color(i, led[i]);
-        }
-        start_transfer();
+
+        // ws2812b_set_color(led_id, led[led_id]);
+        // XGpio_DiscreteWrite(&LED_ADDR, 1, led_id);
+        XGpio_DiscreteWrite(&LED_DATA, 1, led_color);
+            
+        
     }
+}
+
+void LED_AU(void){
+    led_color = DEFAULT_RED;
+}
+
+void LED_GREEN(void){
+    led_color = DEFAULT_GREEN;
 }
 
 uint8_t LED_cmd(void) {
@@ -72,48 +76,8 @@ uint8_t LED_cmd(void) {
         xil_printf("Color out of range\n\r");
     }else {
         xil_printf("LED number %d, color: %d, %d, %d\n\r", id, red, green, blue);
-        led[id].red = red;
-        led[id].green = green;
-        led[id].blue = blue;
+        led_color = (green << 16) | (red << 8) | blue;
     }
     return 0;
 }
 
-
-int AU_led_counter = 0;
-int AU_led_old_timer_ms1 = 0;
-int on_off_loop_status = 0;
-// chenillard led rouge 
-void AU_led_loop(){
-    if (Timer_ms1 - AU_led_old_timer_ms1 >= 100) {
-        // xil_printf("AU_led_loop\n\r");
-        AU_led_old_timer_ms1 = Timer_ms1;
-        if (on_off_loop_status == 0){
-            // led[AU_led_counter].red = 0;
-            // led[AU_led_counter].green = 100;
-            // led[AU_led_counter].blue = 0;
-            // ws2812b_set_color(AU_led_counter, led[AU_led_counter]);
-            // AU_led_counter++;
-            // if (AU_led_counter == NBR_LED - 1){
-            //     on_off_loop_status = 1;
-            //     AU_led_counter = 0;
-            // }
-            for (int i = 0; i < NBR_LED; i++){
-                led[i].red = 0;
-                led[i].green = 255;
-                led[i].blue = 0;
-                ws2812b_set_color(i, led[i]);
-            }
-        }else{
-            led[AU_led_counter].red = 255;
-            led[AU_led_counter].green = 0;
-            led[AU_led_counter].blue = 0;
-            ws2812b_set_color(AU_led_counter, led[AU_led_counter]);
-            AU_led_counter++;
-            if (AU_led_counter == NBR_LED - 1){
-                on_off_loop_status = 0;
-                AU_led_counter = 0;
-            }
-        }
-    }
-}

@@ -1,4 +1,5 @@
-#define WS2812_BASEADDR XPAR_AXI_DRAM_INTERFACE_0_BASEADDR
+// #define AXI_LED_ADDR XPAR_AXI_GPIO_24_BASEADDR
+#define AXI_LED_DATA XPAR_AXI_GPIO_25_BASEADDR
 
 #define NBR_LED 44
 
@@ -19,6 +20,8 @@ void start_transfer();
 
 void LED_loop();
 
+void LED_AU(void);
+void LED_GREEN(void);
+
 uint8_t LED_cmd(void);
 
-void AU_led_loop();

@@ -68,10 +68,10 @@ int main()
         if(AU_state == 1){
             Asserv_Loop();
             Can_Loop();
-
+            LED_GREEN();
             PWM_Loop();
         }else{
-            AU_led_loop();
+            LED_AU();
         }
     }
     cleanup_platform();
