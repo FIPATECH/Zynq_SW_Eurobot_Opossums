@@ -47,6 +47,7 @@ int main()
 //    PWM_Init();
     Std_Com_Init();
     // init_AU();
+    Init_Pump();
     Init_Asserv();
     xil_printf("Init done\n\r");
 
@@ -62,7 +63,7 @@ int main()
 
 //        AU_Loop();
         Std_Com_Loop();
-
+        Pump_Loop();
         // if(AU_state == 0){
             // xil_printf("AU_state = 0\n\r");
            Asserv_Loop();

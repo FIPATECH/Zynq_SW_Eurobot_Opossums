@@ -13,6 +13,10 @@ const Command Command_List[] = {
     { "HELP", Print_All_CMD_Cmd},
     { "TEST", Test_Interpreteur},
 
+    { "PUMP", Pump_cmd},
+
+    { "PDE", Activate_Position_Sending_Func},
+
     { "SETX", SETX_Cmd},
     { "SETY", SETY_Cmd},
     { "SETT", SETT_Cmd},
