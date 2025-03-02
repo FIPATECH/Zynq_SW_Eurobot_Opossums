@@ -25,6 +25,7 @@
 #include "QEI.h"
 #include "AU.h"
 #include "pump.h"
+#include "Stepper.h"
 
 //divers
 #include "User.h"

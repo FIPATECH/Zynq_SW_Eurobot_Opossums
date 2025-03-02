@@ -13,14 +13,23 @@ const Command Command_List[] = {
     { "HELP", Print_All_CMD_Cmd},
     { "TEST", Test_Interpreteur},
 
+    //pump command
     { "PUMP", Pump_cmd},
 
+    // Asserv print
     { "PDE", Activate_Position_Sending_Func},
 
+    // Stepper command
+    { "STEPPER", Stepper_cmd},
+    { "HELP_STEPPER", Stepper_help_cmd},
+
+    //odometry command
     { "SETX", SETX_Cmd},
     { "SETY", SETY_Cmd},
     { "SETT", SETT_Cmd},
     { "SET0", SET0_Cmd},
+
+    //asserv command
     { "VMAX", VMAX_Cmd},
     { "VTMAX", VTMAX_Cmd},
     { "MOVE", Move_Cmd},
@@ -36,7 +45,10 @@ const Command Command_List[] = {
     { "MAP", MaP_Asserv_Cmd},
     { "GET_POS", Get_Pos_Cmd},
 
+    //motor command
     { "MOTOR", Motor_cmd},
+
+    //servo command
     { "SERVO", Servo_cmd}
 };
 
