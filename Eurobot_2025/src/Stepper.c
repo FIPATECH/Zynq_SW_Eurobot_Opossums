@@ -38,6 +38,10 @@ uint32_t old_stepper_Timer_ms1 = 0;
 void Stepper_Loop(void){
     if(Timer_ms1 - old_stepper_Timer_ms1 > 5000){
         old_stepper_Timer_ms1 = Timer_ms1;
+        if (AU_state == 1){
+            stepper_1.dir = 0;
+            stepper_1.en = 1;
+        }else{
         // if (XGpio_DiscreteRead(&stepper_1.DONE, 1) == 1){
             if (stepper_1.step == 0){
                 stepper_1.dir = 0;
@@ -51,6 +55,7 @@ void Stepper_Loop(void){
             XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
             // XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
         // }
+        }
     }
 }
 
