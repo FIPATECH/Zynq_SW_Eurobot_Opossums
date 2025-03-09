@@ -4,64 +4,77 @@ STEPPER stepper_1;
 
 STEPPER stepper[NBR_STEPPER];
 
-XGpio stepper_1_EN;
-
 void Init_Stepper(void){
     // create a stepper object
     stepper[0] = stepper_1;
     // initialize the stepper object
-    XGpio_Initialize(&stepper_1.STEP, XPAR_AXI_GPIO_0_DEVICE_ID);
-    XGpio_Initialize(&stepper_1.SPEED, XPAR_AXI_GPIO_1_DEVICE_ID);
-    XGpio_Initialize(&stepper_1.MODE, XPAR_AXI_GPIO_2_DEVICE_ID);
-    XGpio_Initialize(&stepper_1.DIR, XPAR_AXI_GPIO_3_DEVICE_ID);
-    XGpio_Initialize(&stepper_1_EN, XPAR_AXI_GPIO_4_DEVICE_ID);
-    XGpio_Initialize(&stepper_1.DONE, XPAR_AXI_GPIO_5_DEVICE_ID);
+    XGpio_Initialize(&stepper_1.STEP,   STEP_DEVICE_ID);
+    XGpio_Initialize(&stepper_1.SPEED,  SPEED_DEVICE_ID);
+    XGpio_Initialize(&stepper_1.MODE,   MODE_DEVICE_ID);
+    XGpio_Initialize(&stepper_1.DIR,    DIR_DEVICE_ID);
+    XGpio_Initialize(&stepper_1.EN,     EN_DEVICE_ID);
+    XGpio_Initialize(&stepper_1.DONE,   DONE_DEVICE_ID);
     XGpio_SetDataDirection(&stepper_1.STEP, 1, 0);
     XGpio_SetDataDirection(&stepper_1.SPEED, 1, 0);
     XGpio_SetDataDirection(&stepper_1.MODE, 1, 0);
     XGpio_SetDataDirection(&stepper_1.DIR, 1, 0);
-    XGpio_SetDataDirection(&stepper_1_EN, 1, 0);
+    XGpio_SetDataDirection(&stepper_1.EN, 1, 0);
     XGpio_SetDataDirection(&stepper_1.DONE, 1, 1);
     stepper_1.step = 0; 
-    stepper_1.speed = 500; // 0 to 65535 in us between each steps
+    stepper_1.speed =  10000; // 0 to 65535 in us between each steps
     stepper_1.mode = 0; // 0 to full step, 1 to half step, 2 to quarter step, 3 to eighth step, 4 to sixteenth step, 5 to thirty-second step, 6 to sixty-fourth step, 7 to one hundred twenty-eighth step
-    stepper_1.dir = 0; // 0 to go forward, 1 to go backward
+    stepper_1.dir = 1; // 0 to go forward, 1 to go backward
     stepper_1.en = 0; // 0 to enable, 1 to disable
     XGpio_DiscreteWrite(&stepper_1.MODE, 1, stepper_1.mode);
     XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
     XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
-    XGpio_DiscreteWrite(&stepper_1_EN, 1, stepper_1.en);
+    XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
 }
 
 uint32_t old_stepper_Timer_ms1 = 0;
+uint32_t old_stepper_accel_Timer_ms1 = 0;
+uint32_t test = 0;
+
 
 void Stepper_Loop(void){
-    if(Timer_ms1 - old_stepper_Timer_ms1 > 5000){
+    if(Timer_ms1 - old_stepper_Timer_ms1 > 1){
         old_stepper_Timer_ms1 = Timer_ms1;
-        if (AU_state == 1){
-            stepper_1.dir = 0;
-            stepper_1.en = 1;
-        }else{
-        // if (XGpio_DiscreteRead(&stepper_1.DONE, 1) == 1){
-            if (stepper_1.step == 0){
-                stepper_1.dir = 0;
-                stepper_1.step = 200;
-            }else{
+        if (XGpio_DiscreteRead(&stepper_1.DONE, 1) == 1){
+            if (test == 0){
+                // xil_printf ("dir = 1\n");
+                test = 1;
                 stepper_1.dir = 1;
-                stepper_1.step = 400;
+                stepper_1.step = 500;
+                stepper_1.speed = 10000;
+                XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+                XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
+                XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
+                XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
+            } else {
+                // xil_printf ("dir = 0\n");
+                // test = 0;
+                // stepper_1.dir = 0;
+                // stepper_1.step = 500;
+                // stepper_1.speed = 10000;
+                // XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+                // XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
+                // XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
+                // XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
             }
-            XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
-            XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
-            XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
-            // XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
-        // }
+        }else{
+            if(Timer_ms1 - old_stepper_accel_Timer_ms1 > 8){
+                old_stepper_accel_Timer_ms1 = Timer_ms1;
+                stepper_1.speed = stepper_1.speed - 1000;
+                XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
+            }
         }
     }
 }
 
-void Set_Stepper_Mode(STEPPER *stepper, uint32_t mode){
+void Set_Stepper_Mode(STEPPER *stepper, uint8_t mode){
     if (mode > 7){
         printf("Mode out of range\n\r");
+        return;
     }else{
         stepper->mode = (uint8_t)mode;
         XGpio_DiscreteWrite(&stepper->MODE, 1, stepper->mode);
@@ -71,6 +84,7 @@ void Set_Stepper_Mode(STEPPER *stepper, uint32_t mode){
 void Set_Stepper_Step(STEPPER *stepper, uint32_t step){
     if (step > 65535){
         printf("Step out of range\n\r");
+        return;
     }else{
         stepper->step = (uint16_t)step;
         XGpio_DiscreteWrite(&stepper->STEP, 1, stepper->step);
@@ -80,27 +94,30 @@ void Set_Stepper_Step(STEPPER *stepper, uint32_t step){
 void Set_Stepper_Speed(STEPPER *stepper, uint32_t speed){
     if (speed > 65535){
         printf("Speed out of range\n\r");
+        return;
     }else{
         stepper->speed = (uint16_t)speed;
         XGpio_DiscreteWrite(&stepper->SPEED, 1, stepper->speed);
     }
 }
 
-void Set_Stepper_Dir(STEPPER *stepper, uint32_t dir){
+void Set_Stepper_Dir(STEPPER *stepper, uint8_t dir){
     if (dir > 1){
         printf("Dir out of range\n\r");
+        return;
     }else{
         stepper->dir = (uint8_t)dir;
         XGpio_DiscreteWrite(&stepper->DIR, 1, stepper->dir);
     }
 }
 
-void Set_Stepper_En(XGpio *stepper, uint32_t en){
+void Set_Stepper_En(STEPPER *stepper, uint8_t en){
     if (en > 1){
         printf("En out of range\n\r");
+        return;
     }else{
         // stepper->en = (uint8_t)en;
-        XGpio_DiscreteWrite(&stepper_1_EN, 1, stepper_1.en);
+        XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
     }
 }
 
@@ -140,7 +157,7 @@ uint8_t Stepper_cmd(void){
             Set_Stepper_Dir(&stepper[id-1], val);
             break;
         case 5:
-            Set_Stepper_En(&stepper_1_EN, val);
+            Set_Stepper_En(&stepper[id-1], val);
             break;
         default:
             return PARAM_OUT_OF_RANGE_ERROR_CODE;

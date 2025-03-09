@@ -34,14 +34,14 @@ int main()
         Status = 0;
     }
 
-   Status = init_CAN();
-   if (Status != XST_SUCCESS) {
-       xil_printf("CAN init failed\n\r");
-       Status = 0;
-   } else {
-       xil_printf("CAN init done\n\r");
-       Status = 0;
-   }
+//    Status = init_CAN();
+//    if (Status != XST_SUCCESS) {
+//        xil_printf("CAN init failed\n\r");
+//        Status = 0;
+//    } else {
+//        xil_printf("CAN init done\n\r");
+//        Status = 0;
+//    }
 
     // init_QEI();
 //    PWM_Init();
@@ -68,9 +68,9 @@ int main()
         Stepper_Loop();
         // if(AU_state == 0){
             // xil_printf("AU_state = 0\n\r");
-           Asserv_Loop();
+        //    Asserv_Loop();
         //    PWM_Loop();
-           Can_Loop();
+        //    Can_Loop();
         // }
     }
     cleanup_platform();
