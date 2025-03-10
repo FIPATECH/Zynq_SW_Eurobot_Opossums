@@ -20,8 +20,8 @@ void Init_Stepper(void){
     XGpio_SetDataDirection(&stepper_1.DIR, 1, 0);
     XGpio_SetDataDirection(&stepper_1.EN, 1, 0);
     XGpio_SetDataDirection(&stepper_1.DONE, 1, 1);
-    stepper_1.step = 0; 
-    stepper_1.speed =  10000; // 0 to 65535 in us between each steps
+    stepper_1.step = 10000; 
+    stepper_1.speed =  500; // 0 to 65535 in us between each steps
     stepper_1.mode = 0; // 0 to full step, 1 to half step, 2 to quarter step, 3 to eighth step, 4 to sixteenth step, 5 to thirty-second step, 6 to sixty-fourth step, 7 to one hundred twenty-eighth step
     stepper_1.dir = 1; // 0 to go forward, 1 to go backward
     stepper_1.en = 0; // 0 to enable, 1 to disable
@@ -39,18 +39,19 @@ uint32_t test = 0;
 void Stepper_Loop(void){
     if(Timer_ms1 - old_stepper_Timer_ms1 > 1){
         old_stepper_Timer_ms1 = Timer_ms1;
-        if (XGpio_DiscreteRead(&stepper_1.DONE, 1) == 1){
-            if (test == 0){
-                // xil_printf ("dir = 1\n");
-                test = 1;
+        // if (XGpio_DiscreteRead(&stepper_1.DONE, 1) == 1){
+        //     if (test == 0){
+        //         // xil_printf ("dir = 1\n");
+        //         test = 1;
                 stepper_1.dir = 1;
-                stepper_1.step = 500;
-                stepper_1.speed = 10000;
+                stepper_1.step = 60000;
+                stepper_1.speed = 1000;
                 XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
                 XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
                 XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
                 XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
-            } else {
+        //     } 
+            // else {
                 // xil_printf ("dir = 0\n");
                 // test = 0;
                 // stepper_1.dir = 0;
@@ -60,14 +61,14 @@ void Stepper_Loop(void){
                 // XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
                 // XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
                 // XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
-            }
-        }else{
-            if(Timer_ms1 - old_stepper_accel_Timer_ms1 > 8){
-                old_stepper_accel_Timer_ms1 = Timer_ms1;
-                stepper_1.speed = stepper_1.speed - 1000;
-                XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
-            }
-        }
+            // }
+        // }else{
+        //     if(Timer_ms1 - old_stepper_accel_Timer_ms1 > 8){
+        //         old_stepper_accel_Timer_ms1 = Timer_ms1;
+        //         stepper_1.speed = stepper_1.speed - 1000;
+        //         XGpio_DiscreteWrite(&stepper_1.SPEED, 1, stepper_1.speed);
+        //     }
+        // }
     }
 }
 
