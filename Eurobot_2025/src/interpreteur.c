@@ -15,6 +15,9 @@ const Command Command_List[] = {
 
     { "SERVO", Servo_cmd},
     { "LED", LED_cmd},
+    { "PUMP", Pump_cmd},
+
+    { "PDE", Activate_Position_Sending_Func},
 
     { "SETX", SETX_Cmd},
     { "SETY", SETY_Cmd},

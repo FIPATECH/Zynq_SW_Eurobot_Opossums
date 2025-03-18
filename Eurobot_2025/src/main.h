@@ -26,6 +26,7 @@
 #include "AU.h"
 #include "ws2812b.h"
 
+#include "pump.h"
 
 //divers
 #include "User.h"

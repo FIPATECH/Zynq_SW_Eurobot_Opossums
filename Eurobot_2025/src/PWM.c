@@ -46,27 +46,27 @@ void PWM_Init(void)
             case 8:
                 gpio_id = XPAR_AXI_GPIO_10_DEVICE_ID;
                 break;
-            case 9:
-                gpio_id = XPAR_AXI_GPIO_11_DEVICE_ID;
-                break;
-            case 10:
-                gpio_id = XPAR_AXI_GPIO_12_DEVICE_ID;
-                break;
-            case 11:
-                gpio_id = XPAR_AXI_GPIO_13_DEVICE_ID;
-                break;
-            case 12:
-                gpio_id = XPAR_AXI_GPIO_14_DEVICE_ID;
-                break;
-            case 13:
-                gpio_id = XPAR_AXI_GPIO_15_DEVICE_ID;
-                break;
-            case 14:
-                gpio_id = XPAR_AXI_GPIO_16_DEVICE_ID;
-                break;
-            case 15:
-                gpio_id = XPAR_AXI_GPIO_17_DEVICE_ID;
-                break;
+            // case 9:
+            //     gpio_id = XPAR_AXI_GPIO_11_DEVICE_ID;
+            //     break;
+            // case 10:
+            //     gpio_id = XPAR_AXI_GPIO_12_DEVICE_ID;
+            //     break;
+            // case 11:
+            //     gpio_id = XPAR_AXI_GPIO_13_DEVICE_ID;
+            //     break;
+            // case 12:
+            //     gpio_id = XPAR_AXI_GPIO_14_DEVICE_ID;
+            //     break;
+            // case 13:
+            //     gpio_id = XPAR_AXI_GPIO_15_DEVICE_ID;
+            //     break;
+            // case 14:
+            //     gpio_id = XPAR_AXI_GPIO_16_DEVICE_ID;
+            //     break;
+            // case 15:
+            //     gpio_id = XPAR_AXI_GPIO_17_DEVICE_ID;
+            //     break;
         }
         Init_Servo(&servo[i], gpio_id, DEFAULT_ANGLE, DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX, 0); 
         XGpio_Initialize(&servo[i].gpio, servo[i].axi_id);
