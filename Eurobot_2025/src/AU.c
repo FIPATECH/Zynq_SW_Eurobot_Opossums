@@ -1,6 +1,7 @@
 #include "main.h"
 
-int AU_state;
+int AU_state = 0;
+int previous_AU_state = 0;
 
 XGpio AU;
 
@@ -13,7 +14,8 @@ void init_AU(void){
 
 void AU_Loop(void){
 	AU_state = XGpio_DiscreteRead(&AU, 1);
-    if (AU_state == 0){
-        // xil_printf("AU 0");
+    if (AU_state != previous_AU_state){
+        xil_printf("AU state : %d\n\r", AU_state);
+        previous_AU_state = AU_state;
     }
 }

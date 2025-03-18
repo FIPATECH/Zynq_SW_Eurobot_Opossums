@@ -48,8 +48,6 @@ int main()
     Std_Com_Init();
     init_AU();
     ws2812b_init();
-    init_AU();
-    // init_AU();
     // Init_Pump();
     // Init_Asserv();
     xil_printf("Init done\n\r");
@@ -70,10 +68,10 @@ int main()
         if(AU_state == 1){
             // Asserv_Loop();
             // Can_Loop();
-            LED_GREEN();
+            LED_AU();
             // PWM_Loop();
         }else{
-            LED_AU();
+            LED_GREEN();
         }
         // Pump_Loop();
         // // if(AU_state == 0){

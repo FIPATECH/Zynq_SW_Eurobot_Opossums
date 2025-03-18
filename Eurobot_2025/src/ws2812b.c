@@ -36,15 +36,15 @@ uint32_t led_id = 0;
 uint32_t led_color = 0;
 
 void LED_loop(){
-    if (Timer_ms1 - LED_old_timer_ms1 > 1){
-        LED_old_timer_ms1 = Timer_ms1;
+    // if (Timer_ms1 - LED_old_timer_ms1 > 1){
+    //     LED_old_timer_ms1 = Timer_ms1;
 
         // ws2812b_set_color(led_id, led[led_id]);
         // XGpio_DiscreteWrite(&LED_ADDR, 1, led_id);
         XGpio_DiscreteWrite(&LED_DATA, 1, led_color);
             
         
-    }
+    // }
 }
 
 void LED_AU(void){
