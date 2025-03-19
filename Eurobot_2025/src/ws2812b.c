@@ -3,16 +3,16 @@
 LED led[NBR_LED];
 LED color;
 
-// XGpio LED_ADDR;
+XGpio LED_ADDR;
 XGpio LED_DATA;
 
 int LED_old_timer_ms1 = 0;
 
 void ws2812b_init(){
-    // XGpio_Initialize(&LED_ADDR, XPAR_AXI_GPIO_24_DEVICE_ID);
+    XGpio_Initialize(&LED_ADDR, XPAR_AXI_GPIO_26_DEVICE_ID);
     XGpio_Initialize(&LED_DATA, XPAR_AXI_GPIO_25_DEVICE_ID);
 
-    // XGpio_SetDataDirection(&LED_ADDR, 1, 0);
+    XGpio_SetDataDirection(&LED_ADDR, 1, 0);
     XGpio_SetDataDirection(&LED_DATA, 1, 0);
 
     for (int i = 0; i < NBR_LED; i++){
@@ -31,20 +31,29 @@ void ws2812b_set_color(int led_id, LED color){
     }
 }
 
-
+uint32_t led_color = 0x0000FF;
 uint32_t led_id = 0;
-uint32_t led_color = 0;
+uint32_t led_color1 = 0x0100000;   //BRG
+uint32_t led_color2 = 0xFF0000;   //BRG
+uint8_t  cpt = 0;
 
 void LED_loop(){
-    // if (Timer_ms1 - LED_old_timer_ms1 > 1){
-    //     LED_old_timer_ms1 = Timer_ms1;
-
-        // ws2812b_set_color(led_id, led[led_id]);
-        // XGpio_DiscreteWrite(&LED_ADDR, 1, led_id);
-        XGpio_DiscreteWrite(&LED_DATA, 1, led_color);
-            
-        
-    // }
+    if (Timer_ms1 - LED_old_timer_ms1 > 20){
+        LED_old_timer_ms1 = Timer_ms1;
+        for (int i = 0; i < NBR_LED-1; i++){
+            if (cpt == i){
+                XGpio_DiscreteWrite(&LED_ADDR, 1, i);
+                XGpio_DiscreteWrite(&LED_DATA, 1, led_color2);
+            }else{
+                XGpio_DiscreteWrite(&LED_ADDR, 1, i);
+                XGpio_DiscreteWrite(&LED_DATA, 1, led_color1);
+            }
+        }
+        cpt++;
+        if (cpt == NBR_LED-1){
+            cpt = 0;
+        }
+    }
 }
 
 void LED_AU(void){
