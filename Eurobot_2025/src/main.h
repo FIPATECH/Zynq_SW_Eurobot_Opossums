@@ -30,6 +30,7 @@
 
 //divers
 #include "User.h"
+#include "IHM.h"
 
 
 //asserv part 
