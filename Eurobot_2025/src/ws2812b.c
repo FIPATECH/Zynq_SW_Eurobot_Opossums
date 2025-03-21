@@ -70,12 +70,13 @@ void LED_MODE(){
             break;
         case 1: //waiting for color choice
             if(Timer_ms1 - led_mode_timer_old > 20){
+                led_mode_timer_old = Timer_ms1;
                 for (int i = 0; i < NBR_LED-1; i++){
                     if (sens_animation_au == 0){
-                        if(i < cpt){
-                            led[i].red = 0;
+                        if(i < cpt){ // yellow
+                            led[i].red = 0x10;
                             led[i].green = 0x10;
-                            led[i].blue = 0x10;
+                            led[i].blue = 0;
                         }else{
                             led[i].red = 0;
                             led[i].green = 0;
@@ -87,18 +88,19 @@ void LED_MODE(){
                             led[i].green = 0;
                             led[i].blue = 0x10;
                         }else{
-                            led[i].red = 0;
+                            led[i].red = 0x10;
                             led[i].green = 0x10;
-                            led[i].blue = 0x10;
+                            led[i].blue = 0;
                         }
                     }
                 }
                 cpt++;
-                if(cpt > NBR_LED){
+                if(cpt > NBR_LED-1){
                     cpt = 0;
                     sens_animation_au = !sens_animation_au;
                 }
             }
+            break;
         case 10: // validation with green color
             if(Timer_ms1 - led_mode_timer_old > 20){
                 led_mode_timer_old = Timer_ms1;
