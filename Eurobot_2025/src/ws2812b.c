@@ -241,6 +241,26 @@ void LED_MODE(){
                 }
             }
             break;
+        case 60: // leash
+            if(Timer_ms1 - led_mode_timer_old > 20){
+                led_mode_timer_old = Timer_ms1;
+                cpt = (timer_match*44)/100000;
+                if (cpt < NBR_LED-1){
+                    for (int i = 0; i < NBR_LED-1; i++){
+                        if(i < cpt){
+                            led[i].red = 0x10;
+                            led[i].green = 0x10;
+                            led[i].blue = 0x10;
+                        }else{
+                            led[i].red = 0;
+                            led[i].green = 0;
+                            led[i].blue = 0;
+                        }
+                    }
+                }
+            }
+            break;
+        
     }
 }
 
