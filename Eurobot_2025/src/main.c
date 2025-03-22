@@ -48,14 +48,15 @@ int main()
     Std_Com_Init();
     init_AU();
     ws2812b_init();
+    init_switch();
     // Init_Pump();
     // Init_Asserv();
     xil_printf("Init done\n\r");
 
     while(1){
-        if (Timer_ms1 - old_timer_ms1 >= 1000) {
+        if (Timer_ms1 - old_timer_ms1 >= 100) {
             old_timer_ms1 = Timer_ms1;
-            // xil_printf("Timer_ms1 = %d\n\r", Timer_ms1);
+            xil_printf("Timer_ms1 = %d\n\r", Timer_ms1);
         }
 
         if (Get_Std_In(&c)) {
@@ -65,13 +66,14 @@ int main()
         LED_loop();
         Std_Com_Loop();
 
-        if(AU_state == 1){
+        if(AU_state == 0){
             // Asserv_Loop();
             // Can_Loop();
             LED_AU();
             // PWM_Loop();
         }else{
-            LED_GREEN();
+            IHM_loop();
+            LED_CLASSIC_MODE();
         }
         // Pump_Loop();
         // // if(AU_state == 0){
