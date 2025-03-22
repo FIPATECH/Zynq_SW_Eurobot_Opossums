@@ -3,25 +3,40 @@
 XGpio YELLOW_SWITCH;
 XGpio GREEN_SWITCH;
 XGpio BLUE_SWITCH;
+XGpio LEASH;
 
 int yellow_state;
 int green_state; 
 int blue_state;
+int leash_state;
 
 int previous_yellow_state;
 int previous_green_state;
 int previous_blue_state;
+int previous_leash_state;
+
+int timer_match = 0;
+int start_timer_match = 0;
+
 
 int current_mode = 0;
 
 void init_switch(void){
+    // init IHM switches 
     XGpio_Initialize(&YELLOW_SWITCH, XPAR_AXI_GPIO_23_DEVICE_ID);
     XGpio_Initialize(&GREEN_SWITCH, XPAR_AXI_GPIO_21_DEVICE_ID);
     XGpio_Initialize(&BLUE_SWITCH, XPAR_AXI_GPIO_22_DEVICE_ID);
 
+    //init leash input
+    XGpio_Initialize(&LEASH, XPAR_AXI_GPIO_20_DEVICE_ID);
+
+    // set switches as input
     XGpio_SetDataDirection(&YELLOW_SWITCH, 1, 1);
     XGpio_SetDataDirection(&GREEN_SWITCH, 1, 1);
     XGpio_SetDataDirection(&BLUE_SWITCH, 1, 1);
+
+    // set leash as input
+    XGpio_SetDataDirection(&LEASH, 1, 1);
 }
 
 int validation_blue = 0;
@@ -77,5 +92,17 @@ void IHM_loop(void){
                 current_mode = 1;
             }
         }
+    }
+
+    leash_state = XGpio_DiscreteRead(&LEASH, 1);
+    if (leash_state != previous_leash_state){
+        previous_leash_state = leash_state;
+        if(leash_state == 1){
+            current_mode = 60;
+            start_timer_match = Timer_ms1;
+        }
+    }
+    if(leash_state == 1){
+        timer_match = Timer_ms1 - start_timer_match;
     }
 }
