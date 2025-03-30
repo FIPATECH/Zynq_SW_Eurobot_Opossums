@@ -119,7 +119,6 @@ uint8_t SETY_Cmd(void) {
 }
 
 // SETT
-
 uint8_t SETT_Cmd(void) {
     float valf;
     if (Get_Param_Float(&valf))
@@ -136,6 +135,7 @@ uint8_t SET0_Cmd(void) {
     set_position(Pos);
     return 0;
 }
+
 
 
 // VMAX
@@ -236,7 +236,13 @@ uint8_t Param_Asserv_Cmd(void) {
     if (Get_Param_Float(&valf2))
         return 1;
 
-    int Param = valf1;
+    int Param = (int)valf1;
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////            10 V_Lin
+    ////            11 V_Lin KP
+    ////            12 V_Lin KI
+    ////            13 V_Lin KD
+    //////////////////////////////////////////////////////////////////////////////////////////////
     if (Param == 10) {
         printf("V_Lin\n");
         printf("KP %f\n", (double)(pid_speed.coef.kp));
@@ -252,24 +258,34 @@ uint8_t Param_Asserv_Cmd(void) {
         pid_speed.coef.kd = valf2;
         printf("Set V_Lin KD to %f\n", (double)(pid_speed.coef.kd));
     }
-
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////            20 PID_Dist
+    ////            21 PID_Dist KP
+    ////            22 PID_Dist KI
+    ////            23 PID_Dist KD
+    //////////////////////////////////////////////////////////////////////////////////////////////
     else if(Param == 20){
-        printf("PID_Dist_X\n");
+        printf("PID_Dist\n");
         printf("KP %f\n", (double)(pid_dist.coef.kp));
         printf("KI %f\n", (double)(pid_dist.coef.ki));
         printf("KD %f\n", (double)(pid_dist.coef.kd));
     } else if(Param == 21){
         pid_dist.coef.kp = valf2;
-        printf("Set PID_Dist_X KP to %f\n", (double)(pid_dist.coef.kp));
+        printf("Set PID_Dist KP to %f\n", (double)(pid_dist.coef.kp));
     } else if(Param == 22){
         pid_dist.coef.ki = valf2;
-        printf("Set PID_Dist_X KI to %f\n", (double)(pid_dist.coef.ki));
+        printf("Set PID_Dist KI to %f\n", (double)(pid_dist.coef.ki));
     } else if(Param == 23){
         pid_dist.coef.kd = valf2;
-        printf("Set PID_Dist_X KD to %f\n", (double)(pid_dist.coef.kd));
+        printf("Set PID_Dist KD to %f\n", (double)(pid_dist.coef.kd));
     } 
-
-    else if(Param == 40){
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////            30 PID_ANGLE
+    ////            31 PID_ANGLE KP
+    ////            32 PID_ANGLE KI
+    ////            33 PID_ANGLE KD
+    //////////////////////////////////////////////////////////////////////////////////////////////           
+    else if(Param == 30){
         printf("PID_ANGLE\n");
         printf("KP %f\n", (double)(pid_angle.coef.kp));
         printf("KI %f\n", (double)(pid_angle.coef.ki));
@@ -284,12 +300,19 @@ uint8_t Param_Asserv_Cmd(void) {
         pid_angle.coef.kd = valf2;
         printf("Set PID_ANGLE KD to %f\n", (double)(pid_angle.coef.kd));
     }
-
     return 0;
 }
 
 
 uint8_t MaP_Asserv_Cmd(void) {
+    /////////////////////////////////////////////////////////////////////
+    // 10 : Linear speed on x axis
+    // 11 : Linear speed on y axis
+    // 12 : angular speed 
+    // 50 : Position on x axis
+    // 51 : Position on y axis
+    // 52 : Position on t axis
+    /////////////////////////////////////////////////////////////////////
     float valf;
     if (Get_Param_Float(&valf))
         return 1;
@@ -452,4 +475,75 @@ void MaP_Asserv_Loop(void)
         }
     }
     
+}
+
+
+uint8_t asserv_test_state = 10;
+int old_timer_test = 0;
+void Asserv_test_loop(void) {
+    Position Pos_Obj;
+    if (asserv_test_state == 0) {
+        if (motion_done){
+            Pos_Obj.x = 0.6;
+            Pos_Obj.y = 0;
+            Pos_Obj.t = 0;
+            motion_pos(Pos_Obj);
+            asserv_test_state++;
+            old_timer_test = Timer_ms1;
+        }
+    } else if (asserv_test_state == 1) {
+        if((Timer_ms1 - old_timer_test) > 500) {
+            asserv_test_state++;
+        }
+    } else if (asserv_test_state == 2) {
+        if(motion_done){
+            Pos_Obj.x = 0.6;
+            Pos_Obj.y = -0.6;
+            Pos_Obj.t = 1;
+            motion_pos(Pos_Obj);
+            asserv_test_state++;
+            old_timer_test = Timer_ms1;
+        }
+    } else if (asserv_test_state == 3) {
+        if((Timer_ms1 - old_timer_test) > 500) {
+            asserv_test_state++;
+        }
+    } else if (asserv_test_state == 4) {
+        if(motion_done){
+            Pos_Obj.x = 0;
+            Pos_Obj.y = -0.6;
+            Pos_Obj.t = 0;
+            motion_pos(Pos_Obj);
+            asserv_test_state++;
+            old_timer_test = Timer_ms1;
+        }
+    } else if (asserv_test_state == 5) {
+        if((Timer_ms1 - old_timer_test) > 500) {
+            asserv_test_state++;
+        }
+    } else if (asserv_test_state == 6) {
+        if(motion_done){
+            Pos_Obj.x = 0;
+            Pos_Obj.y = 0;
+            Pos_Obj.t = 1;
+            motion_pos(Pos_Obj);
+            asserv_test_state++;
+            old_timer_test = Timer_ms1;
+        }
+    } else if (asserv_test_state == 7) {
+        if((Timer_ms1 - old_timer_test) > 500) {
+            asserv_test_state = 0;
+        }
+    }
+}
+
+uint8_t asserv_test_cmd(void) {
+    float valf;
+    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+    if (valf == 1){
+        asserv_test_state = 0;
+    } else{
+        asserv_test_state = 10;
+    }
+    return 0;
 }

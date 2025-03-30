@@ -13,9 +13,13 @@ const Command Command_List[] = {
     { "HELP", Print_All_CMD_Cmd},
     { "TEST", Test_Interpreteur},
 
+    { "MOTIONTEST", asserv_test_cmd},
+
     { "SERVO", Servo_cmd},
     { "LED", LED_cmd},
     { "PUMP", Pump_cmd},
+
+    { "ODOSPACING", Set_Odo_Spacing_Cmd},
 
     { "PDE", Activate_Position_Sending_Func},
 
