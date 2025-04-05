@@ -46,7 +46,7 @@ int main()
     // init_QEI();
     // PWM_Init();
     Std_Com_Init();
-    // init_AU();
+    init_AU();
     // ws2812b_init();
     init_switch();
     // Init_Pump();
@@ -62,23 +62,19 @@ int main()
         if (Get_Std_In(&c)) {
             Interp(c);
         }
-        // AU_Loop();
-        // LED_loop();
+        AU_Loop();
+        LED_loop();
         Std_Com_Loop();
 
-        // if(AU_state == 0){
-        //     // Asserv_Loop();
-        //     // Can_Loop();
-        //     LED_AU();
-        //     // PWM_Loop();
-        // }else{
-        //     IHM_loop();
-        //     LED_CLASSIC_MODE();
-        // }
-
-        MaP_Asserv_Cmd();
-        Asserv_Loop();
-        Can_Loop();
+        if(AU_state == 0){
+            LED_AU();
+        }else{
+            IHM_loop();
+            LED_CLASSIC_MODE();
+            MaP_Asserv_Cmd();
+            Asserv_Loop();
+            Can_Loop();
+        }
 
         Asserv_test_loop();
     }
