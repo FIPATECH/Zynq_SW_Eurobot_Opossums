@@ -47,7 +47,7 @@ int main()
     // PWM_Init();
     Std_Com_Init();
     init_AU();
-    // ws2812b_init();
+    ws2812b_init();
     init_switch();
     // Init_Pump();
     Init_Asserv();
@@ -71,7 +71,7 @@ int main()
         }else{
             IHM_loop();
             LED_CLASSIC_MODE();
-            MaP_Asserv_Cmd();
+            MaP_Asserv_Loop();
             Asserv_Loop();
             Can_Loop();
         }

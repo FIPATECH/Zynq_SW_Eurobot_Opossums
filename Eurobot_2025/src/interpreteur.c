@@ -39,7 +39,7 @@ const Command Command_List[] = {
     { "PWM3", PWM3_Func},
     { "ASSERV_MODE", Asserv_Mode_Cmd},
     { "PARAM", Param_Asserv_Cmd},
-    { "MAP", MaP_Asserv_Cmd},
+    { "MAPASSERV", MaP_Asserv_Cmd},
     { "GET_POS", Get_Pos_Cmd},
 
     { "MOTOR", Motor_cmd}

@@ -6,7 +6,7 @@
 /*############################################################################*/
 
 // {tic/m, m/tic, entre roues}
-#define DEFAULT_ODO_SPACING  0.115
+#define DEFAULT_ODO_SPACING  0.115//0.115
 #define DEFAULT_SIZE_WHEEL 0.060 // 6cm
 #define DEFAULT_WHEEL_RADIUS DEFAULT_SIZE_WHEEL/2 // 3cm
 
@@ -15,10 +15,10 @@
 /*############################################################################*/
 
 // {v, vt} v = 0.9 * v max moteur, vt = v/(entre roues/2)
-#define DEFAULT_CONSTRAINT_V_MAX  0.7//1.0
+#define DEFAULT_CONSTRAINT_V_MAX  0.7//0.7
 #define DEFAULT_CONSTRAINT_VT_MAX 3
 
-#define DEFAULT_AUTHORIZED_V_MAX 0.7
+#define DEFAULT_AUTHORIZED_V_MAX 0.7//0.7
 #define DEFAULT_AUTHORIZED_VT_MAX 3
 
 #define DEFAULT_CONSTRAINT_V_ROUE_MAX 1.5
@@ -53,14 +53,14 @@
 #define DEFAULT_PID_DIST_KI 0 //ki    
 #define DEFAULT_PID_DIST_KD 0  //kd     
 
-#define DEFAULT_PID_ANGLE_KP 3 // kp
+#define DEFAULT_PID_ANGLE_KP 1 // kp
 #define DEFAULT_PID_ANGLE_KI 0 //ki
 #define DEFAULT_PID_ANGLE_KD 0 //kd    
 
 
 // 2 PID lies a l'asserve en vitesse (vitesse lineaire et vitesse angulaire)
-#define DEFAULT_PID_V_LIN_KP 10000 // kp
-#define DEFAULT_PID_V_LIN_KI 300   //ki
+#define DEFAULT_PID_V_LIN_KP 9000 // kp
+#define DEFAULT_PID_V_LIN_KI 50   //ki
 #define DEFAULT_PID_V_LIN_KD 0   //kd   
 
 #endif // _LIB_ASSERV_DEFAULT_H_

@@ -224,9 +224,9 @@ uint8_t Asserv_Mode_Cmd(void) {
 
 uint8_t MaP_Asserv_State = 0;
 uint16_t MaP_Asserv_Count = 0;
-uint16_t MaP_Asserv_Count_Max = 0;
+uint16_t MaP_Asserv_Count_Max = 300; 
 uint32_t MaP_Asserv_Timer = 0;
-float Param_Map_Asserv = 0.3;
+float Param_Map_Asserv = 1.5;
 
 
 uint8_t Param_Asserv_Cmd(void) {
@@ -319,10 +319,10 @@ uint8_t MaP_Asserv_Cmd(void) {
     MaP_Asserv_State = valf;
 
 
-    if (Get_Param_Float(&valf))
-        MaP_Asserv_Count_Max = 0;
-    else
-        MaP_Asserv_Count_Max = valf;
+    // if (Get_Param_Float(&valf))
+    //     MaP_Asserv_Count_Max = 0;
+    // else
+    //     MaP_Asserv_Count_Max = valf;
 
     MaP_Asserv_Count = 0;
     MaP_Asserv_Timer = Timer_ms1;
@@ -417,7 +417,6 @@ void MaP_Asserv_Loop(void)
     if (MaP_Asserv_State) {
         if (MaP_Asserv_State == 1) {    // Odometrie
             if ((Timer_ms1 - MaP_Asserv_Timer) > 10) {
-                // printf("%d,%u,%u,%u\n", MaP_Asserv_Count, QEI1, QEI2, QEI3);
                 MaP_Asserv_Timer += 10;
                 MaP_Asserv_Count++;
                 if (MaP_Asserv_Count_Max) {
@@ -427,40 +426,22 @@ void MaP_Asserv_Loop(void)
                 }
             }
         } else if (MaP_Asserv_State == 2) {
-            //POS1CNT = 0;
-            //POS2CNT = 0;
             MaP_Asserv_State = 1;
             MaP_Asserv_Count = 0;
 
         } else if (MaP_Asserv_State == 10)  {
+            // printf("hello");
             if ((Timer_ms1 - MaP_Asserv_Timer) > 10) {
                 MaP_Asserv_Timer += 10;
+                printf("MAPASSERV ");
                 
-                printf("%.2f,",  (double)(speed_order_constrained.vx));
-                printf("%.2f,",  (double)(speed_order_constrained.vy));
-                printf("%.2f,",  (double)(speed_order_constrained.vt));
+                printf("%.2f ",  (double)(speed_order_constrained.vx));
+                printf("%.2f ",  (double)(speed_order_constrained.vy));
+                printf("%.2f ",  (double)(speed_order_constrained.vt));
 
-                printf("%.2f,", (double)(speed_robot.vx));
-                printf("%.2f,", (double)(speed_robot.vy));
-                printf("%.2f",  (double)(speed_robot.vt));
-
-                printf("\n");
-                MaP_Asserv_Count++;
-                if (MaP_Asserv_Count_Max) {
-                    if (MaP_Asserv_Count > MaP_Asserv_Count_Max) {
-                        MaP_Asserv_State = 0;
-                        MaP_Asserv_Count = 0;
-                        motion_free();
-                    }
-                }
-            }
-        } else if (MaP_Asserv_State == 50)  {
-            if ((Timer_ms1 - MaP_Asserv_Timer) > 10) {
-                MaP_Asserv_Timer += 10;
-                
-                printf("%.2f,",  (double)(speed_order_constrained.vx));
-                printf("%.2f,",  (double)(speed_order.vx));
-                printf("%.2f,", (double)(speed_robot.vx));
+                printf("%.2f ", (double)(speed_robot.vx));
+                printf("%.2f ", (double)(speed_robot.vy));
+                printf("%.2f ",  (double)(speed_robot.vt));
 
                 printf("\n");
                 MaP_Asserv_Count++;
@@ -473,8 +454,7 @@ void MaP_Asserv_Loop(void)
                 }
             }
         }
-    }
-    
+    } 
 }
 
 
