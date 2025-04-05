@@ -37,22 +37,24 @@ void odo_set_spacing(float param_spacing) {
 }
 
 void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2, int16_t delta_angle_motor_3) {   
-    // calcul de la distance linéaire parcourue par chaque roues
     float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
     float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
     float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
 
-    float dx = -0.5*(dist_motor_2 - dist_motor_3)/sin(PI/3);
-    float dy = 0.5*(dist_motor_1 -(dist_motor_2 + dist_motor_3));
-    float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3*robot_wheel_distance);
+    // Nouvelle formule correcte pour odométrie holonome 3 roues
+    float dx = (2.0f / 3.0f) * (dist_motor_1 - 0.5f * dist_motor_2 - 0.5f * dist_motor_3);
+    float dy = (2.0f / 3.0f) * ((sqrtf(3.0f) / 2.0f) * (dist_motor_2 - dist_motor_3));
+    float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3.0f * robot_wheel_distance);
 
-    float rdx = dx*cos(position_robot.t) - dy*sin(position_robot.t);
-    float rdy = dx*sin(position_robot.t) + dy*cos(position_robot.t);
+    float cos_t = cosf(position_robot.t);
+    float sin_t = sinf(position_robot.t);
+
+    float rdx = dx * cos_t - dy * sin_t;
+    float rdy = dx * sin_t + dy * cos_t;
 
     position_robot.x += rdx;
     position_robot.y += rdy;
     position_robot.t = principal_angle(position_robot.t + dt);
-
 }
 
 float odo_dist_roue(int16_t delta_angle_motor) {
