@@ -148,53 +148,69 @@ void asserv_free_step(void)
 	}
 }
 
+float old_angle = 0;
+
 
 void pos_asserv_step(void) {
-    // recuperation de la consigne (o pour "order") en position
-    float x_o = Wanted_Pos.x; // consigne en x
-    float y_o = Wanted_Pos.y; // consigne en y
-    float t_o = Wanted_Pos.t; // consigne en theta
+    // --- Consignes
+    float x_o = Wanted_Pos.x;
+    float y_o = Wanted_Pos.y;
+    float t_o = Wanted_Pos.t;
 
-    // recuperation de la position et vitesse courantes
-    float x = position_robot.x; // position en x
-    float y = position_robot.y; // position en y
-    float t = position_robot.t; // position angulaire
+    // --- Position actuelle
+    float x = position_robot.x;
+    float y = position_robot.y;
+    float t = position_robot.t;
 
+    // --- Erreurs
     float rdx = x_o - x;
     float rdy = y_o - y;
-
-    float d = sqrt(rdx*rdx + rdy*rdy);
-    
+    float d = sqrt(rdx * rdx + rdy * rdy);
     float dt = principal_angle(t_o - t);
-    
-    float angle = principal_angle(atan2(y_o - y, x_o - x));
-    
-    
+
+    // --- Filtrage de l'angle cible si la distance est très petite
+    static float angle_filtered = 0;  // Valeur persistante entre appels
+
+    if (d > 1e-3) {  // seuil en mètres (ex : 1 mm)
+        angle_filtered = atan2(rdy, rdx);
+    }
+    float angle = principal_angle(angle_filtered);  // direction de la cible (global)
+
+    // --- Transformations utiles
     float cos_t = cos(t);
     float sin_t = sin(t);
-    
-    speed_order_d = pid_position_processing(&pid_dist, d);
 
+    // --- PID distance avec zone morte
+    if (d < 1e-3) {
+        speed_order_d = 0.0f;
+    } else {
+        speed_order_d = pid_position_processing(&pid_dist, d);
+    }
+
+    // --- Limitation de la vitesse avec profil d'accélération
     speed_order_d = limit_float(speed_order_d, -v_max, v_max);
     speed_order_d = limit_float(speed_order_d, v_constrained - a_max, v_constrained + a_max);
     v_constrained = speed_order_d;
-        
-    float speed_order_dx = speed_order_d*cos(angle);
-    float speed_order_dy = speed_order_d*sin(angle);
-        
-    speed_order.vx = speed_order_dx*cos_t + speed_order_dy*sin_t;
-    speed_order.vy = -speed_order_dx*sin_t + speed_order_dy*cos_t;
+
+    // --- Vecteurs vitesse dans le repère global
+    float speed_order_dx = speed_order_d * cos(angle);
+    float speed_order_dy = speed_order_d * sin(angle);
+
+    // --- Transformation vers repère robot (à vérifier selon convention)
+    speed_order.vx =  speed_order_dx * cos_t + speed_order_dy * sin_t;
+    speed_order.vy = -speed_order_dx * sin_t + speed_order_dy * cos_t;
     speed_order.vt = pid_position_processing(&pid_angle, dt);
-    Pid_Speed_En = 1; 
-    
-    
-    // si on est arrive // voir truc plus performant....
-    if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
+
+    // --- Activation de l'asservissement vitesse
+    Pid_Speed_En = 1;
+
+    // --- Condition d'arrêt (avec tolérance)
+    if ((d < current_stop_distance) && (fabsf(dt) < DEFAULT_STOP_ANGLE)) {
         set_Constraint_vitesse_max(DEFAULT_CONSTRAINT_V_MAX);
         set_Constraint_vt_max(DEFAULT_CONSTRAINT_VT_MAX);
         motion_free();
         printf("Pos,done\n");
-	}
+    }
 }
 
 

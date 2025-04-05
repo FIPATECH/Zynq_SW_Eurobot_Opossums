@@ -55,7 +55,7 @@ void constrain_speed_order(float period) {
 	// limites absolues sur les vitesses
 	vx_o  = limit_float(vx_o, -Speed_Max.vx, Speed_Max.vx);
 	vy_o  = limit_float(vy_o, -Speed_Max.vy, Speed_Max.vy);
-	vt_o  = limit_float(vt_o,  -Speed_Max.vt, Speed_Max.vt);
+	vt_o  = limit_float(vt_o, -Speed_Max.vt, Speed_Max.vt);
 
 	// limites sur la variation par rapport a la fois d'avant
 	vx_o = limit_float(vx_o, speed_order_constrained.vx - delta_vx_max, speed_order_constrained.vx + delta_vx_max);
