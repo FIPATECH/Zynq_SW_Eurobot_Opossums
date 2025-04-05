@@ -10,6 +10,9 @@
 #define ASSERV_MODE_SPEED 30
 #define ASSERV_MODE_ABSOLUTE_SPEED 31
 
+#define DIST_TOL 0.005 // 5mm
+#define ANGLE_TOL 0.01745 // 1 deg
+
 
 extern int motion_done;
 
