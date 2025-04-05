@@ -67,9 +67,9 @@ void constrain_speed_order(float period) {
     speed_order_constrained.vt = vt_o;
     
     // pour l'instant un peu con, ne prend pas de limite par roue, juste des limites globales
-    Speed_Order_1 = -vt_o * robot_wheel_distance + vy_o;
-    Speed_Order_2 = -vt_o * robot_wheel_distance - (vy_o * 0.5f) - (vx_o * sin(PI / 3.0f));
-    Speed_Order_3 = -vt_o * robot_wheel_distance - (vy_o * 0.5f) + (vx_o * sin(PI / 3.0f));
+    Speed_Order_1  = -(vt_o * robot_wheel_distance) + vy_o;
+    Speed_Order_2 = -(vt_o * robot_wheel_distance) - (vy_o * 0.5) - (vx_o * sin(PI/3));   // *0.5 = * cos(PI/3))
+    Speed_Order_3 = -(vt_o * robot_wheel_distance) - (vy_o * 0.5) + (vx_o * sin(PI/3));
 
 }
 
