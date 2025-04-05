@@ -72,26 +72,27 @@ float odo_dist_roue(int16_t delta_angle_motor) {
     return distance; // Retourne la distance parcourue
 }
 
-void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) {
-    // vitesse roues en m/s
-    Speed_1 = (float)((Rotor_RPM1*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0)); //36 reducteur du moteur
-    Speed_2 = (float)((Rotor_RPM2*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
-    Speed_3 = (float)((Rotor_RPM3*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
+void odo_speed_step(int16_t RPM1, int16_t RPM2, int16_t RPM3) {
+    float v1 = (RPM1 * PI * DEFAULT_SIZE_WHEEL) / (36.0f * 60.0f);
+    float v2 = (RPM2 * PI * DEFAULT_SIZE_WHEEL) / (36.0f * 60.0f);
+    float v3 = (RPM3 * PI * DEFAULT_SIZE_WHEEL) / (36.0f * 60.0f);
 
-    // sauvegarde des anciennes vitesses
-    float vx = speed_robot.vx;
-    float vy = speed_robot.vy;
-    float vt = speed_robot.vt;
+    float vx_r = (2.0f / 3.0f) * (v1 - 0.5f * v2 - 0.5f * v3);
+    float vy_r = (2.0f / 3.0f) * (cosf(60) * (v2 - v3));
+    float vt = -(v1 + v2 + v3) / (3.0f * robot_wheel_distance);
 
-    // maj des vitesses
-    speed_robot.vx = -0.5*(Speed_2 - Speed_3)/sin(PI/3);
-    speed_robot.vy = 0.5*(Speed_1 -(Speed_2 + Speed_3));
-    speed_robot.vt = -(Speed_1 + Speed_2 + Speed_3) / (3*robot_wheel_distance);
+    static float last_vx = 0.0f, last_vy = 0.0f, last_vt = 0.0f;
+    acceleration_robot.ax = vx_r - last_vx;
+    acceleration_robot.ay = vy_r - last_vy;
+    acceleration_robot.at = vt - last_vt;
 
-    // maj des accelerations
-    acceleration_robot.ax = speed_robot.vx - vx;
-    acceleration_robot.ay = speed_robot.vy - vy;
-    acceleration_robot.at = speed_robot.vt - vt;
+    last_vx = vx_r;
+    last_vy = vy_r;
+    last_vt = vt;
+
+    speed_robot.vx = vx_r;
+    speed_robot.vy = vy_r;
+    speed_robot.vt = vt;
 }
 
 
