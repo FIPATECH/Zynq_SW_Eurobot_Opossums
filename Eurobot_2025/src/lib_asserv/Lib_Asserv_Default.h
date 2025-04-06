@@ -33,7 +33,7 @@
 
 //#define DEFAULT_CONSTRAINT_VVT_MAX 0.981
 
-#define DEFAULT_CONSTRAINT_A_ROUE 1
+#define DEFAULT_CONSTRAINT_A_ROUE 0.7
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 
