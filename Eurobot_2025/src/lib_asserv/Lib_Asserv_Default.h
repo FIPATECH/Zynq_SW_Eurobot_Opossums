@@ -53,14 +53,14 @@
 #define DEFAULT_PID_DIST_KI 0 //ki    
 #define DEFAULT_PID_DIST_KD 0  //kd     
 
-#define DEFAULT_PID_ANGLE_KP 1 // kp
+#define DEFAULT_PID_ANGLE_KP 1.2 // kp
 #define DEFAULT_PID_ANGLE_KI 0 //ki
 #define DEFAULT_PID_ANGLE_KD 0 //kd    
 
 
 // 2 PID lies a l'asserve en vitesse (vitesse lineaire et vitesse angulaire)
-#define DEFAULT_PID_V_LIN_KP 9000 // kp
-#define DEFAULT_PID_V_LIN_KI 50   //ki
+#define DEFAULT_PID_V_LIN_KP 10000 // kp
+#define DEFAULT_PID_V_LIN_KI 100   //ki
 #define DEFAULT_PID_V_LIN_KD 0   //kd   
 
 #endif // _LIB_ASSERV_DEFAULT_H_
