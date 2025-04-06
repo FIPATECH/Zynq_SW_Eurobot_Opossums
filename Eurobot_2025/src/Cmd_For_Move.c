@@ -73,9 +73,10 @@ uint8_t Asserv_Done_Cmd(void) {
 
 uint8_t Get_Pos_Cmd(void) {
     Position pos = get_position();
-    printf("X:%.4f,", (double) (pos.x));
-    printf("Y:%.4f,", (double) (pos.y));
-    printf("T:%.4f\n", (double) (pos.t));
+    printf("GETPOS,");
+    printf("%.4f,", (double) (pos.x));
+    printf("%.4f,", (double) (pos.y));
+    printf("%.4f\n", (double) (pos.t));
     return 0;
 }
 

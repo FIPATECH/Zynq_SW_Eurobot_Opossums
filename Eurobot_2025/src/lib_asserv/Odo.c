@@ -41,21 +41,23 @@ void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2,
     float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
     float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
 
-    // Nouvelle formule correcte pour odométrie holonome 3 roues
-    float dx = (2.0f / 3.0f) * (dist_motor_1 - 0.5f * dist_motor_2 - 0.5f * dist_motor_3);
-    float dy = (2.0f / 3.0f) * ((sqrtf(3.0f) / 2.0f) * (dist_motor_2 - dist_motor_3));
+    // dx = déplacement avant/arrière = axe X
+    // dy = déplacement latéral gauche/droite = axe Y
+    float dx_local = (2.0f / 3.0f) * ((sqrtf(3.0f) / 2.0f) * (dist_motor_2 - dist_motor_3));     // translation avant (X robot)
+    float dy_local = (2.0f / 3.0f) * (dist_motor_1 - 0.5f * dist_motor_2 - 0.5f * dist_motor_3); // translation latérale (Y robot)
     float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3.0f * robot_wheel_distance);
 
     float cos_t = cosf(position_robot.t);
     float sin_t = sinf(position_robot.t);
 
-    float rdx = dx * cos_t - dy * sin_t;
-    float rdy = dx * sin_t + dy * cos_t;
+    float dx_global = dx_local * cos_t + dy_local * sin_t;
+    float dy_global = -dx_local * sin_t + dy_local * cos_t;
 
-    position_robot.x += rdx;
-    position_robot.y += rdy;
+    position_robot.x += dx_global;
+    position_robot.y += dy_global;
     position_robot.t = principal_angle(position_robot.t + dt);
 }
+
 
 float odo_dist_roue(int16_t delta_angle_motor) {
     static const float facteur_conversion = TWO_PI / (MOTOR_ANGLE_CODEUR_MAX * 36); // Conversion en radian
