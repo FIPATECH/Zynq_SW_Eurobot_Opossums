@@ -192,9 +192,9 @@ void pos_asserv_step(void) {
         float speed_order_d = pid_position_processing(&pid_dist, d);
 
         // Limitation (profil d'accélération et saturation)
-        speed_order_d = limit_float(speed_order_d, -v_max, v_max);
-        speed_order_d = limit_float(speed_order_d, v_constrained - a_max, v_constrained + a_max);
-        v_constrained = speed_order_d;
+        // speed_order_d = limit_float(speed_order_d, -v_max, v_max);
+        // speed_order_d = limit_float(speed_order_d, v_constrained - a_max, v_constrained + a_max);
+        // v_constrained = speed_order_d;
 
         // Décomposition en X/Y monde
         float vx_world = speed_order_d * cosf(angle);
