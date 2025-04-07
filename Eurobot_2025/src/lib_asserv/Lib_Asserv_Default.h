@@ -23,7 +23,7 @@
 
 #define DEFAULT_CONSTRAINT_V_ROUE_MAX 1.5
 
-
+#define DEFAULT_BETA 10 // ponderation distance vs angle 
 /* {a, at, v_vt} a = a max sans glissement, at = a/(entre roues/2),
  * v_vt = acc centripete (trop fort -> erreur odo) 0.1g
  *
@@ -33,7 +33,7 @@
 
 //#define DEFAULT_CONSTRAINT_VVT_MAX 0.981
 
-#define DEFAULT_CONSTRAINT_A_ROUE 0.7
+#define DEFAULT_CONSTRAINT_A_ROUE 0.5
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 
@@ -49,13 +49,13 @@
 /*############################################################################*/
 
 // 2 PID lies a l'asserv en position (dist: position absolue, angle: position angulaire)
-#define DEFAULT_PID_DIST_KP 2 // kp   
+#define DEFAULT_PID_DIST_KP 1.8 // kp   
 #define DEFAULT_PID_DIST_KI 0 //ki    
-#define DEFAULT_PID_DIST_KD 0  //kd     
+#define DEFAULT_PID_DIST_KD 0.2  //kd     
 
-#define DEFAULT_PID_ANGLE_KP 1.2 // kp
+#define DEFAULT_PID_ANGLE_KP 2.5   //2.3 // kp
 #define DEFAULT_PID_ANGLE_KI 0 //ki
-#define DEFAULT_PID_ANGLE_KD 0 //kd    
+#define DEFAULT_PID_ANGLE_KD 1.5 //kd    
 
 
 // 2 PID lies a l'asserve en vitesse (vitesse lineaire et vitesse angulaire)

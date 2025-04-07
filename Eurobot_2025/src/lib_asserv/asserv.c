@@ -185,6 +185,8 @@ void pos_asserv_step(void) {
     speed_order.vy = 0.0f;
     speed_order.vt = 0.0f;
 
+    float rotation_weight = 1 - expf(-DEFAULT_BETA * d);
+
     // --- Cas 1 : Déplacement complet
     if (!pos_reached) {
         float angle = principal_angle(angle_filtered);
@@ -207,7 +209,7 @@ void pos_asserv_step(void) {
 
     // --- Cas 2 ou 3 : commande en rotation
     if (!angle_reached) {
-        speed_order.vt = pid_position_processing(&pid_angle, dt);
+        speed_order.vt = rotation_weight * pid_position_processing(&pid_angle, dt);
     }
 
     // --- Activation de l’asservissement vitesse
