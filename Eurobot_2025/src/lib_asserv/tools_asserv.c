@@ -27,3 +27,13 @@ float principal_angle(float angle) {
         return alpha;
     }
 }
+
+float maximum3(float a, float b, float c) {
+    if (a > b) {
+        if (a > c) return a;
+        else return c;
+    } else {
+        if (b > c) return b;
+        else return c;
+    }
+}

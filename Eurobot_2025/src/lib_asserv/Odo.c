@@ -50,8 +50,8 @@ void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2,
     float cos_t = cosf(position_robot.t);
     float sin_t = sinf(position_robot.t);
 
-    float dx_global = dx_local * cos_t + dy_local * sin_t;
-    float dy_global = -dx_local * sin_t + dy_local * cos_t;
+    float dx_global = dx_local * cos_t - dy_local * sin_t;
+    float dy_global = dx_local * sin_t + dy_local * cos_t;
 
     position_robot.x += dx_global;
     position_robot.y += dy_global;
@@ -87,7 +87,7 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
 
     // maj des vitesses
     speed_robot.vx = -0.5*(Speed_2 - Speed_3)/sin(PI/3);
-    speed_robot.vy = 0.5*(Speed_1 -(Speed_2 + Speed_3));
+    speed_robot.vy = -0.5*(Speed_1 -(Speed_2 + Speed_3));
     speed_robot.vt = -(Speed_1 + Speed_2 + Speed_3) / (3*robot_wheel_distance);
 
     // maj des accelerations

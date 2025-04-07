@@ -185,7 +185,7 @@ void pos_asserv_step(void) {
     speed_order.vy = 0.0f;
     speed_order.vt = 0.0f;
 
-    float rotation_weight = 1 - expf(-DEFAULT_BETA * d);
+    // float rotation_weight = 0.2; // Poids de la rotation (0.5 = 50% de la vitesse max)
 
     // --- Cas 1 : Déplacement complet
     if (!pos_reached) {
@@ -193,23 +193,18 @@ void pos_asserv_step(void) {
 
         float speed_order_d = pid_position_processing(&pid_dist, d);
 
-        // Limitation (profil d'accélération et saturation)
-        // speed_order_d = limit_float(speed_order_d, -v_max, v_max);
-        // speed_order_d = limit_float(speed_order_d, v_constrained - a_max, v_constrained + a_max);
-        // v_constrained = speed_order_d;
-
         // Décomposition en X/Y monde
         float vx_world = speed_order_d * cosf(angle);
         float vy_world = speed_order_d * sinf(angle);
 
         // Transformation vers repère robot
-        speed_order.vx = vx_world * cos_t - vy_world * sin_t;
-        speed_order.vy = vx_world * sin_t + vy_world * cos_t;
+        speed_order.vx = vx_world * cos_t + vy_world * sin_t;
+        speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
     }
 
     // --- Cas 2 ou 3 : commande en rotation
     if (!angle_reached) {
-        speed_order.vt = rotation_weight * pid_position_processing(&pid_angle, dt);
+        speed_order.vt = pid_position_processing(&pid_angle, dt);
     }
 
     // --- Activation de l’asservissement vitesse

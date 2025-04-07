@@ -21,9 +21,9 @@
 #define DEFAULT_AUTHORIZED_V_MAX 0.7//0.7
 #define DEFAULT_AUTHORIZED_VT_MAX 3
 
-#define DEFAULT_CONSTRAINT_V_ROUE_MAX 1.5
+#define DEFAULT_CONSTRAINT_V_ROUE_MAX 0.7
 
-#define DEFAULT_BETA 10 // ponderation distance vs angle 
+#define DEFAULT_BETA 5 // ponderation distance vs angle 
 /* {a, at, v_vt} a = a max sans glissement, at = a/(entre roues/2),
  * v_vt = acc centripete (trop fort -> erreur odo) 0.1g
  *

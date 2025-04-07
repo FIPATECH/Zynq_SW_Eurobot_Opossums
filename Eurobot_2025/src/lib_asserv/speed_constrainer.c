@@ -24,8 +24,6 @@ float vx_o, vy_o, vt_o = 0;
 float old_vx_o, old_vy_o, old_vt_o = 0;
 
 float v_o, old_v_o = 0;
-float tau = 0;
-float coef;
 
 
 void speed_constrainer_init(void)
@@ -46,25 +44,38 @@ void constrain_speed_order(float period) {
     float vx_o = speed_order.vx;
     float vy_o = speed_order.vy;
     float vt_o = speed_order.vt;
-    
-    float delta_vr_max = Accel_Max_Roue * period;
+
      
-    float wheel_speed_1 = -(vt_o * robot_wheel_distance) + vy_o;  
-    float wheel_speed_2 = -(vt_o * robot_wheel_distance) + (vy_o * 0.5) + (vx_o * sin(PI/3)); 
-    float wheel_speed_3 = -(vt_o * robot_wheel_distance) + (vy_o * 0.5) - (vx_o * sin(PI/3)); 
+    float wheel_speed_1 = -(vt_o * robot_wheel_distance) - vy_o;  
+    float wheel_speed_2 = -(vt_o * robot_wheel_distance) + (vy_o * 0.5) - (vx_o * sin(PI/3)); 
+    float wheel_speed_3 = -(vt_o * robot_wheel_distance) + (vy_o * 0.5) + (vx_o * sin(PI/3)); 
 
     //limitation on wheel speed and wheel acceleration
-    wheel_speed_1 = limit_float(wheel_speed_1, -Speed_Max_Roue, Speed_Max_Roue);
-    wheel_speed_2 = limit_float(wheel_speed_2, -Speed_Max_Roue, Speed_Max_Roue);
-    wheel_speed_3 = limit_float(wheel_speed_3, -Speed_Max_Roue, Speed_Max_Roue);
+    float speed_coef = maximum3(fabsf(wheel_speed_1), fabsf(wheel_speed_2), fabsf(wheel_speed_3));
+    if (speed_coef > Speed_Max_Roue) {
+        wheel_speed_1 = wheel_speed_1 * Speed_Max_Roue / speed_coef;
+        wheel_speed_2 = wheel_speed_2 * Speed_Max_Roue / speed_coef;
+        wheel_speed_3 = wheel_speed_3 * Speed_Max_Roue / speed_coef;
+    }
 
-    wheel_speed_1 = limit_float(wheel_speed_1, Speed_Order_1 - delta_vr_max, Speed_Order_1 + delta_vr_max);
-    wheel_speed_2 = limit_float(wheel_speed_2, Speed_Order_2 - delta_vr_max, Speed_Order_2 + delta_vr_max);
-    wheel_speed_3 = limit_float(wheel_speed_3, Speed_Order_3 - delta_vr_max, Speed_Order_3 + delta_vr_max);
+    // --- Limitation d’accélération proportionnelle
+    float delta_1 = wheel_speed_1 - Speed_Order_1;
+    float delta_2 = wheel_speed_2 - Speed_Order_2;
+    float delta_3 = wheel_speed_3 - Speed_Order_3;
 
-    Speed_Order_1 = wheel_speed_1;
-    Speed_Order_2 = wheel_speed_2;
-    Speed_Order_3 = wheel_speed_3;
+    float max_delta = maximum3(fabsf(delta_1), fabsf(delta_2), fabsf(delta_3));
+    float delta_vr_max = Accel_Max_Roue * period;
+
+    if (max_delta > delta_vr_max) {
+        float scale = delta_vr_max / max_delta;
+        delta_1 *= scale;
+        delta_2 *= scale;
+        delta_3 *= scale;
+    }
+
+    Speed_Order_1 += delta_1;
+    Speed_Order_2 += delta_2;
+    Speed_Order_3 += delta_3;  
 }
 
 void set_Constraint_vitesse_xy_max(float v_max) {

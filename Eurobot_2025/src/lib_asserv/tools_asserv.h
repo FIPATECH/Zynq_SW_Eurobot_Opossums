@@ -14,6 +14,7 @@ float limit_float(float valeur, float inf, float sup);
 // angle principal
 float principal_angle(float angle);
 
+float maximum3(float a, float b, float c);
 #endif
 
 
