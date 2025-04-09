@@ -43,8 +43,8 @@ void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2,
 
     // dx = déplacement avant/arrière = axe X
     // dy = déplacement latéral gauche/droite = axe Y
-    float dx_local = (2.0f / 3.0f) * ((sqrtf(3.0f) / 2.0f) * (dist_motor_2 - dist_motor_3));     // translation avant (X robot)
-    float dy_local = (2.0f / 3.0f) * (dist_motor_1 - 0.5f * dist_motor_2 - 0.5f * dist_motor_3); // translation latérale (Y robot)
+    float dx_local = -0.5f * (dist_motor_2 - dist_motor_3) / sin(PI/3);   // translation avant (X robot)
+    float dy_local = (2.0f * dist_motor_1 - dist_motor_2 - dist_motor_3) / 3.0f;  // translation latérale (Y robot)
     float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3.0f * robot_wheel_distance);
 
     float cos_t = cosf(position_robot.t);
@@ -86,9 +86,9 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
     float vt = speed_robot.vt;
 
     // maj des vitesses
-    speed_robot.vx = -0.5*(Speed_2 - Speed_3)/sin(PI/3);
-    speed_robot.vy = -0.5*(Speed_1 -(Speed_2 + Speed_3));
-    speed_robot.vt = -(Speed_1 + Speed_2 + Speed_3) / (3*robot_wheel_distance);
+    speed_robot.vx = (sqrtf(3.0f) / 2.0f) * (Speed_2 - Speed_3);
+    speed_robot.vy = (2.0f * Speed_1 - Speed_2 - Speed_3) / 3.0f;
+    speed_robot.vt = -(Speed_1 + Speed_2 + Speed_3) / (3.0f * robot_wheel_distance);
 
     // maj des accelerations
     acceleration_robot.ax = speed_robot.vx - vx;

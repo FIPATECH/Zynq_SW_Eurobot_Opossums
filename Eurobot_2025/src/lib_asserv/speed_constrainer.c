@@ -45,10 +45,10 @@ void constrain_speed_order(float period) {
     float vy_o = speed_order.vy;
     float vt_o = speed_order.vt;
 
-     
-    float wheel_speed_1 = -(vt_o * robot_wheel_distance) - vy_o;  
-    float wheel_speed_2 = -(vt_o * robot_wheel_distance) + (vy_o * 0.5) - (vx_o * sin(PI/3)); 
-    float wheel_speed_3 = -(vt_o * robot_wheel_distance) + (vy_o * 0.5) + (vx_o * sin(PI/3)); 
+    float vt_component = (vt_o * robot_wheel_distance) / 3.0f; 
+    float wheel_speed_1 = -vt_component + vy_o;  
+    float wheel_speed_2 = -vt_component + (vy_o * 0.5) + (vx_o * (sqrtf(3.0f) / 2.0f)); 
+    float wheel_speed_3 = -vt_component + (vy_o * 0.5) - (vx_o * (sqrtf(3.0f) / 2.0f)); 
 
     //limitation on wheel speed and wheel acceleration
     float speed_coef = maximum3(fabsf(wheel_speed_1), fabsf(wheel_speed_2), fabsf(wheel_speed_3));
