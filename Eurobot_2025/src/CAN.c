@@ -45,7 +45,7 @@ int motor3_current_order = 0;
 void Can_Loop(void){
 	switch (can_loop_state){
 		case 0: 
-			if (Timer_ms1 - old_Can_Timer_ms1 > 100){
+			if (Timer_ms1 - old_Can_Timer_ms1 > 10){
 				#ifdef DEBUG_CAN
 					xil_printf("Motor 1: angle = %d, torque = %d, speed = %d\r\n", angle_motor_1, torque_motor_1, speed_motor_1);
 					xil_printf("Motor 2: angle = %d, torque = %d, speed = %d\r\n", angle_motor_2, torque_motor_2, speed_motor_2);

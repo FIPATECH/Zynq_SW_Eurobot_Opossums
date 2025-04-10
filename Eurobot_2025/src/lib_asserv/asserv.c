@@ -198,8 +198,8 @@ void pos_asserv_step(void) {
         float vy_world = speed_order_d * sinf(angle);
 
         // Transformation vers repère robot
-        speed_order.vx = vx_world * cos_t - vy_world * sin_t;
-        speed_order.vy = vx_world * sin_t + vy_world * cos_t;
+        speed_order.vx = vx_world * cos_t + vy_world * sin_t;
+        speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
     }
 
     // --- Cas 2 ou 3 : commande en rotation
