@@ -191,7 +191,7 @@ void pos_asserv_step(void) {
     speed_order.vx = vx_world * cos_t + vy_world * sin_t;
     speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
 
-    float speed_order_vt = speed_order_vt = pid_position_processing(&pid_angle, dt) * exp(-2 * d);
+    float speed_order_vt = speed_order_vt = pid_position_processing(&pid_angle, dt) * exp(-d);
     speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX);
 
     // printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0\n", speed_order.vx, speed_order.vy, speed_order_d, speed_robot.vx, speed_robot.vy, angle);
