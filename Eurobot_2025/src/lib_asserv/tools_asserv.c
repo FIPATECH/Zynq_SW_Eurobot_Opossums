@@ -17,10 +17,10 @@ float principal_angle(float angle) {
     if (fabsf(angle) < PI) {
         return angle;
     } else {
-        alpha = fmodf(angle, 2 * PI);
+        alpha = fmodf(angle + PI, 2 * PI);
         if (alpha<-PI) {
             alpha += 2 * PI;
-        } // d�calage de 2PI remarqu� par Ken si l'angle est n�gatif
+        }
         if (alpha > PI) {
             alpha -= 2 * PI;
         }

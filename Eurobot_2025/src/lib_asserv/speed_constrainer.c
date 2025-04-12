@@ -45,7 +45,7 @@ void constrain_speed_order(float period) {
     float vy_o = speed_order.vy;
     float vt_o = speed_order.vt;
 
-    float vt_component = -(vt_o * robot_wheel_distance); // check le * 3.0f ?
+    float vt_component = -(vt_o * robot_wheel_distance);
     float wheel_speed_1 = vt_component + vx_o;  
     float wheel_speed_2 = vt_component - (vx_o * 0.5f) + (vy_o * (sqrtf(3.0f) / 2.0f)); 
     float wheel_speed_3 = vt_component - (vx_o * 0.5f) - (vy_o * (sqrtf(3.0f) / 2.0f)); 
@@ -76,6 +76,9 @@ void constrain_speed_order(float period) {
     Speed_Order_1 += delta_1;
     Speed_Order_2 += delta_2;
     Speed_Order_3 += delta_3;  
+
+    // printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0\n", Speed_Order_1, Speed_Order_2, Speed_Order_3, Speed_1, Speed_2, Speed_3);
+
 }
 
 void set_Constraint_vitesse_xy_max(float v_max) {
