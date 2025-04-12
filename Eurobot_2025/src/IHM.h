@@ -8,3 +8,5 @@ extern int timer_match;
 void init_switch(void);
 void IHM_loop(void);
 
+uint8_t Version_cmd(void);
+

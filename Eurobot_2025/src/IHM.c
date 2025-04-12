@@ -106,3 +106,8 @@ void IHM_loop(void){
         timer_match = Timer_ms1 - start_timer_match;
     }
 }
+
+uint8_t Version_cmd(void) {
+    printf("VERSION ZYNQ\n");
+    return 0;
+}

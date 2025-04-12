@@ -12,6 +12,7 @@ const Command Command_List[] = {
     { "PRINTCMD", Print_All_CMD_Cmd},
     { "HELP", Print_All_CMD_Cmd},
     { "TEST", Test_Interpreteur},
+    { "VERSION", Version_cmd},
 
     { "MOTIONTEST", asserv_test_cmd},
 

@@ -129,8 +129,8 @@ void Asserv_Loop(void)
         
         float Consigne_Max = Max_Trois(Abs_Consigne1, Abs_Consigne2, Abs_Consigne3);
 
-        if (Consigne_Max > 10000) {
-            float Consigne_rapport = 10000.0/Consigne_Max;
+        if (Consigne_Max > 9000) {
+            float Consigne_rapport = 9000.0/Consigne_Max;
             Consigne.command1 *= Consigne_rapport;
             Consigne.command2 *= Consigne_rapport;
             Consigne.command3 *= Consigne_rapport;
