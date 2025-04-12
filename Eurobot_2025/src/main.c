@@ -68,6 +68,7 @@ int main()
 
         if(AU_state == 0){
             LED_AU();
+            motion_block();
         }else{
             IHM_loop();
             LED_CLASSIC_MODE();
