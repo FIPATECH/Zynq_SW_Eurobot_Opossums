@@ -14,20 +14,20 @@ float R[3][3] = {
     {0, 0, NOISE_T_LIDAR}
 }; // lidar noise covariance matrix
 
-void kalman_init(Vector3* x) {
-    x->x = 0;
-    x->y = 0;
-    x->theta = 0;
+void kalman_init(Position* pos) {
+    pos->x = 0;
+    pos->y = 0;
+    pos->t = 0;
 
     memset(P, 0, sizeof(P));
     P[0][0] = P[1][1] = 0.1f;
     P[2][2] = 0.01f;
 }
 
-void kalman_predict(Vector3* x, float dx, float dy, float dtheta) { // called each odo step : 1kHz
-    x->x += dx;
-    x->y += dy;
-    x->theta += dtheta;
+void kalman_predict(Position* pos, float dx, float dy, float dtheta) { // called each odo step : 1kHz
+    pos->x += dx;
+    pos->y += dy;
+    pos->t += dtheta;
 
     // Mise à jour de la covariance : P = P + Q
     for (int i = 0; i < 3; ++i)
@@ -35,12 +35,12 @@ void kalman_predict(Vector3* x, float dx, float dy, float dtheta) { // called ea
             P[i][j] += Q[i][j];
 }
 
-void kalman_update(Vector3* x, float z_x, float z_y, float z_theta) { // called each lidar step : 10Hz
+void kalman_update(Position* pos, float z_x, float z_y, float z_theta) { // called each lidar step : 10Hz
     float z[3] = { z_x, z_y, z_theta };
     float y[3] = {
-        z[0] - x->x,
-        z[1] - x->y,
-        principal_angle(z[2] - x->theta)
+        z[0] - pos->x,
+        z[1] - pos->y,
+        principal_angle(z[2] - pos->t)
     };
 
     // Calcul S = P + R
@@ -63,10 +63,10 @@ void kalman_update(Vector3* x, float z_x, float z_y, float z_theta) { // called 
             K[i][j] = P[i][j] * S_inv[j][j];  // diag simplifiée
 
     // Mise à jour état : x = x + K*y
-    x->x += K[0][0]*y[0] + K[0][1]*y[1] + K[0][2]*y[2];
-    x->y += K[1][0]*y[0] + K[1][1]*y[1] + K[1][2]*y[2];
-    x->theta += K[2][0]*y[0] + K[2][1]*y[1] + K[2][2]*y[2];
-    x->theta = principal_angle(x->theta);
+    pos->x += K[0][0]*y[0] + K[0][1]*y[1] + K[0][2]*y[2];
+    pos->y += K[1][0]*y[0] + K[1][1]*y[1] + K[1][2]*y[2];
+    pos->t += K[2][0]*y[0] + K[2][1]*y[1] + K[2][2]*y[2];
+    pos->t = principal_angle(pos->t);
 
     // Mise à jour covariance : P = (I - K) * P
     float I_K[3][3];
