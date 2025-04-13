@@ -1,10 +1,10 @@
 #ifndef __KALMAN_H_
 #define __KALMAN_H_
 
-#define NOISE_XY_ODO 1e-2
+#define NOISE_XY_ODO 1e-3
 #define NOISE_T_ODO 1e-2
 
-#define NOISE_XY_LIDAR 1e-2
+#define NOISE_XY_LIDAR 1e-3
 #define NOISE_T_LIDAR 1e-2
 
 void kalman_init(Position* pos);
