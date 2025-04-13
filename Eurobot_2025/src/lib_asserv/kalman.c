@@ -1,3 +1,4 @@
+#include "../main.h"
 #include "lib_asserv.h"
 
 float P[3][3]; // Covariance matrix

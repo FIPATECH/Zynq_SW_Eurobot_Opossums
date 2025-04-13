@@ -82,6 +82,9 @@ void Asserv_Loop(void)
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);
             odo_position_step(delta_angle_motor_1, delta_angle_motor_2, delta_angle_motor_3);
 
+            // update kalman filter with odometry data
+            kalman_predict(&position_robot, position_robot.x, position_robot.y, position_robot.t);
+
             previous_angle_motor_1 = angle_motor_1;
             previous_angle_motor_2 = angle_motor_2;
             previous_angle_motor_3 = angle_motor_3;
