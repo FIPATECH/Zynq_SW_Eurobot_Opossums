@@ -80,20 +80,10 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
     Speed_2 = (float)((Rotor_RPM2*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
     Speed_3 = (float)((Rotor_RPM3*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
 
-    // sauvegarde des anciennes vitesses
-    float vx = speed_robot.vx;
-    float vy = speed_robot.vy;
-    float vt = speed_robot.vt;
-
     // maj des vitesses
     speed_robot.vx = (2.0f/3.0f) * (Speed_1) - (1.0f/3.0f) * (Speed_2 + Speed_3);
-    speed_robot.vy = (sqrtf(3.0f) / 2.0f) * (Speed_2 - Speed_3); // translation avant (X robot)
+    speed_robot.vy = (sqrtf(3.0f) / 3.0f) * (Speed_2 - Speed_3); // translation avant (X robot)
     speed_robot.vt = -(Speed_1 + Speed_2 + Speed_3) / (3.0f * robot_wheel_distance);
-
-    // maj des accelerations
-    acceleration_robot.ax = (speed_robot.vx - vx) / 0.001;
-    acceleration_robot.ay = (speed_robot.vy - vy) / 0.001;
-    acceleration_robot.at = (speed_robot.vt - vt) / 0.001;
 }
 
 
