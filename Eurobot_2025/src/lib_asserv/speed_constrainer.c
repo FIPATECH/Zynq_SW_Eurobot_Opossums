@@ -33,9 +33,9 @@ void speed_constrainer_init(void)
 	Accel_Max.at    = DEFAULT_CONSTRAINT_AT_MAX;
     Accel_Max_Roue  = DEFAULT_CONSTRAINT_A_ROUE;
 
-	Speed_Max.vx   = DEFAULT_AUTHORIZED_V_MAX;
-	Speed_Max.vy   = DEFAULT_AUTHORIZED_V_MAX;
-	Speed_Max.vt   = DEFAULT_AUTHORIZED_VT_MAX;
+	Speed_Max.vx   = DEFAULT_CONSTRAINT_V_MAX;
+	Speed_Max.vy   = DEFAULT_CONSTRAINT_V_MAX;
+	Speed_Max.vt   = DEFAULT_CONSTRAINT_VT_MAX;
     Speed_Max_Roue = DEFAULT_CONSTRAINT_V_ROUE_MAX;
 }
 
@@ -45,7 +45,10 @@ void constrain_speed_order(float period) {
     float vy_o = speed_order.vy;
     float vt_o = speed_order.vt;
 
+    vt_o = limit_float(vt_o, -Speed_Max.vt, Speed_Max.vt);
     float vt_component = -(vt_o * robot_wheel_distance);
+	// vt_component  = limit_float(vt_component, -Speed_Max_Roue, Speed_Max_Roue);
+
     float wheel_speed_1 = vt_component + vx_o;  
     float wheel_speed_2 = vt_component - (vx_o * 0.5f) + (vy_o * (sqrtf(3.0f) / 2.0f)); 
     float wheel_speed_3 = vt_component - (vx_o * 0.5f) - (vy_o * (sqrtf(3.0f) / 2.0f)); 
@@ -76,9 +79,6 @@ void constrain_speed_order(float period) {
     Speed_Order_1 += delta_1;
     Speed_Order_2 += delta_2;
     Speed_Order_3 += delta_3;  
-
-    // printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0\n", Speed_Order_1, Speed_Order_2, Speed_Order_3, Speed_1, Speed_2, Speed_3);
-
 }
 
 void set_Constraint_vitesse_xy_max(float v_max) {

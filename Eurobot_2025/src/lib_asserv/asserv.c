@@ -77,7 +77,7 @@ void motion_absolute_speed(Speed speed) {
 
 void set_Constraint_vitesse_max(float v_max_in) {
     if (v_max_in != 0) {
-        if (v_max_in <= DEFAULT_AUTHORIZED_V_MAX) {
+        if (v_max_in <= DEFAULT_CONSTRAINT_V_MAX) {
             v_max = v_max_in;
         } else {
             v_max = DEFAULT_CONSTRAINT_V_MAX;
@@ -217,7 +217,7 @@ float angular_speed_calculation(float angle) {
     if (angle < 0) {
         sign = -1;
     }
-    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle);
+    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.9f);
 }
 
 
@@ -248,18 +248,6 @@ int Get_asserv_done(void) {
     } else {
         return 0;
     }
-}
-
-int Get_Sens_Deplacement(void) {
-//    float valf = speed_order.v;
-//    if (valf > 0.01)
-//        return 1;
-//    else if (valf < -0.01)
-//        return -1;
-//    else
-//        return 0;
-//    
-    return 0;
 }
 
 // verifier qu'on est pas bloque par un obstacle
