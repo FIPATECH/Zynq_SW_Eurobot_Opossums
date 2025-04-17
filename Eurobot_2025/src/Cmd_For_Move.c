@@ -259,48 +259,6 @@ uint8_t Param_Asserv_Cmd(void) {
         pid_speed.coef.kd = valf2;
         printf("Set V_Lin KD to %f\n", (double)(pid_speed.coef.kd));
     }
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    ////            20 PID_Dist
-    ////            21 PID_Dist KP
-    ////            22 PID_Dist KI
-    ////            23 PID_Dist KD
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    else if(Param == 20){
-        printf("PID_Dist\n");
-        printf("KP %f\n", (double)(pid_dist.coef.kp));
-        printf("KI %f\n", (double)(pid_dist.coef.ki));
-        printf("KD %f\n", (double)(pid_dist.coef.kd));
-    } else if(Param == 21){
-        pid_dist.coef.kp = valf2;
-        printf("Set PID_Dist KP to %f\n", (double)(pid_dist.coef.kp));
-    } else if(Param == 22){
-        pid_dist.coef.ki = valf2;
-        printf("Set PID_Dist KI to %f\n", (double)(pid_dist.coef.ki));
-    } else if(Param == 23){
-        pid_dist.coef.kd = valf2;
-        printf("Set PID_Dist KD to %f\n", (double)(pid_dist.coef.kd));
-    } 
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    ////            30 PID_ANGLE
-    ////            31 PID_ANGLE KP
-    ////            32 PID_ANGLE KI
-    ////            33 PID_ANGLE KD
-    //////////////////////////////////////////////////////////////////////////////////////////////           
-    else if(Param == 30){
-        printf("PID_ANGLE\n");
-        printf("KP %f\n", (double)(pid_angle.coef.kp));
-        printf("KI %f\n", (double)(pid_angle.coef.ki));
-        printf("KD %f\n", (double)(pid_angle.coef.kd));
-    } else if(Param == 41){
-        pid_angle.coef.kp = valf2;
-        printf("Set PID_ANGLE KP to %f\n", (double)(pid_angle.coef.kp));
-    } else if(Param == 42){
-        pid_angle.coef.ki = valf2;
-        printf("Set PID_ANGLE KI to %f\n", (double)(pid_angle.coef.ki));
-    } else if(Param == 43){
-        pid_angle.coef.kd = valf2;
-        printf("Set PID_ANGLE KD to %f\n", (double)(pid_angle.coef.kd));
-    }
     return 0;
 }
 

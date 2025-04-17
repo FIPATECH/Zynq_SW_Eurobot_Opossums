@@ -27,7 +27,6 @@ float a_max = DEFAULT_CONSTRAINT_A_MAX;
 void asserv_init(void) {
 	// init des autres trucs de la lib
 	odo_init();
-	pid_position_init();
 	speed_constrainer_init();
 	pid_vitesse_init();
 
