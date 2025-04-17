@@ -88,8 +88,6 @@ void RecvHandler(void *CallBackRef);
 void ErrorHandler(void *CallBackRef, u32 ErrorMask);
 void EventHandler(void *CallBackRef, u32 IntrMask);
 
-void Can_Loop(void);
-
 void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3);
 
 
