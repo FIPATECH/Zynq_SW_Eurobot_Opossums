@@ -66,4 +66,9 @@ int Get_asserv_done();
 // renvoit 1 si la vitesse >1cm/s, -1 si <1cm/s, 0 sinon
 int Get_Sens_Deplacement(void);
 
+float radial_speed_calculation(float distance);
+float angular_speed_calculation(float angle);
+
+
+
 #endif // _ASSERV_H_
