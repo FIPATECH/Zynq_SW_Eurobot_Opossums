@@ -75,7 +75,6 @@ int main()
             LED_CLASSIC_MODE();
             MaP_Asserv_Loop();
             Asserv_Loop();
-            Can_Loop();
         }
 
         Asserv_test_loop();
