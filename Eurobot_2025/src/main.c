@@ -50,7 +50,7 @@ int main()
     init_AU();
     ws2812b_init();
     init_switch();
-    // Init_Pump();
+    Init_Pump();
     Init_Asserv();
     xil_printf("Init done\n\r");
 
@@ -77,6 +77,7 @@ int main()
             Asserv_Loop();
             Can_Loop();
             PWM_Loop();
+            Pump_Loop();
         }
 
         Asserv_test_loop();
