@@ -27,7 +27,7 @@ void PWM_Init(void)
         switch (i){
             case 0:
                 gpio_id = XPAR_AXI_GPIO_2_DEVICE_ID;
-                angle = SERVO_1_ANGLE_MIN;
+                angle = SERVO_1_ANGLE_MAX;
                 angle_min = SERVO_1_ANGLE_MIN;
                 angle_max = SERVO_1_ANGLE_MAX;
                 break;
