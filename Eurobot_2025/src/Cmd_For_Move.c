@@ -73,9 +73,10 @@ uint8_t Asserv_Done_Cmd(void) {
 
 uint8_t Get_Pos_Cmd(void) {
     Position pos = get_position();
-    printf("X:%.4f,", (double) (pos.x));
-    printf("Y:%.4f,", (double) (pos.y));
-    printf("T:%.4f\n", (double) (pos.t));
+    printf("GETPOS,");
+    printf("%.4f,", (double) (pos.x));
+    printf("%.4f,", (double) (pos.y));
+    printf("%.4f\n", (double) (pos.t));
     return 0;
 }
 
@@ -119,7 +120,6 @@ uint8_t SETY_Cmd(void) {
 }
 
 // SETT
-
 uint8_t SETT_Cmd(void) {
     float valf;
     if (Get_Param_Float(&valf))
@@ -136,6 +136,7 @@ uint8_t SET0_Cmd(void) {
     set_position(Pos);
     return 0;
 }
+
 
 
 // VMAX
@@ -224,9 +225,9 @@ uint8_t Asserv_Mode_Cmd(void) {
 
 uint8_t MaP_Asserv_State = 0;
 uint16_t MaP_Asserv_Count = 0;
-uint16_t MaP_Asserv_Count_Max = 0;
+uint16_t MaP_Asserv_Count_Max = 300; 
 uint32_t MaP_Asserv_Timer = 0;
-float Param_Map_Asserv = 0.3;
+float Param_Map_Asserv = 1.5;
 
 
 uint8_t Param_Asserv_Cmd(void) {
@@ -236,7 +237,13 @@ uint8_t Param_Asserv_Cmd(void) {
     if (Get_Param_Float(&valf2))
         return 1;
 
-    int Param = valf1;
+    int Param = (int)valf1;
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////            10 V_Lin
+    ////            11 V_Lin KP
+    ////            12 V_Lin KI
+    ////            13 V_Lin KD
+    //////////////////////////////////////////////////////////////////////////////////////////////
     if (Param == 10) {
         printf("V_Lin\n");
         printf("KP %f\n", (double)(pid_speed.coef.kp));
@@ -252,54 +259,29 @@ uint8_t Param_Asserv_Cmd(void) {
         pid_speed.coef.kd = valf2;
         printf("Set V_Lin KD to %f\n", (double)(pid_speed.coef.kd));
     }
-
-    else if(Param == 20){
-        printf("PID_Dist_X\n");
-        printf("KP %f\n", (double)(pid_dist.coef.kp));
-        printf("KI %f\n", (double)(pid_dist.coef.ki));
-        printf("KD %f\n", (double)(pid_dist.coef.kd));
-    } else if(Param == 21){
-        pid_dist.coef.kp = valf2;
-        printf("Set PID_Dist_X KP to %f\n", (double)(pid_dist.coef.kp));
-    } else if(Param == 22){
-        pid_dist.coef.ki = valf2;
-        printf("Set PID_Dist_X KI to %f\n", (double)(pid_dist.coef.ki));
-    } else if(Param == 23){
-        pid_dist.coef.kd = valf2;
-        printf("Set PID_Dist_X KD to %f\n", (double)(pid_dist.coef.kd));
-    } 
-
-    else if(Param == 40){
-        printf("PID_ANGLE\n");
-        printf("KP %f\n", (double)(pid_angle.coef.kp));
-        printf("KI %f\n", (double)(pid_angle.coef.ki));
-        printf("KD %f\n", (double)(pid_angle.coef.kd));
-    } else if(Param == 41){
-        pid_angle.coef.kp = valf2;
-        printf("Set PID_ANGLE KP to %f\n", (double)(pid_angle.coef.kp));
-    } else if(Param == 42){
-        pid_angle.coef.ki = valf2;
-        printf("Set PID_ANGLE KI to %f\n", (double)(pid_angle.coef.ki));
-    } else if(Param == 43){
-        pid_angle.coef.kd = valf2;
-        printf("Set PID_ANGLE KD to %f\n", (double)(pid_angle.coef.kd));
-    }
-
     return 0;
 }
 
 
 uint8_t MaP_Asserv_Cmd(void) {
+    /////////////////////////////////////////////////////////////////////
+    // 10 : Linear speed on x axis
+    // 11 : Linear speed on y axis
+    // 12 : angular speed 
+    // 50 : Position on x axis
+    // 51 : Position on y axis
+    // 52 : Position on t axis
+    /////////////////////////////////////////////////////////////////////
     float valf;
     if (Get_Param_Float(&valf))
         return 1;
     MaP_Asserv_State = valf;
 
 
-    if (Get_Param_Float(&valf))
-        MaP_Asserv_Count_Max = 0;
-    else
-        MaP_Asserv_Count_Max = valf;
+    // if (Get_Param_Float(&valf))
+    //     MaP_Asserv_Count_Max = 0;
+    // else
+    //     MaP_Asserv_Count_Max = valf;
 
     MaP_Asserv_Count = 0;
     MaP_Asserv_Timer = Timer_ms1;
@@ -394,7 +376,6 @@ void MaP_Asserv_Loop(void)
     if (MaP_Asserv_State) {
         if (MaP_Asserv_State == 1) {    // Odometrie
             if ((Timer_ms1 - MaP_Asserv_Timer) > 10) {
-                // printf("%d,%u,%u,%u\n", MaP_Asserv_Count, QEI1, QEI2, QEI3);
                 MaP_Asserv_Timer += 10;
                 MaP_Asserv_Count++;
                 if (MaP_Asserv_Count_Max) {
@@ -404,40 +385,22 @@ void MaP_Asserv_Loop(void)
                 }
             }
         } else if (MaP_Asserv_State == 2) {
-            //POS1CNT = 0;
-            //POS2CNT = 0;
             MaP_Asserv_State = 1;
             MaP_Asserv_Count = 0;
 
         } else if (MaP_Asserv_State == 10)  {
+            // printf("hello");
             if ((Timer_ms1 - MaP_Asserv_Timer) > 10) {
                 MaP_Asserv_Timer += 10;
+                printf("MAPASSERV ");
                 
-                printf("%.2f,",  (double)(speed_order_constrained.vx));
-                printf("%.2f,",  (double)(speed_order_constrained.vy));
-                printf("%.2f,",  (double)(speed_order_constrained.vt));
+                printf("%.2f ",  (double)(speed_order_constrained.vx));
+                printf("%.2f ",  (double)(speed_order_constrained.vy));
+                printf("%.2f ",  (double)(speed_order_constrained.vt));
 
-                printf("%.2f,", (double)(speed_robot.vx));
-                printf("%.2f,", (double)(speed_robot.vy));
-                printf("%.2f",  (double)(speed_robot.vt));
-
-                printf("\n");
-                MaP_Asserv_Count++;
-                if (MaP_Asserv_Count_Max) {
-                    if (MaP_Asserv_Count > MaP_Asserv_Count_Max) {
-                        MaP_Asserv_State = 0;
-                        MaP_Asserv_Count = 0;
-                        motion_free();
-                    }
-                }
-            }
-        } else if (MaP_Asserv_State == 50)  {
-            if ((Timer_ms1 - MaP_Asserv_Timer) > 10) {
-                MaP_Asserv_Timer += 10;
-                
-                printf("%.2f,",  (double)(speed_order_constrained.vx));
-                printf("%.2f,",  (double)(speed_order.vx));
-                printf("%.2f,", (double)(speed_robot.vx));
+                printf("%.2f ", (double)(speed_robot.vx));
+                printf("%.2f ", (double)(speed_robot.vy));
+                printf("%.2f ",  (double)(speed_robot.vt));
 
                 printf("\n");
                 MaP_Asserv_Count++;
@@ -450,6 +413,76 @@ void MaP_Asserv_Loop(void)
                 }
             }
         }
+    } 
+}
+
+
+uint8_t asserv_test_state = 10;
+int old_timer_test = 0;
+void Asserv_test_loop(void) {
+    Position Pos_Obj;
+    if (asserv_test_state == 0) {
+        if (motion_done){
+            Pos_Obj.x = 0.6;
+            Pos_Obj.y = 0;
+            Pos_Obj.t = 0;
+            motion_pos(Pos_Obj);
+            asserv_test_state++;
+            old_timer_test = Timer_ms1;
+        }
+    } else if (asserv_test_state == 1) {
+        if((Timer_ms1 - old_timer_test) > 500) {
+            asserv_test_state++;
+        }
+    } else if (asserv_test_state == 2) {
+        if(motion_done){
+            Pos_Obj.x = 0.6;
+            Pos_Obj.y = -0.6;
+            Pos_Obj.t = 1;
+            motion_pos(Pos_Obj);
+            asserv_test_state++;
+            old_timer_test = Timer_ms1;
+        }
+    } else if (asserv_test_state == 3) {
+        if((Timer_ms1 - old_timer_test) > 500) {
+            asserv_test_state++;
+        }
+    } else if (asserv_test_state == 4) {
+        if(motion_done){
+            Pos_Obj.x = 0;
+            Pos_Obj.y = -0.6;
+            Pos_Obj.t = 0;
+            motion_pos(Pos_Obj);
+            asserv_test_state++;
+            old_timer_test = Timer_ms1;
+        }
+    } else if (asserv_test_state == 5) {
+        if((Timer_ms1 - old_timer_test) > 500) {
+            asserv_test_state++;
+        }
+    } else if (asserv_test_state == 6) {
+        if(motion_done){
+            Pos_Obj.x = 0;
+            Pos_Obj.y = 0;
+            Pos_Obj.t = 1;
+            motion_pos(Pos_Obj);
+            asserv_test_state++;
+            old_timer_test = Timer_ms1;
+        }
+    } else if (asserv_test_state == 7) {
+        if((Timer_ms1 - old_timer_test) > 500) {
+            asserv_test_state = 0;
+        }
     }
-    
+}
+
+uint8_t asserv_test_cmd(void) {
+    float valf;
+    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+    if (valf == 1){
+        asserv_test_state = 0;
+    } else{
+        asserv_test_state = 10;
+    }
+    return 0;
 }

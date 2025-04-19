@@ -27,7 +27,6 @@ float a_max = DEFAULT_CONSTRAINT_A_MAX;
 void asserv_init(void) {
 	// init des autres trucs de la lib
 	odo_init();
-	pid_position_init();
 	speed_constrainer_init();
 	pid_vitesse_init();
 
@@ -148,53 +147,77 @@ void asserv_free_step(void)
 	}
 }
 
+float old_angle = 0;
+
 
 void pos_asserv_step(void) {
-    // recuperation de la consigne (o pour "order") en position
-    float x_o = Wanted_Pos.x; // consigne en x
-    float y_o = Wanted_Pos.y; // consigne en y
-    float t_o = Wanted_Pos.t; // consigne en theta
+    // --- Consignes
+    float x_o = Wanted_Pos.x;
+    float y_o = Wanted_Pos.y;
+    float t_o = Wanted_Pos.t;
 
-    // recuperation de la position et vitesse courantes
-    float x = position_robot.x; // position en x
-    float y = position_robot.y; // position en y
-    float t = position_robot.t; // position angulaire
+    // --- État actuel
+    float x = position_robot.x;
+    float y = position_robot.y;
+    float t = position_robot.t;
 
+    // --- Erreurs
     float rdx = x_o - x;
     float rdy = y_o - y;
+    float d = sqrtf(rdx*rdx + rdy*rdy);                 // Erreur positionnelle
+    float dt = principal_angle(t_o - t);            // Erreur angulaire
 
-    float d = sqrt(rdx*rdx + rdy*rdy);
-    
-    float dt = principal_angle(t_o - t);
-    
-    float angle = principal_angle(atan2(y_o - y, x_o - x));
-    
-    
-    float cos_t = cos(t);
-    float sin_t = sin(t);
-    
-    speed_order_d = pid_position_processing(&pid_dist, d);
+    float cos_t = cosf(t);
+    float sin_t = sinf(t);
 
-    speed_order_d = limit_float(speed_order_d, -v_max, v_max);
-    speed_order_d = limit_float(speed_order_d, v_constrained - a_max, v_constrained + a_max);
-    v_constrained = speed_order_d;
-        
-    float speed_order_dx = speed_order_d*cos(angle);
-    float speed_order_dy = speed_order_d*sin(angle);
-        
-    speed_order.vx = speed_order_dx*cos_t + speed_order_dy*sin_t;
-    speed_order.vy = -speed_order_dx*sin_t + speed_order_dy*cos_t;
-    speed_order.vt = pid_position_processing(&pid_angle, dt);
-    Pid_Speed_En = 1; 
+    // --- Par défaut : pas de mouvement
+    speed_order.vx = 0.0f;
+    speed_order.vy = 0.0f;
+    speed_order.vt = 0.0f;
+
+    // float rotation_weight = 0.2; // Poids de la rotation (0.5 = 50% de la vitesse max)
+
+    float angle = atan2f(rdy, rdx);
+
+    float speed_order_d = radial_speed_calculation(d); // vitesse de consigne radiale
+    speed_order_d = limit_float(speed_order_d, -DEFAULT_CONSTRAINT_V_MAX, DEFAULT_CONSTRAINT_V_MAX);
     
-    
-    // si on est arrive // voir truc plus performant....
+    // Décomposition en X/Y monde
+    float vx_world = speed_order_d * cosf(angle);
+    float vy_world = speed_order_d * sinf(angle);
+
+    // Transformation vers repère robot
+    speed_order.vx = vx_world * cos_t + vy_world * sin_t;
+    speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
+
+    float speed_order_vt = speed_order_vt = angular_speed_calculation(dt) * exp(-d);
+    speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX);
+
+    // printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0\n", speed_order.vx, speed_order.vy, speed_order_d, speed_robot.vx, speed_robot.vy, angle);
+
+    // --- Activation de l’asservissement vitesse
+    Pid_Speed_En = 1;
+
+    // --- Stop condition globale (position + angle atteints)
     if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
         set_Constraint_vitesse_max(DEFAULT_CONSTRAINT_V_MAX);
         set_Constraint_vt_max(DEFAULT_CONSTRAINT_VT_MAX);
         motion_free();
         printf("Pos,done\n");
-	}
+    }
+}
+
+float radial_speed_calculation(float distance) {
+    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.9f);
+}
+
+float angular_speed_calculation(float angle) {
+    float fabs_angle = fabsf(angle);
+    int sign = 1;
+    if (angle < 0) {
+        sign = -1;
+    }
+    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle);
 }
 
 

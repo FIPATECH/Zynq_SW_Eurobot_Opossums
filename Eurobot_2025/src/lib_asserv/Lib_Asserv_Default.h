@@ -6,8 +6,8 @@
 /*############################################################################*/
 
 // {tic/m, m/tic, entre roues}
-#define DEFAULT_ODO_SPACING  0.115
-#define DEFAULT_SIZE_WHEEL 0.0575 // 6cm
+#define DEFAULT_ODO_SPACING  0.115//0.115
+#define DEFAULT_SIZE_WHEEL 0.060 // 6cm
 #define DEFAULT_WHEEL_RADIUS DEFAULT_SIZE_WHEEL/2 // 3cm
 
 /*############################################################################*/
@@ -15,25 +15,25 @@
 /*############################################################################*/
 
 // {v, vt} v = 0.9 * v max moteur, vt = v/(entre roues/2)
-#define DEFAULT_CONSTRAINT_V_MAX  0.5//1.0
-#define DEFAULT_CONSTRAINT_VT_MAX 0.5
+#define DEFAULT_CONSTRAINT_V_MAX  0.5//0.7
+#define DEFAULT_CONSTRAINT_VT_MAX 3
 
-#define DEFAULT_AUTHORIZED_V_MAX 0.5
-#define DEFAULT_AUTHORIZED_VT_MAX 0.5
+#define DEFAULT_AUTHORIZED_V_MAX 0.5//0.7
+#define DEFAULT_AUTHORIZED_VT_MAX 1.5
 
-#define DEFAULT_CONSTRAINT_V_ROUE_MAX 1
+#define DEFAULT_CONSTRAINT_V_ROUE_MAX 0.5
 
-
+#define DEFAULT_BETA 5 // ponderation distance vs angle 
 /* {a, at, v_vt} a = a max sans glissement, at = a/(entre roues/2),
  * v_vt = acc centripete (trop fort -> erreur odo) 0.1g
  *
  */
-#define DEFAULT_CONSTRAINT_A_MAX 0.25
-#define DEFAULT_CONSTRAINT_AT_MAX 0.5
+#define DEFAULT_CONSTRAINT_A_MAX 0.5
+#define DEFAULT_CONSTRAINT_AT_MAX 1.5
 
 //#define DEFAULT_CONSTRAINT_VVT_MAX 0.981
 
-#define DEFAULT_CONSTRAINT_A_ROUE 0.5
+#define DEFAULT_CONSTRAINT_A_ROUE 0.4
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 
@@ -49,13 +49,13 @@
 /*############################################################################*/
 
 // 2 PID lies a l'asserv en position (dist: position absolue, angle: position angulaire)
-#define DEFAULT_PID_DIST_KP 3 // kp   
+#define DEFAULT_PID_DIST_KP 1.5//1.8 // kp   
 #define DEFAULT_PID_DIST_KI 0 //ki    
-#define DEFAULT_PID_DIST_KD 0  //kd     
+#define DEFAULT_PID_DIST_KD 0//0.2  //kd     
 
-#define DEFAULT_PID_ANGLE_KP 3 // kp
+#define DEFAULT_PID_ANGLE_KP 1//2.5   //2.3 // kp
 #define DEFAULT_PID_ANGLE_KI 0 //ki
-#define DEFAULT_PID_ANGLE_KD 0 //kd    
+#define DEFAULT_PID_ANGLE_KD 0//1.5 //kd    
 
 
 // 2 PID lies a l'asserve en vitesse (vitesse lineaire et vitesse angulaire)

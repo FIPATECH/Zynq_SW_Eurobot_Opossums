@@ -24,11 +24,14 @@
 #include "PWM.h"
 #include "QEI.h"
 #include "AU.h"
+#include "ws2812b.h"
+
 #include "pump.h"
 #include "Stepper.h"
 
 //divers
 #include "User.h"
+#include "IHM.h"
 
 
 //asserv part 

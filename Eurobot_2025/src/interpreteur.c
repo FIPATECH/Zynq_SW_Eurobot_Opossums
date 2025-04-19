@@ -12,11 +12,19 @@ const Command Command_List[] = {
     { "PRINTCMD", Print_All_CMD_Cmd},
     { "HELP", Print_All_CMD_Cmd},
     { "TEST", Test_Interpreteur},
+    { "VERSION", Version_cmd},
 
     //pump command
     { "PUMP", Pump_cmd},
 
     // Asserv print
+    { "MOTIONTEST", asserv_test_cmd},
+
+    { "SERVO", Servo_cmd},
+    { "LED", LED_cmd},
+
+    { "ODOSPACING", Set_Odo_Spacing_Cmd},
+
     { "PDE", Activate_Position_Sending_Func},
 
     // Stepper command
@@ -42,14 +50,10 @@ const Command Command_List[] = {
     { "PWM3", PWM3_Func},
     { "ASSERV_MODE", Asserv_Mode_Cmd},
     { "PARAM", Param_Asserv_Cmd},
-    { "MAP", MaP_Asserv_Cmd},
-    { "GET_POS", Get_Pos_Cmd},
+    { "MAPASSERV", MaP_Asserv_Cmd},
+    { "GETPOS", Get_Pos_Cmd},
 
-    //motor command
-    { "MOTOR", Motor_cmd},
-
-    //servo command
-    { "SERVO", Servo_cmd}
+    { "MOTOR", Motor_cmd}
 };
 
 const uint16_t Command_List_Length = sizeof (Command_List) / sizeof (Command_List[0]);

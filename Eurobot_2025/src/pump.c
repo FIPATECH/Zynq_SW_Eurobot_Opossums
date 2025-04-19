@@ -31,12 +31,7 @@ uint8_t Pump_cmd(void){
     if (Get_Param_u32(&state)){
         return PARAM_ERROR_CODE;
     }
-	
     xil_printf("Pump number %d, state: %d\n\r", id, state);
-    if (state == 0){
-        pump_state[id-1] = 1;
-    }else{
-        pump_state[id-1] = 0;
-    }
+    pump_state[id-1] = state;
     return 0;
 }

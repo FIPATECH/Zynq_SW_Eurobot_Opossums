@@ -10,6 +10,9 @@
 #define ASSERV_MODE_SPEED 30
 #define ASSERV_MODE_ABSOLUTE_SPEED 31
 
+#define DIST_TOL 0.005 // 5mm
+#define ANGLE_TOL 0.01745 // 1 deg
+
 
 extern int motion_done;
 
@@ -62,5 +65,10 @@ int Get_asserv_done();
 
 // renvoit 1 si la vitesse >1cm/s, -1 si <1cm/s, 0 sinon
 int Get_Sens_Deplacement(void);
+
+float radial_speed_calculation(float distance);
+float angular_speed_calculation(float angle);
+
+
 
 #endif // _ASSERV_H_

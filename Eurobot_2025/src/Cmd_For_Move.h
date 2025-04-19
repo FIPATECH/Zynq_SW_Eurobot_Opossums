@@ -32,7 +32,10 @@ uint8_t Param_Asserv_Cmd(void);
 
 uint8_t MaP_Asserv_Cmd(void);
 
+
 void MaP_Asserv_Loop(void);
 
+void Asserv_test_loop(void);
+uint8_t asserv_test_cmd(void);
 
 #endif

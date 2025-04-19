@@ -37,26 +37,30 @@ void odo_set_spacing(float param_spacing) {
 }
 
 void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2, int16_t delta_angle_motor_3) {   
-    // calcul de la distance linéaire parcourue par chaque roues
     float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
     float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
     float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
 
-    float dx = -0.5*(dist_motor_2 - dist_motor_3)/sin(PI/3);
-    float dy = 0.5*(dist_motor_1 -(dist_motor_2 + dist_motor_3));
-    float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3*robot_wheel_distance);
+    // dx = déplacement avant/arrière = axe X
+    // dy = déplacement latéral gauche/droite = axe Y
+    float dx_local = (2.0f/3.0f) * (dist_motor_1) - (1.0f/3.0f) * (dist_motor_2 + dist_motor_3);  // translation latérale (Y robot)
+    float dy_local = (sqrtf(3.0f) / 3.0f) * (dist_motor_2 - dist_motor_3);   // translation avant (X robot)
+    float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3.0f * robot_wheel_distance);
+    
+    float cos_t = cosf(position_robot.t);
+    float sin_t = sinf(position_robot.t);
 
-    float rdx = dx*cos(position_robot.t) - dy*sin(position_robot.t);
-    float rdy = dx*sin(position_robot.t) + dy*cos(position_robot.t);
+    float dx_global = dx_local * cos_t - dy_local * sin_t;
+    float dy_global = dx_local * sin_t + dy_local * cos_t;
 
-    position_robot.x += rdx;
-    position_robot.y += rdy;
+    position_robot.x += dx_global;
+    position_robot.y += dy_global;
     position_robot.t = principal_angle(position_robot.t + dt);
-
 }
 
+
 float odo_dist_roue(int16_t delta_angle_motor) {
-    static const float facteur_conversion = TWO_PI / (MOTOR_ANGLE_CODEUR_MAX * 36); // Conversion en radian
+    static const float facteur_conversion = TWO_PI / (MOTOR_ANGLE_CODEUR_MAX * 36.0f); // Conversion en radian
 
     // Calcul de la variation d'angle normalisée
     if (delta_angle_motor > (MOTOR_ANGLE_CODEUR_MAX / 2)) {
@@ -82,14 +86,14 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
     float vt = speed_robot.vt;
 
     // maj des vitesses
-    speed_robot.vx = -0.5*(Speed_2 - Speed_3)/sin(PI/3);
-    speed_robot.vy = 0.5*(Speed_1 -(Speed_2 + Speed_3));
-    speed_robot.vt = -(Speed_1 + Speed_2 + Speed_3) / (3*robot_wheel_distance);
+    speed_robot.vx = (2.0f/3.0f) * (Speed_1) - (1.0f/3.0f) * (Speed_2 + Speed_3);
+    speed_robot.vy = (sqrtf(3.0f) / 2.0f) * (Speed_2 - Speed_3); // translation avant (X robot)
+    speed_robot.vt = -(Speed_1 + Speed_2 + Speed_3) / (3.0f * robot_wheel_distance);
 
     // maj des accelerations
-    acceleration_robot.ax = speed_robot.vx - vx;
-    acceleration_robot.ay = speed_robot.vy - vy;
-    acceleration_robot.at = speed_robot.vt - vt;
+    acceleration_robot.ax = (speed_robot.vx - vx) / 0.001;
+    acceleration_robot.ay = (speed_robot.vy - vy) / 0.001;
+    acceleration_robot.at = (speed_robot.vt - vt) / 0.001;
 }
 
 

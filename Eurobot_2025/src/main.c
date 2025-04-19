@@ -1,4 +1,5 @@
 #include "main.h"
+#include "lib_asserv/Lib_Asserv.h"
 
 int old_timer_ms1 = 0;
 int Status = 0;
@@ -34,26 +35,28 @@ int main()
         Status = 0;
     }
 
-//    Status = init_CAN();
-//    if (Status != XST_SUCCESS) {
-//        xil_printf("CAN init failed\n\r");
-//        Status = 0;
-//    } else {
-//        xil_printf("CAN init done\n\r");
-//        Status = 0;
-//    }
+   Status = init_CAN();
+   if (Status != XST_SUCCESS) {
+       xil_printf("CAN init failed\n\r");
+       Status = 0;
+   } else {
+       xil_printf("CAN init done\n\r");
+       Status = 0;
+   }
 
     // init_QEI();
-//    PWM_Init();
+    PWM_Init();
     Std_Com_Init();
-    // init_AU();
+    init_AU();
+    ws2812b_init();
+    init_switch();
     Init_Pump();
     Init_Stepper();
     Init_Asserv();
     xil_printf("Init done\n\r");
 
     while(1){
-        if (Timer_ms1 - old_timer_ms1 >= 1000) {
+        if (Timer_ms1 - old_timer_ms1 >= 100) {
             old_timer_ms1 = Timer_ms1;
             // xil_printf("Timer_ms1 = %d\n\r", Timer_ms1);
         }
@@ -61,18 +64,28 @@ int main()
         if (Get_Std_In(&c)) {
             Interp(c);
         }
-
-//        AU_Loop();
+        AU_Loop();
+        LED_loop();
         Std_Com_Loop();
-        Pump_Loop();
-        Stepper_Loop();
-        // if(AU_state == 0){
-            // xil_printf("AU_state = 0\n\r");
-        //    Asserv_Loop();
-        //    PWM_Loop();
-        //    Can_Loop();
-        // }
+
+        if(AU_state == 0){
+            LED_AU();
+            motion_block();
+        }else{
+            IHM_loop();
+            LED_CLASSIC_MODE();
+            MaP_Asserv_Loop();
+            Asserv_Loop();
+            Can_Loop();
+            PWM_Loop();
+            Pump_Loop();
+            Stepper_Loop();
+        }
+
+        Asserv_test_loop();
     }
     cleanup_platform();
     return 0;
 }
+
+
