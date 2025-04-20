@@ -528,14 +528,3 @@ uint8_t asserv_test_cmd(void) {
     }
     return 0;
 }
-
-uint8_t set_lidar_cmd(void) {
-    float dx;
-    if (Get_Param_Float(&dx)) return PARAM_ERROR_CODE;
-    float dy;
-    if (Get_Param_Float(&dy)) return PARAM_ERROR_CODE;
-    float dtheta;
-    if (Get_Param_Float(&dtheta)) return PARAM_ERROR_CODE;
-    kalman_update(&position_robot, dx, dy, dtheta);
-    return 0;
-}

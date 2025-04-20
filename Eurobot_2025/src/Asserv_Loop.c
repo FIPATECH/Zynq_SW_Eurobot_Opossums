@@ -45,6 +45,8 @@ ESC_Command Consigne;
 ESC_Command Wanted_Forced_Consigne;
 ESC_Command old_Consigne;
 
+float dx, dy, dt = 0;
+
 void Init_Asserv(void) {
     Consigne.command1 = 0;
     Consigne.command2 = 0;
@@ -80,10 +82,14 @@ void Asserv_Loop(void)
             delta_angle_motor_3 = angle_motor_3 - previous_angle_motor_3;
 
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);
-            odo_position_step(delta_angle_motor_1, delta_angle_motor_2, delta_angle_motor_3);
+            odo_position_step(&dx, &dy, &dt);
 
             // update kalman filter with odometry data
-            kalman_predict(&position_robot, position_robot.x, position_robot.y, position_robot.t);
+            position_robot_kalman.x = position_robot.x;
+            position_robot_kalman.y = position_robot.y;
+            position_robot_kalman.t = position_robot.t;
+
+            kalman_predict(&position_robot_kalman, dx, dy, dt);
 
             previous_angle_motor_1 = angle_motor_1;
             previous_angle_motor_2 = angle_motor_2;
@@ -202,7 +208,11 @@ uint8_t Set_Lidar_Cmd(void){
     if (Get_Param_Float(&z_x)) return 1;
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
-    kalman_update(&position_robot, z_x, z_y, z_theta);
+    Position lidar_meas;
+    lidar_meas.x = z_x;
+    lidar_meas.y = z_y;
+    lidar_meas.t = z_theta;
+    kalman_update(&position_robot, &position_robot_kalman, lidar_meas);
     return 0;
 }
 

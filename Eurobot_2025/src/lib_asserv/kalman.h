@@ -9,6 +9,6 @@
 
 void kalman_init(Position* pos);
 void kalman_predict(Position* pos, float dx, float dy, float dtheta);
-void kalman_update(Position* pos, float z_x, float z_y, float z_theta);
+void kalman_update(Position* pos, const Position* pos_predict, const Position lidar_meas);
 
 #endif // __KALMAN_H_
