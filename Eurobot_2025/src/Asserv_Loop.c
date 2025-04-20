@@ -197,3 +197,12 @@ uint8_t Set_Odo_Spacing_Cmd(void){
     return 0;
 }
 
+uint8_t Set_Lidar_Cmd(void){
+    float z_x, z_y, z_theta;
+    if (Get_Param_Float(&z_x)) return 1;
+    if (Get_Param_Float(&z_y)) return 1;
+    if (Get_Param_Float(&z_theta)) return 1;
+    kalman_update(&position_robot, z_x, z_y, z_theta);
+    return 0;
+}
+
