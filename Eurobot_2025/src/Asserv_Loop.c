@@ -144,9 +144,14 @@ void Asserv_Loop(void)
         Asserv_State ++;
 
     } else if (Asserv_State == 5) {
-        motor1_current_order = Consigne.command1;
-        motor2_current_order = Consigne.command2;
-        motor3_current_order = Consigne.command3;
+        if(!AU_state){
+            asserv_off_step();
+        }else{
+            motor1_current_order = Consigne.command1;
+            motor2_current_order = Consigne.command2;
+            motor3_current_order = Consigne.command3;
+        }
+        CAN_transmit_motor(motor1_current_order, motor2_current_order, motor3_current_order);
         Asserv_State ++;
 
     } else if (Asserv_State == 6) {

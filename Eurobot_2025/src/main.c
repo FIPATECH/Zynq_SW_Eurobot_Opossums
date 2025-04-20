@@ -44,12 +44,12 @@ int main()
    }
 
     // init_QEI();
-    // PWM_Init();
+    PWM_Init();
     Std_Com_Init();
     init_AU();
     ws2812b_init();
     init_switch();
-    // Init_Pump();
+    Init_Pump();
     Init_Asserv();
     xil_printf("Init done\n\r");
 
@@ -75,6 +75,8 @@ int main()
             MaP_Asserv_Loop();
             Asserv_Loop();
             Can_Loop();
+            PWM_Loop();
+            Pump_Loop();
         }
 
         Asserv_test_loop();
