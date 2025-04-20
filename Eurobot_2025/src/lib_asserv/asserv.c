@@ -180,7 +180,7 @@ void pos_asserv_step(void) {
 
     float angle = atan2f(rdy, rdx);
 
-    float speed_order_d = radial_speed_calculation(d); // vitesse de consigne radiale
+    float speed_order_d = pid_position_processing(&pid_dist, d);
     speed_order_d = limit_float(speed_order_d, -DEFAULT_CONSTRAINT_V_MAX, DEFAULT_CONSTRAINT_V_MAX);
     
     // Décomposition en X/Y monde
@@ -191,7 +191,7 @@ void pos_asserv_step(void) {
     speed_order.vx = vx_world * cos_t + vy_world * sin_t;
     speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
 
-    float speed_order_vt = speed_order_vt = angular_speed_calculation(dt) * exp(-d);
+    float speed_order_vt = speed_order_vt = pid_position_processing(&pid_angle, dt) * exp(-d);
     speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX);
 
     // printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0\n", speed_order.vx, speed_order.vy, speed_order_d, speed_robot.vx, speed_robot.vy, angle);
@@ -206,19 +206,6 @@ void pos_asserv_step(void) {
         motion_free();
         printf("Pos,done\n");
     }
-}
-
-float radial_speed_calculation(float distance) {
-    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.9f);
-}
-
-float angular_speed_calculation(float angle) {
-    float fabs_angle = fabsf(angle);
-    int sign = 1;
-    if (angle < 0) {
-        sign = -1;
-    }
-    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.9f);
 }
 
 
