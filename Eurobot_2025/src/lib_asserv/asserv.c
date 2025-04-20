@@ -27,6 +27,7 @@ float a_max = DEFAULT_CONSTRAINT_A_MAX;
 void asserv_init(void) {
 	// init des autres trucs de la lib
 	odo_init();
+	pid_position_init();
 	speed_constrainer_init();
 	pid_vitesse_init();
 
@@ -77,7 +78,7 @@ void motion_absolute_speed(Speed speed) {
 
 void set_Constraint_vitesse_max(float v_max_in) {
     if (v_max_in != 0) {
-        if (v_max_in <= DEFAULT_AUTHORIZED_V_MAX) {
+        if (v_max_in <= DEFAULT_CONSTRAINT_V_MAX) {
             v_max = v_max_in;
         } else {
             v_max = DEFAULT_CONSTRAINT_V_MAX;
@@ -190,8 +191,8 @@ void pos_asserv_step(void) {
     speed_order.vx = vx_world * cos_t + vy_world * sin_t;
     speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
 
-    float speed_order_vt = speed_order_vt = angular_speed_calculation(dt) * exp(-d);
-    speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX);
+    float speed_order_vt =  angular_speed_calculation(dt);
+    speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX) * exp(-d);
 
     // printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0\n", speed_order.vx, speed_order.vy, speed_order_d, speed_robot.vx, speed_robot.vy, angle);
 
@@ -208,7 +209,7 @@ void pos_asserv_step(void) {
 }
 
 float radial_speed_calculation(float distance) {
-    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.9f);
+    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.7f);
 }
 
 float angular_speed_calculation(float angle) {
@@ -217,10 +218,8 @@ float angular_speed_calculation(float angle) {
     if (angle < 0) {
         sign = -1;
     }
-    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle);
+    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.7f);
 }
-
-
 
 void speed_asserv_step(void) {
 
@@ -248,18 +247,6 @@ int Get_asserv_done(void) {
     } else {
         return 0;
     }
-}
-
-int Get_Sens_Deplacement(void) {
-//    float valf = speed_order.v;
-//    if (valf > 0.01)
-//        return 1;
-//    else if (valf < -0.01)
-//        return -1;
-//    else
-//        return 0;
-//    
-    return 0;
 }
 
 // verifier qu'on est pas bloque par un obstacle
