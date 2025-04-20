@@ -1,4 +1,5 @@
 #include "main.h"
+#include "lib_asserv/Lib_Asserv.h"
 
 int old_timer_ms1 = 0;
 int Status = 0;
@@ -74,7 +75,6 @@ int main()
             LED_CLASSIC_MODE();
             MaP_Asserv_Loop();
             Asserv_Loop();
-            Can_Loop();
             PWM_Loop();
             Pump_Loop();
         }
