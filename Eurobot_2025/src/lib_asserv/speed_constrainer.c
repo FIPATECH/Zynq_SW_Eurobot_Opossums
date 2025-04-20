@@ -45,7 +45,7 @@ void constrain_speed_order(float period) {
     float vy_o = speed_order.vy;
     float vt_o = speed_order.vt;
 
-    vt_o = limit_float(vt_o, -Speed_Max.vt, Speed_Max.vt);
+    // vt_o = limit_float(vt_o, -Speed_Max.vt, Speed_Max.vt);
     float vt_component = -(vt_o * robot_wheel_distance);
 	// vt_component  = limit_float(vt_component, -Speed_Max_Roue, Speed_Max_Roue);
 

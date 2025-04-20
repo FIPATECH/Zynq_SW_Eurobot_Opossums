@@ -36,11 +36,11 @@
 /*                                   PID                                      */
 /*############################################################################*/
 
-#define DEFAULT_PID_DIST_KP 1.5//1.8 // kp   
+#define DEFAULT_PID_DIST_KP 1//1.8 // kp   
 #define DEFAULT_PID_DIST_KI 0 //ki    
 #define DEFAULT_PID_DIST_KD 0//0.2  //kd     
 
-#define DEFAULT_PID_ANGLE_KP 1//2.5   //2.3 // kp
+#define DEFAULT_PID_ANGLE_KP 0.8//2.5   //2.3 // kp
 #define DEFAULT_PID_ANGLE_KI 0 //ki
 #define DEFAULT_PID_ANGLE_KD 0//1.5 //kd 
 

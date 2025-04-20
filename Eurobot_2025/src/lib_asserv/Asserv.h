@@ -63,5 +63,7 @@ void asserv_check_blocked(float period);
 // indique si l'asservissement en cours a termine
 int Get_asserv_done();
 
+float radial_speed_calculation(float distance);
+float angular_speed_calculation(float angle);
 
 #endif // _ASSERV_H_
