@@ -37,15 +37,19 @@ void odo_set_spacing(float param_spacing) {
 }
 
 void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2, int16_t delta_angle_motor_3) {   
-    float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
-    float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
-    float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
+    // float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
+    // float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
+    // float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
 
-    // dx = déplacement avant/arrière = axe X
-    // dy = déplacement latéral gauche/droite = axe Y
-    float dx_local = (2.0f/3.0f) * (dist_motor_1) - (1.0f/3.0f) * (dist_motor_2 + dist_motor_3);  // translation latérale (Y robot)
-    float dy_local = (sqrtf(3.0f) / 3.0f) * (dist_motor_2 - dist_motor_3);   // translation avant (X robot)
-    float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3.0f * robot_wheel_distance);
+    // // dx = déplacement avant/arrière = axe X
+    // // dy = déplacement latéral gauche/droite = axe Y
+    // float dx_local = (2.0f/3.0f) * (dist_motor_1) - (1.0f/3.0f) * (dist_motor_2 + dist_motor_3);  // translation latérale (Y robot)
+    // float dy_local = (sqrtf(3.0f) / 3.0f) * (dist_motor_2 - dist_motor_3);   // translation avant (X robot)
+    // float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3.0f * robot_wheel_distance);
+
+    float dx_local = (speed_robot.vx * 0.001f);
+    float dy_local = (speed_robot.vy * 0.001f);
+    float dt = (speed_robot.vt * 0.001f);
     
     float cos_t = cosf(position_robot.t);
     float sin_t = sinf(position_robot.t);

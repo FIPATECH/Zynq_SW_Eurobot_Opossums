@@ -15,7 +15,7 @@
 /*############################################################################*/
 
 // {v, vt} v = 0.9 * v max moteur, vt = v/(entre roues/2)
-#define DEFAULT_CONSTRAINT_V_ROUE_MAX 0.5
+#define DEFAULT_CONSTRAINT_V_ROUE_MAX 0.2
 #define DEFAULT_CONSTRAINT_V_MAX  DEFAULT_CONSTRAINT_V_ROUE_MAX
 #define DEFAULT_CONSTRAINT_VT_MAX 1.0
 
