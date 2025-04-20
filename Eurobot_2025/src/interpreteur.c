@@ -14,6 +14,8 @@ const Command Command_List[] = {
     { "TEST", Test_Interpreteur},
     { "VERSION", Version_cmd},
 
+    { "SETLIDAR", Set_Lidar_Cmd},
+
     { "MOTIONTEST", asserv_test_cmd},
 
     { "SERVO", Servo_cmd},

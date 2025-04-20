@@ -20,6 +20,10 @@ void odo_init(void) {
     position_robot.y = 0;
     position_robot.t = 0;
 
+    position_robot_predict.x = 0;
+    position_robot_predict.y = 0;
+    position_robot_predict.t = 0;
+
     speed_robot.vx = 0;
     speed_robot.vy = 0;
     speed_robot.vt = 0;
@@ -36,17 +40,7 @@ void odo_set_spacing(float param_spacing) {
     robot_wheel_distance = param_spacing;
 }
 
-void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2, int16_t delta_angle_motor_3) {   
-    // float dist_motor_1 = odo_dist_roue(delta_angle_motor_1);
-    // float dist_motor_2 = odo_dist_roue(delta_angle_motor_2);
-    // float dist_motor_3 = odo_dist_roue(delta_angle_motor_3);
-
-    // // dx = déplacement avant/arrière = axe X
-    // // dy = déplacement latéral gauche/droite = axe Y
-    // float dx_local = (2.0f/3.0f) * (dist_motor_1) - (1.0f/3.0f) * (dist_motor_2 + dist_motor_3);  // translation latérale (Y robot)
-    // float dy_local = (sqrtf(3.0f) / 3.0f) * (dist_motor_2 - dist_motor_3);   // translation avant (X robot)
-    // float dt = -(dist_motor_1 + dist_motor_2 + dist_motor_3) / (3.0f * robot_wheel_distance);
-
+void odo_position_step(float* dx, float* dy, float* delta_t) {   
     float dx_local = (speed_robot.vx * 0.001f);
     float dy_local = (speed_robot.vy * 0.001f);
     float dt = (speed_robot.vt * 0.001f);
@@ -56,6 +50,10 @@ void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2,
 
     float dx_global = dx_local * cos_t - dy_local * sin_t;
     float dy_global = dx_local * sin_t + dy_local * cos_t;
+
+    *dx = dx_global;
+    *dy = dy_global;
+    *delta_t = dt;
 
     position_robot.x += dx_global;
     position_robot.y += dy_global;
@@ -93,18 +91,22 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
 
 void set_position(Position pos) {
     position_robot = pos;
+    position_robot_predict = pos;
 }
 
 void set_position_x(float x) {
     position_robot.x = x;
+    position_robot_predict.x = x;
 }
 
 void set_position_y(float y) {
     position_robot.y = y;
+    position_robot_predict.y = y;
 }
 
 void set_position_t(float t) {
     position_robot.t = t;
+    position_robot_predict.t = t;
 }
 
 

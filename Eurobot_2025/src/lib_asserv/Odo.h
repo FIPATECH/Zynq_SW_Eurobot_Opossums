@@ -18,7 +18,7 @@ void odo_set_tic_by_meter(double param_tic_by_meter);
 void odo_set_spacing(float param_spacing);
 
 // maj de la position du robot
-void odo_position_step(int16_t delta_angle_motor_1, int16_t delta_angle_motor_2, int16_t delta_angle_motor_3);
+void odo_position_step(float* dx, float* dy, float* delta_t);
 
 // maj de la vitesse/acceleration  du robot
 void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3);

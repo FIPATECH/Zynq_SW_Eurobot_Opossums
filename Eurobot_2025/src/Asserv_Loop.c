@@ -3,8 +3,8 @@
 
 u32 Last_Timer_print_pos = 0;
 
-uint8_t auto_printpos_en = 0;
-uint16_t auto_printpos_delay = 100;
+uint8_t auto_printpos_en = 1;
+uint16_t auto_printpos_delay = 10;
 
 uint8_t Debug_Timing = 0;
 
@@ -28,6 +28,7 @@ float wheel_speed3 = 0;
 
 uint8_t stop = 0;
 
+Position position_lidar;
 
 int Last_Timer_Asserv = 0;
 int Asserv_State = 0;
@@ -44,6 +45,8 @@ int16_t delta_angle_motor_3 = 0;
 ESC_Command Consigne;
 ESC_Command Wanted_Forced_Consigne;
 ESC_Command old_Consigne;
+
+float dx, dy, dt = 0;
 
 void Init_Asserv(void) {
     Consigne.command1 = 0;
@@ -80,7 +83,14 @@ void Asserv_Loop(void)
             delta_angle_motor_3 = angle_motor_3 - previous_angle_motor_3;
 
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);
-            odo_position_step(delta_angle_motor_1, delta_angle_motor_2, delta_angle_motor_3);
+            odo_position_step(&dx, &dy, &dt);
+
+            // update kalman filter with odometry data
+            // position_robot_kalman.x = position_robot.x;
+            // position_robot_kalman.y = position_robot.y;
+            // position_robot_kalman.t = position_robot.t;
+
+            kalman_predict(&position_robot_predict, dx, dy, dt);
 
             previous_angle_motor_1 = angle_motor_1;
             previous_angle_motor_2 = angle_motor_2;
@@ -153,16 +163,17 @@ void Asserv_Loop(void)
 
     } else if (Asserv_State == 6) {
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
-            printf("motor,");
-            printf("%d,",Timer_ms1);
-            printf("%d,",motion_done);
-            // print angle_motor
-            printf("%.2f,", (float)(position_robot.x));
-            printf("%.2f,", (float)(position_robot.y));
-            printf("%.2f,", (float)(position_robot.t));
-            printf("%.2f,", (float)(speed_robot.vx));
-            printf("%.2f,", (float)(speed_robot.vy)); 
-            printf("\n");
+            // printf("motor,");
+            // printf("%d,",Timer_ms1);
+            // printf("%d,",motion_done);
+            // // print angle_motor
+            // printf("%.2f,", (float)(position_robot.x));
+            // printf("%.2f,", (float)(position_robot.y));
+            // printf("%.2f,", (float)(position_robot.t));
+            // printf("%.2f,", (float)(speed_robot.vx));
+            // printf("%.2f,", (float)(speed_robot.vy)); 
+            // printf("\n");
+            printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot.x, position_robot.y, position_robot.t, position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, position_lidar.x, position_lidar.y, position_lidar.t);
             Last_Timer_print_pos += auto_printpos_delay;
         }
         Asserv_State = 0;
@@ -191,6 +202,18 @@ uint8_t Set_Odo_Spacing_Cmd(void){
     if (Get_Param_Float(&valf))
         return 1;
     odo_set_spacing(valf);
+    return 0;
+}
+
+uint8_t Set_Lidar_Cmd(void){
+    float z_x, z_y, z_theta;
+    if (Get_Param_Float(&z_x)) return 1;
+    if (Get_Param_Float(&z_y)) return 1;
+    if (Get_Param_Float(&z_theta)) return 1;
+    position_lidar.x = z_x;
+    position_lidar.y = z_y;
+    position_lidar.t = principal_angle(z_theta);
+    kalman_update(&position_robot, &position_robot_predict, position_lidar);
     return 0;
 }
 
