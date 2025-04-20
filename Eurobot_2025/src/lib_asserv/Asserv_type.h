@@ -11,7 +11,7 @@ typedef struct {
 } Position;
 
 extern Position position_robot;
-extern Position position_robot_kalman;
+extern Position position_robot_predict;
 
 
 // Vitesse et vitesse angulaire du robot
