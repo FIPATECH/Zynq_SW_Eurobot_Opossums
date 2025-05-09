@@ -29,20 +29,20 @@
 /*                                  Asserv                                    */
 /*############################################################################*/
 
-#define DEFAULT_STOP_DISTANCE 0.005 // +-5mm
-#define DEFAULT_STOP_ANGLE 0.01745// +-1deg  // en radian
+#define DEFAULT_STOP_DISTANCE 0.015 // +-5mm
+#define DEFAULT_STOP_ANGLE 0.04// +-1deg  // en radian
 
 /*############################################################################*/
 /*                                   PID                                      */
 /*############################################################################*/
 
-#define DEFAULT_PID_DIST_KP 1//1.8 // kp   
+#define DEFAULT_PID_DIST_KP 1.8//1.3//1.8 // kp   
 #define DEFAULT_PID_DIST_KI 0 //ki    
-#define DEFAULT_PID_DIST_KD 0//0.2  //kd     
+#define DEFAULT_PID_DIST_KD 0.2//0.2  //kd     
 
-#define DEFAULT_PID_ANGLE_KP 0.8//2.5   //2.3 // kp
+#define DEFAULT_PID_ANGLE_KP 1.3//1.3//0.8//2.5   //2.3 // kp
 #define DEFAULT_PID_ANGLE_KI 0 //ki
-#define DEFAULT_PID_ANGLE_KD 0//1.5 //kd 
+#define DEFAULT_PID_ANGLE_KD 0.2//1.5 //kd 
 
 // 2 PID lies a l'asserve en vitesse (vitesse lineaire et vitesse angulaire)
 #define DEFAULT_PID_V_LIN_KP 10000 // kp

@@ -3,7 +3,7 @@
 
 u32 Last_Timer_print_pos = 0;
 
-uint8_t auto_printpos_en = 0;
+uint8_t auto_printpos_en = 1;
 uint16_t auto_printpos_delay = 10;
 
 uint8_t Debug_Timing = 0;
