@@ -57,9 +57,6 @@ uint8_t FREE_Cmd(void) {
 // HOLD
 uint8_t BLOCK_Cmd(void) {
     motion_block();
-    // Wanted_Forced_Consigne.command1 = 0;
-    // Wanted_Forced_Consigne.command2 = 0;
-    // Wanted_Forced_Consigne.command3 = 0;
     return 0;
 }
 
