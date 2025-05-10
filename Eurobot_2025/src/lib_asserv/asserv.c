@@ -55,6 +55,14 @@ void asserv_init(void) {
 
 // consignes de deplacements du robot
 void motion_block(void) {
+        Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
+        Wanted_Speed.vx = 0;
+        Wanted_Speed.vy = 0;
+        Wanted_Speed.vt = 0;
+        asserv_mode = ASSERV_MODE_SPEED;
+}
+
+void motion_off(void) {
     asserv_mode = ASSERV_MODE_OFF;
 }
 
@@ -65,6 +73,7 @@ void motion_free(void) {
 void motion_pos(Position pos) {
     current_stop_distance = default_stop_distance;
     Wanted_Pos = pos;
+    Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
     asserv_mode = ASSERV_MODE_POS;
 }
 
@@ -146,7 +155,7 @@ void asserv_free_step(void)
     Pid_Speed_En = 1;
 
 	if ((fabs(speed_robot.vx) < 0.05*Speed_Max.vx) && (fabs(speed_robot.vy) < 0.05*Speed_Max.vy) && (fabs(speed_robot.vt) < 0.05*Speed_Max.vt)) {
-        motion_block();
+        motion_off();
 	}
 }
 

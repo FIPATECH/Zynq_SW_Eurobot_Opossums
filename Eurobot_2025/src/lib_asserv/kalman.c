@@ -1,7 +1,7 @@
 #include "../main.h"
 #include "lib_asserv.h"
 
-Position position_robot_predict; // Position estimée par le filtre de Kalman
+Position position_robot_odom; // Position estimée par le filtre de Kalman
 
 float P[3][3]; // Covariance matrix
 

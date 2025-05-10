@@ -4,8 +4,8 @@
 #define NOISE_XY_ODO 1e-3
 #define NOISE_T_ODO 1e-2
 
-#define NOISE_XY_LIDAR 1
-#define NOISE_T_LIDAR 1
+#define NOISE_XY_LIDAR 20 //0.8
+#define NOISE_T_LIDAR 20 //0.8
 
 void kalman_init(Position* pos);
 void kalman_predict(Position* pos, float dx, float dy, float dtheta);

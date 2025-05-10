@@ -8,6 +8,7 @@ extern Speed Old_Speed_Max;
 extern Speed speed_order;
 extern Speed speed_order_constrained;
 
+extern float Accel_Max_Roue;
 
 extern float Speed_Order_1, Speed_Order_2, Speed_Order_3;
 extern float vx_o, vy_o, vt_o;

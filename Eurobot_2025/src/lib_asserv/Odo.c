@@ -20,9 +20,9 @@ void odo_init(void) {
     position_robot.y = 0;
     position_robot.t = 0;
 
-    position_robot_predict.x = 0;
-    position_robot_predict.y = 0;
-    position_robot_predict.t = 0;
+    position_robot_odom.x = 0;
+    position_robot_odom.y = 0;
+    position_robot_odom.t = 0;
 
     speed_robot.vx = 0;
     speed_robot.vy = 0;
@@ -91,22 +91,22 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
 
 void set_position(Position pos) {
     position_robot = pos;
-    position_robot_predict = pos;
+    position_robot_odom = pos;
 }
 
 void set_position_x(float x) {
     position_robot.x = x;
-    position_robot_predict.x = x;
+    position_robot_odom.x = x;
 }
 
 void set_position_y(float y) {
     position_robot.y = y;
-    position_robot_predict.y = y;
+    position_robot_odom.y = y;
 }
 
 void set_position_t(float t) {
     position_robot.t = t;
-    position_robot_predict.t = t;
+    position_robot_odom.t = t;
 }
 
 

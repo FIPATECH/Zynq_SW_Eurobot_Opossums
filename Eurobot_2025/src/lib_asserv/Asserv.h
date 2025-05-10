@@ -34,6 +34,7 @@ void asserv_init(void);
 void motion_block(void) ;
 void motion_free(void) ;
 void motion_pos(Position pos);
+void motion_off(void);
 
 void motion_speed(Speed speed);
 void motion_absolute_speed(Speed speed);
