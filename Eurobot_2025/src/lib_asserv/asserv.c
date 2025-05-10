@@ -55,6 +55,13 @@ void asserv_init(void) {
 
 // consignes de deplacements du robot
 void motion_block(void) {
+    Wanted_Pos.x = position_robot.x;
+    Wanted_Pos.y = position_robot.y;
+    Wanted_Pos.t = position_robot.t;
+    asserv_mode = ASSERV_MODE_POS;
+}
+
+void motion_off(void) {
     asserv_mode = ASSERV_MODE_OFF;
 }
 
@@ -146,7 +153,7 @@ void asserv_free_step(void)
     Pid_Speed_En = 1;
 
 	if ((fabs(speed_robot.vx) < 0.05*Speed_Max.vx) && (fabs(speed_robot.vy) < 0.05*Speed_Max.vy) && (fabs(speed_robot.vt) < 0.05*Speed_Max.vt)) {
-        motion_block();
+        motion_off();
 	}
 }
 
