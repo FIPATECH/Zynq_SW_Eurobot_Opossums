@@ -4,6 +4,7 @@
 u32 Last_Timer_print_pos = 0;
 
 uint8_t auto_printpos_en = 1;
+uint8_t auto_printdebug_en = 1;
 uint16_t auto_printpos_delay = 10;
 
 uint8_t Debug_Timing = 0;
@@ -170,10 +171,13 @@ void Asserv_Loop(void)
             // printf("\n");
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
-            printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot.x, position_robot.y, position_robot.t, position_robot_odom.x, position_robot_odom.y, position_robot_odom.t, position_lidar.x, position_lidar.y, position_lidar.t);
-            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot.x, position_robot.y, position_robot.t, speed_linear, speed_direction);
+            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot.x, position_robot.y, position_robot.t, speed_linear, speed_direction);          
+            if (auto_printdebug_en) {
+                printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_odom.x, position_robot_odom.y, position_robot_odom.t, speed_robot.vx, speed_robot.vy);
+            }
             Last_Timer_print_pos += auto_printpos_delay;
         }
+
         Asserv_State = 0;
         
     } else {
