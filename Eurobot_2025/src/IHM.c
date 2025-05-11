@@ -67,6 +67,7 @@ void IHM_loop(void){
             if(current_mode == 1){ // start selection color
                 current_mode = 10;
                 validation_blue = 1;
+                printf("LEASH\n");
             } else if (current_mode == 20){ //abort selection color
                 current_mode = 1;
             }
