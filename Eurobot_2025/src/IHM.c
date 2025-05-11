@@ -67,7 +67,6 @@ void IHM_loop(void){
             if(current_mode == 1){ // start selection color
                 current_mode = 10;
                 validation_blue = 1;
-                printf("LEASH\n");
             } else if (current_mode == 20){ //abort selection color
                 current_mode = 1;
             }
@@ -99,8 +98,11 @@ void IHM_loop(void){
     if (leash_state != previous_leash_state){
         previous_leash_state = leash_state;
         if(leash_state == 1){
+            printf("LEASH\n");
             current_mode = 60;
             start_timer_match = Timer_ms1;
+        }else{
+            current_mode = 0;
         }
     }
     if(leash_state == 1){
