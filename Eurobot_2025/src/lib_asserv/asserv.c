@@ -55,11 +55,7 @@ void asserv_init(void) {
 
 // consignes de deplacements du robot
 void motion_block(void) {
-        Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
-        Wanted_Speed.vx = 0;
-        Wanted_Speed.vy = 0;
-        Wanted_Speed.vt = 0;
-        asserv_mode = ASSERV_MODE_SPEED;
+        asserv_mode = ASSERV_MODE_BREAK;
 }
 
 void motion_off(void) {
@@ -128,6 +124,10 @@ void motion_step(void) {
         // si on est en asservissement en vitesse
         case ASSERV_MODE_SPEED:
             speed_asserv_step();
+            motion_done = 0;
+            break;
+        case ASSERV_MODE_BREAK:
+            speed_asserv_break_step();
             motion_done = 0;
             break;
         case ASSERV_MODE_ABSOLUTE_SPEED:
@@ -214,6 +214,7 @@ void pos_asserv_step(void) {
     if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
         set_Constraint_vitesse_max(DEFAULT_CONSTRAINT_V_MAX);
         set_Constraint_vt_max(DEFAULT_CONSTRAINT_VT_MAX);
+        set_Constraint_acceleration_max(DEFAULT_CONSTRAINT_A_MAX);
         motion_free();
         printf("Pos,done\n");
     }
@@ -249,7 +250,19 @@ void absolute_speed_asserv_step(void) {
     Pid_Speed_En = 1;
 }
 
-
+void speed_asserv_break_step(void) {
+    Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
+    speed_order.vx = 0;
+    speed_order.vy = 0;
+    speed_order.vt = 0;
+    Pid_Speed_En = 1;
+    if (fabs(speed_robot.vx) < 0.05 && fabs(speed_robot.vy) < 0.05 && fabs(speed_robot.vt) < 0.05) {
+        Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
+        motion_free();
+        printf("Break,done\n");
+        motion_done = 1;
+    }
+}
 
 // indique si l'asservissement en cours a termine
 int Get_asserv_done(void) {

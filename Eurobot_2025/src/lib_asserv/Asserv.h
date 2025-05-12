@@ -5,7 +5,7 @@
 // mode de l'asservissement
 #define ASSERV_MODE_OFF 0
 #define ASSERV_MODE_FREE 1
-
+#define ASSERV_MODE_BREAK 2
 #define ASSERV_MODE_POS 10
 #define ASSERV_MODE_SPEED 30
 #define ASSERV_MODE_ABSOLUTE_SPEED 31
@@ -52,6 +52,7 @@ void pos_asserv_step(void);
 
 
 void speed_asserv_step(void);
+void speed_asserv_break_step(void);
 void absolute_speed_asserv_step(void);
 
 
