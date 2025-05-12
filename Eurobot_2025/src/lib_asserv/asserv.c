@@ -3,7 +3,7 @@
 
 
 // ******************************    Variables    *******************************
-int asserv_mode;
+int asserv_mode = 0; // asservissement off par defaut
 int motion_done;
 
 float blocked_time;
@@ -251,7 +251,7 @@ void absolute_speed_asserv_step(void) {
 }
 
 void speed_asserv_break_step(void) {
-    Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
+    // Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
     speed_order.vx = 0;
     speed_order.vy = 0;
     speed_order.vt = 0;
