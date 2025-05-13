@@ -111,16 +111,17 @@ void set_Constraint_acceleration_max(float a_max_in) {
 void motion_step(void) {
     // choix en fonction du mode d'asservissement (off, position ou vitesse)
     switch (asserv_mode) {
-            // si on est en roue libre
+        // si on est en roue libre
         case ASSERV_MODE_OFF:
             asserv_off_step();
             motion_done = 1;
             break;
+        // si on s'arrête mais qu'on ne doit pas freiner (pas de roue libre ni de blocage roues)
         case ASSERV_MODE_FREE:
             asserv_free_step();
             motion_done = 1;
             break;
-            // si on est en asservissement en position
+        // si on est en asservissement en position
         case ASSERV_MODE_POS:
             pos_asserv_step();
             motion_done = 0;
@@ -135,6 +136,7 @@ void motion_step(void) {
             speed_asserv_break_step();
             motion_done = 0;
             break;
+        // si on est en asservissement en vitesse absolue
         case ASSERV_MODE_ABSOLUTE_SPEED:
             absolute_speed_asserv_step();
             motion_done = 0;
@@ -173,6 +175,8 @@ void speed_asserv_break_step(void) {
     speed_order.vy = 0;
     speed_order.vt = 0;
     Pid_Speed_En = 1;
+
+    // if the robot is almost not moving anymore, free the motion
     if (fabs(speed_robot.vx) < 0.05 && fabs(speed_robot.vy) < 0.05 && fabs(speed_robot.vt) < 0.05) {
         Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
         motion_free();
@@ -198,7 +202,7 @@ void pos_asserv_step(void) {
     // --- Erreurs
     float rdx = x_o - x;
     float rdy = y_o - y;
-    float d = sqrtf(rdx*rdx + rdy*rdy);                 // Erreur positionnelle
+    float d = sqrtf(rdx*rdx + rdy*rdy);             // Erreur positionnelle
     float dt = principal_angle(t_o - t);            // Erreur angulaire
 
     float cos_t = cosf(t);
@@ -209,10 +213,9 @@ void pos_asserv_step(void) {
     speed_order.vy = 0.0f;
     speed_order.vt = 0.0f;
 
-    // float rotation_weight = 0.2; // Poids de la rotation (0.5 = 50% de la vitesse max)
-
     float angle = atan2f(rdy, rdx);
 
+    // --- Calcul de la vitesse radiale
     float speed_order_d = radial_speed_calculation(d); // vitesse de consigne radiale
     speed_order_d = limit_float(speed_order_d, -DEFAULT_CONSTRAINT_V_MAX, DEFAULT_CONSTRAINT_V_MAX);
     
@@ -224,6 +227,7 @@ void pos_asserv_step(void) {
     speed_order.vx = vx_world * cos_t + vy_world * sin_t;
     speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
 
+    // --- Calcul de la vitesse angulaire
     float speed_order_vt =  angular_speed_calculation(dt);
     speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX) * exp(-d);
 
@@ -234,7 +238,7 @@ void pos_asserv_step(void) {
     if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
         set_Constraint_vitesse_max(DEFAULT_CONSTRAINT_V_MAX);
         set_Constraint_vt_max(DEFAULT_CONSTRAINT_VT_MAX);
-        set_Constraint_acceleration_max(DEFAULT_CONSTRAINT_A_MAX);
+        acceleration_constrainer_init();
         motion_free();
         printf("Pos,done\n");
     }
