@@ -159,16 +159,6 @@ void Asserv_Loop(void)
 
     } else if (Asserv_State == 6) {
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
-            // printf("motor,");
-            // printf("%d,",Timer_ms1);
-            // printf("%d,",motion_done);
-            // // print angle_motor
-            // printf("%.2f,", (float)(position_robot.x));
-            // printf("%.2f,", (float)(position_robot.y));
-            // printf("%.2f,", (float)(position_robot.t));
-            // printf("%.2f,", (float)(speed_robot.vx));
-            // printf("%.2f,", (float)(speed_robot.vy)); 
-            // printf("\n");
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
             printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot.x, position_robot.y, position_robot.t, speed_linear, speed_direction);          
@@ -177,7 +167,6 @@ void Asserv_Loop(void)
             }
             Last_Timer_print_pos += auto_printpos_delay;
         }
-
         Asserv_State = 0;
         
     } else {
