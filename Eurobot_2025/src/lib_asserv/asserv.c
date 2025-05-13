@@ -187,7 +187,6 @@ void speed_asserv_break_step(void) {
     }
 }
 
-
 float old_angle = 0;
 
 void pos_asserv_step(void) {
@@ -240,7 +239,6 @@ void pos_asserv_step(void) {
     // --- Stop condition globale (position + angle atteints)
     if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
         speed_constrainer_init();
-        set_Constraint_vt_max(DEFAULT_CONSTRAINT_VT_MAX);
         acceleration_constrainer_init();
         motion_free();
         printf("Pos,done\n");
