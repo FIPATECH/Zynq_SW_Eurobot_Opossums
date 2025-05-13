@@ -52,6 +52,19 @@ void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3){
 	SendFrame(&CanInstance);
 }
 
+void init_CAN_MOTOR_variables(void){
+	angle_motor_1 = 0;
+	angle_motor_2 = 0;
+	angle_motor_3 = 0;
+
+	torque_motor_1 = 0;
+	torque_motor_2 = 0;
+	torque_motor_3 = 0;
+
+	speed_motor_1 = 0;
+	speed_motor_2 = 0;
+	speed_motor_3 = 0;
+}
 
 /*****************************************************************************/
 /**

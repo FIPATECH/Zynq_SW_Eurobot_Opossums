@@ -46,6 +46,7 @@ int main()
    }
 
     // init_QEI();
+    init_CAN_MOTOR_variables();
     PWM_Init();
     Std_Com_Init();
     init_AU();
@@ -71,6 +72,7 @@ int main()
         if(AU_state == 0){
             LED_AU();
             motion_free();
+            init_CAN_MOTOR_variables();
         }else{
             IHM_loop();
             LED_CLASSIC_MODE();
