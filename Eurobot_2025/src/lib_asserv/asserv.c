@@ -130,6 +130,7 @@ void motion_step(void) {
             speed_asserv_step();
             motion_done = 0;
             break;
+        // si on doit freiner en urgence
         case ASSERV_MODE_BREAK:
             speed_asserv_break_step();
             motion_done = 0;
@@ -163,8 +164,25 @@ void asserv_free_step(void)
 	}
 }
 
-float old_angle = 0;
+void speed_asserv_break_step(void) {
+    // break only if the robot is moving 
+    if (fabs(speed_robot.vx) > 0.1 || fabs(speed_robot.vy) > 0.1 || fabs(speed_robot.vt) > 0.1){
+        Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
+    }
+    speed_order.vx = 0;
+    speed_order.vy = 0;
+    speed_order.vt = 0;
+    Pid_Speed_En = 1;
+    if (fabs(speed_robot.vx) < 0.05 && fabs(speed_robot.vy) < 0.05 && fabs(speed_robot.vt) < 0.05) {
+        Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
+        motion_free();
+        printf("Break,done\n");
+        motion_done = 1;
+    }
+}
 
+
+float old_angle = 0;
 
 void pos_asserv_step(void) {
     // --- Consignes
@@ -209,8 +227,6 @@ void pos_asserv_step(void) {
     float speed_order_vt =  angular_speed_calculation(dt);
     speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX) * exp(-d);
 
-    // printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0\n", speed_order.vx, speed_order.vy, speed_order_d, speed_robot.vx, speed_robot.vy, angle);
-
     // --- Activation de l’asservissement vitesse
     Pid_Speed_En = 1;
 
@@ -254,19 +270,6 @@ void absolute_speed_asserv_step(void) {
     Pid_Speed_En = 1;
 }
 
-void speed_asserv_break_step(void) {
-    // Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
-    speed_order.vx = 0;
-    speed_order.vy = 0;
-    speed_order.vt = 0;
-    Pid_Speed_En = 1;
-    if (fabs(speed_robot.vx) < 0.05 && fabs(speed_robot.vy) < 0.05 && fabs(speed_robot.vt) < 0.05) {
-        Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
-        motion_free();
-        printf("Break,done\n");
-        motion_done = 1;
-    }
-}
 
 // indique si l'asservissement en cours a termine
 int Get_asserv_done(void) {
