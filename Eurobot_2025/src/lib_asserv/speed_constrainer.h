@@ -15,6 +15,7 @@ extern float vx_o, vy_o, vt_o;
 extern float tau_x;
 
 void speed_constrainer_init(void);
+void acceleration_constrainer_init(void);
 
 // contraint la consigne de vitesse selon les caracteristiques du robot
 void constrain_speed_order(float period);

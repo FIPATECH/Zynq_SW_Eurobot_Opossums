@@ -28,17 +28,19 @@ float v_o, old_v_o = 0;
 
 void speed_constrainer_init(void)
 {
-	Accel_Max.ax    = DEFAULT_CONSTRAINT_A_MAX;
-	Accel_Max.ay    = DEFAULT_CONSTRAINT_A_MAX;
-	Accel_Max.at    = DEFAULT_CONSTRAINT_AT_MAX;
-    Accel_Max_Roue  = DEFAULT_CONSTRAINT_A_ROUE;
-
 	Speed_Max.vx   = DEFAULT_CONSTRAINT_V_MAX;
 	Speed_Max.vy   = DEFAULT_CONSTRAINT_V_MAX;
 	Speed_Max.vt   = DEFAULT_CONSTRAINT_VT_MAX;
     Speed_Max_Roue = DEFAULT_CONSTRAINT_V_ROUE_MAX;
 }
 
+void acceleration_constrainer_init(void)
+{
+    Accel_Max.ax    = DEFAULT_CONSTRAINT_A_MAX;
+    Accel_Max.ay    = DEFAULT_CONSTRAINT_A_MAX;
+    Accel_Max.at    = DEFAULT_CONSTRAINT_AT_MAX;
+    Accel_Max_Roue  = DEFAULT_CONSTRAINT_A_ROUE;
+}
 
 void constrain_speed_order(float period) {
     float vx_o = speed_order.vx;

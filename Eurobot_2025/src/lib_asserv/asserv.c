@@ -3,7 +3,7 @@
 
 
 // ******************************    Variables    *******************************
-int asserv_mode = 0; // asservissement off par defaut
+int asserv_mode; // asservissement off par defaut (refer to asserv_init function)
 int motion_done;
 
 float blocked_time;
@@ -27,9 +27,14 @@ float a_max = DEFAULT_CONSTRAINT_A_MAX;
 void asserv_init(void) {
 	// init des autres trucs de la lib
 	odo_init();
-	pid_position_init();
+
+    // init acccel and speed constrainers
 	speed_constrainer_init();
+    acceleration_constrainer_init();
+
+    // init PID
 	pid_vitesse_init();
+    pid_position_init();
 
     // init kalman
     kalman_init(&position_robot);
@@ -46,7 +51,6 @@ void asserv_init(void) {
 	Wanted_Speed.vy = 0;
 	Wanted_Speed.vt = 0;
 
-
     current_stop_distance = DEFAULT_STOP_DISTANCE;
     default_stop_distance = DEFAULT_STOP_DISTANCE;
 
@@ -55,7 +59,7 @@ void asserv_init(void) {
 
 // consignes de deplacements du robot
 void motion_block(void) {
-        asserv_mode = ASSERV_MODE_BREAK;
+    asserv_mode = ASSERV_MODE_BREAK;
 }
 
 void motion_off(void) {
