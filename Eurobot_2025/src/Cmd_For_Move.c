@@ -4,44 +4,59 @@
 
 //MOVE
 uint8_t Move_Cmd(void) {
-    Position Pos_Obj;
-    float valf;
-    if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
-    Pos_Obj.x = valf;
-    if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
-    Pos_Obj.y = valf;
-    if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
-    Pos_Obj.t = valf;
-    motion_pos(Pos_Obj);
-    return 0;
+    if (!AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }else{
+        Position Pos_Obj;
+        float valf;
+        if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
+        Pos_Obj.x = valf;
+        if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
+        Pos_Obj.y = valf;
+        if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
+        Pos_Obj.t = valf;
+        motion_pos(Pos_Obj);
+        return 0;
+    }
 }
 
 // SPEED
 uint8_t SPEED_Cmd(void) {
-    Speed Vitesse_Obj;
-    float valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vx = valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vy = valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vt = valf;
-    motion_speed(Vitesse_Obj);
-    return 0;
+    if (!AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }else{
+        Speed Vitesse_Obj;
+        float valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vx = valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vy = valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vt = valf;
+        motion_speed(Vitesse_Obj);
+        return 0;
+    }
 }
 
 // ASPEED
 uint8_t Absolute_SPEED_Cmd(void) {
-    Speed Vitesse_Obj;
-    float valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vx = valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vy = valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vt = valf;
-    motion_absolute_speed(Vitesse_Obj);
-    return 0;
+    if (!AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }else{
+        Speed Vitesse_Obj;
+        float valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vx = valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vy = valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vt = valf;
+        motion_absolute_speed(Vitesse_Obj);
+        return 0;
+    }
 }
 //
 
@@ -56,8 +71,13 @@ uint8_t FREE_Cmd(void) {
 
 // HOLD
 uint8_t BLOCK_Cmd(void) {
-    motion_block();
-    return 0;
+    if (!AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }else{
+        motion_block();
+        return 0;
+    }
 }
 
 
