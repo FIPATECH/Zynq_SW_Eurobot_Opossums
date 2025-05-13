@@ -218,15 +218,19 @@ uint8_t Synchro_Lidar_Cmd(void){
     if (Get_Param_Float(&z_x)) return 1;
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
+    
     position_lidar.x = z_x;
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
+
     position_robot.x = z_x;
     position_robot.y = z_y;
     position_robot.t = principal_angle(z_theta);
+
     position_robot_odom.x = z_x;
     position_robot_odom.y = z_y;
     position_robot_odom.t = principal_angle(z_theta);
+
     kalman_update(&position_robot, &position_robot_odom, position_lidar);
     return 0;
 }

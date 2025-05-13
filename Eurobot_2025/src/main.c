@@ -82,7 +82,7 @@ int main()
             Pump_Loop();
         }
 
-        Asserv_test_loop();
+        // Asserv_test_loop();
     }
     cleanup_platform();
     return 0;
