@@ -148,6 +148,7 @@ void motion_step(void) {
 }
 
 void asserv_off_step(void) {
+    acceleration_constrainer_init();
 	speed_order.vx = 0;
 	speed_order.vy = 0;
 	speed_order.vt = 0;
@@ -155,7 +156,8 @@ void asserv_off_step(void) {
 }
 
 void asserv_free_step(void)
-{
+{   
+    acceleration_constrainer_init();
 	speed_order.vx = 0;
 	speed_order.vy = 0;
 	speed_order.vt = 0;
@@ -189,6 +191,7 @@ void speed_asserv_break_step(void) {
 float old_angle = 0;
 
 void pos_asserv_step(void) {
+    acceleration_constrainer_init();
     // --- Consignes
     float x_o = Wanted_Pos.x;
     float y_o = Wanted_Pos.y;
