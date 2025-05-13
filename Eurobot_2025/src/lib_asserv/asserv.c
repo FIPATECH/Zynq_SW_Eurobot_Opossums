@@ -236,7 +236,7 @@ void pos_asserv_step(void) {
 
     // --- Stop condition globale (position + angle atteints)
     if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
-        set_Constraint_vitesse_max(DEFAULT_CONSTRAINT_V_MAX);
+        speed_constrainer_init();
         set_Constraint_vt_max(DEFAULT_CONSTRAINT_VT_MAX);
         acceleration_constrainer_init();
         motion_free();
