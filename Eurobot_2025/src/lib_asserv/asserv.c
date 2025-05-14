@@ -215,7 +215,7 @@ void pos_asserv_step(void) {
     speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
 
     // --- Calcul de la vitesse angulaire
-    float speed_order_vt =  angular_speed_calculation(dt);
+    speed_order.vt =  angular_speed_calculation(dt);
 
     // --- Activation de l’asservissement vitesse
     Pid_Speed_En = 1;

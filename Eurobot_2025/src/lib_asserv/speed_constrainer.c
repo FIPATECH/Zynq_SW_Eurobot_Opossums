@@ -47,7 +47,6 @@ void constrain_acceleration_order(float period) {
     float delta_v_max   = robot_a_max * period;
     float delta_vt_max  = robot_at_max * period;
 
-
     // process old speed constrained (be aware of the rotation)
     float delta_angle = speed_order_constrained.vt * period;
     float cos_angle = cosf(delta_angle);
