@@ -47,6 +47,7 @@ void asserv_init(void) {
     Wanted_Pos.x = 0;
     Wanted_Pos.y = 0;
     Wanted_Pos.t = 0;
+    
 	Wanted_Speed.vx = 0;
 	Wanted_Speed.vy = 0;
 	Wanted_Speed.vt = 0;

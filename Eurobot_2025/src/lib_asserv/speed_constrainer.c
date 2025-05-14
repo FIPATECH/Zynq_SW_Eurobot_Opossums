@@ -13,18 +13,7 @@ float Speed_Max_Roue;
 
 float Speed_Order_1, Speed_Order_2, Speed_Order_3;
 
-float tau_x, tau_y, tau_t = 0;
-
-float old_vx1, old_vx2, old_vx3 = 0;
-float old_vy1, old_vy2, old_vy3 = 0;
-float old_vt1, old_vt2, old_vt3 = 0;
-
 float vx_o, vy_o, vt_o = 0;
-
-float old_vx_o, old_vy_o, old_vt_o = 0;
-
-float v_o, old_v_o = 0;
-
 
 void speed_constrainer_init(void)
 {

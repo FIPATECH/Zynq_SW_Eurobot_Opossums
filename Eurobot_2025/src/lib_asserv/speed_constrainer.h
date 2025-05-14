@@ -12,7 +12,6 @@ extern float Accel_Max_Roue;
 
 extern float Speed_Order_1, Speed_Order_2, Speed_Order_3;
 extern float vx_o, vy_o, vt_o;
-extern float tau_x;
 
 void speed_constrainer_init(void);
 void acceleration_constrainer_init(void);
