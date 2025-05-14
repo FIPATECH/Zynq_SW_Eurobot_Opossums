@@ -15,12 +15,15 @@
 #include "lib_asserv_default.h"
 
 #include "odo.h"
+#include "pid_position.h"
 #include "pid_speed.h"
 #include "PWM_Calculator.h"
 #include "speed_constrainer.h"
 #include "tools_asserv.h"
 
 #include "Motor_info.h"
+
+#include "kalman.h"
 
 
 

@@ -18,6 +18,9 @@ const Command Command_List[] = {
     { "PUMP", Pump_cmd},
 
     // Asserv print
+    { "SETLIDAR", Set_Lidar_Cmd},
+    { "SYNCHROLIDAR", Synchro_Lidar_Cmd},
+
     { "MOTIONTEST", asserv_test_cmd},
 
     { "SERVO", Servo_cmd},

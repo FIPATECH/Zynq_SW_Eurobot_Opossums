@@ -24,7 +24,8 @@ uint8_t Activate_Position_Sending_Func(void);
 
 uint8_t Set_Odo_Spacing_Cmd(void);
 
-
+uint8_t Set_Lidar_Cmd(void);
+uint8_t Synchro_Lidar_Cmd(void);
 #endif
 
 

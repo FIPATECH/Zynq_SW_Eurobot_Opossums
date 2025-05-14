@@ -3,7 +3,7 @@
 
 
 // ******************************    Variables    *******************************
-int asserv_mode;
+int asserv_mode; // asservissement off par defaut (refer to asserv_init function)
 int motion_done;
 
 float blocked_time;
@@ -27,9 +27,17 @@ float a_max = DEFAULT_CONSTRAINT_A_MAX;
 void asserv_init(void) {
 	// init des autres trucs de la lib
 	odo_init();
-	speed_constrainer_init();
-	pid_vitesse_init();
 
+    // init acccel and speed constrainers
+	speed_constrainer_init();
+    acceleration_constrainer_init();
+
+    // init PID
+	pid_vitesse_init();
+    pid_position_init();
+
+    // init kalman
+    kalman_init(&position_robot);
 
 	// init des consignes / modes de ce fichier :
     asserv_mode = ASSERV_MODE_OFF;
@@ -43,7 +51,6 @@ void asserv_init(void) {
 	Wanted_Speed.vy = 0;
 	Wanted_Speed.vt = 0;
 
-
     current_stop_distance = DEFAULT_STOP_DISTANCE;
     default_stop_distance = DEFAULT_STOP_DISTANCE;
 
@@ -52,6 +59,10 @@ void asserv_init(void) {
 
 // consignes de deplacements du robot
 void motion_block(void) {
+    asserv_mode = ASSERV_MODE_BREAK;
+}
+
+void motion_off(void) {
     asserv_mode = ASSERV_MODE_OFF;
 }
 
@@ -62,6 +73,7 @@ void motion_free(void) {
 void motion_pos(Position pos) {
     current_stop_distance = default_stop_distance;
     Wanted_Pos = pos;
+    Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
     asserv_mode = ASSERV_MODE_POS;
 }
 
@@ -77,7 +89,7 @@ void motion_absolute_speed(Speed speed) {
 
 void set_Constraint_vitesse_max(float v_max_in) {
     if (v_max_in != 0) {
-        if (v_max_in <= DEFAULT_AUTHORIZED_V_MAX) {
+        if (v_max_in <= DEFAULT_CONSTRAINT_V_MAX) {
             v_max = v_max_in;
         } else {
             v_max = DEFAULT_CONSTRAINT_V_MAX;
@@ -99,16 +111,17 @@ void set_Constraint_acceleration_max(float a_max_in) {
 void motion_step(void) {
     // choix en fonction du mode d'asservissement (off, position ou vitesse)
     switch (asserv_mode) {
-            // si on est en roue libre
+        // si on est en roue libre
         case ASSERV_MODE_OFF:
             asserv_off_step();
             motion_done = 1;
             break;
+        // si on s'arrête mais qu'on ne doit pas freiner (pas de roue libre ni de blocage roues)
         case ASSERV_MODE_FREE:
             asserv_free_step();
             motion_done = 1;
             break;
-            // si on est en asservissement en position
+        // si on est en asservissement en position
         case ASSERV_MODE_POS:
             pos_asserv_step();
             motion_done = 0;
@@ -118,6 +131,12 @@ void motion_step(void) {
             speed_asserv_step();
             motion_done = 0;
             break;
+        // si on doit freiner en urgence
+        case ASSERV_MODE_BREAK:
+            speed_asserv_break_step();
+            motion_done = 0;
+            break;
+        // si on est en asservissement en vitesse absolue
         case ASSERV_MODE_ABSOLUTE_SPEED:
             absolute_speed_asserv_step();
             motion_done = 0;
@@ -129,6 +148,7 @@ void motion_step(void) {
 }
 
 void asserv_off_step(void) {
+    acceleration_constrainer_init();
 	speed_order.vx = 0;
 	speed_order.vy = 0;
 	speed_order.vt = 0;
@@ -136,21 +156,41 @@ void asserv_off_step(void) {
 }
 
 void asserv_free_step(void)
-{
+{   
+    acceleration_constrainer_init();
 	speed_order.vx = 0;
 	speed_order.vy = 0;
 	speed_order.vt = 0;
     Pid_Speed_En = 1;
 
 	if ((fabs(speed_robot.vx) < 0.05*Speed_Max.vx) && (fabs(speed_robot.vy) < 0.05*Speed_Max.vy) && (fabs(speed_robot.vt) < 0.05*Speed_Max.vt)) {
-        motion_block();
+        motion_off();
 	}
+}
+
+void speed_asserv_break_step(void) {
+    // break only if the robot is moving 
+    if (fabs(speed_robot.vx) > 0.1 || fabs(speed_robot.vy) > 0.1 || fabs(speed_robot.vt) > 0.1){
+        Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
+    }
+    speed_order.vx = 0;
+    speed_order.vy = 0;
+    speed_order.vt = 0;
+    Pid_Speed_En = 1;
+
+    // if the robot is almost not moving anymore, free the motion
+    if (fabs(speed_robot.vx) < 0.05 && fabs(speed_robot.vy) < 0.05 && fabs(speed_robot.vt) < 0.05) {
+        Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
+        motion_free();
+        printf("Break,done\n");
+        motion_done = 1;
+    }
 }
 
 float old_angle = 0;
 
-
 void pos_asserv_step(void) {
+    acceleration_constrainer_init();
     // --- Consignes
     float x_o = Wanted_Pos.x;
     float y_o = Wanted_Pos.y;
@@ -164,7 +204,7 @@ void pos_asserv_step(void) {
     // --- Erreurs
     float rdx = x_o - x;
     float rdy = y_o - y;
-    float d = sqrtf(rdx*rdx + rdy*rdy);                 // Erreur positionnelle
+    float d = sqrtf(rdx*rdx + rdy*rdy);             // Erreur positionnelle
     float dt = principal_angle(t_o - t);            // Erreur angulaire
 
     float cos_t = cosf(t);
@@ -175,10 +215,9 @@ void pos_asserv_step(void) {
     speed_order.vy = 0.0f;
     speed_order.vt = 0.0f;
 
-    // float rotation_weight = 0.2; // Poids de la rotation (0.5 = 50% de la vitesse max)
-
     float angle = atan2f(rdy, rdx);
 
+    // --- Calcul de la vitesse radiale
     float speed_order_d = radial_speed_calculation(d); // vitesse de consigne radiale
     speed_order_d = limit_float(speed_order_d, -DEFAULT_CONSTRAINT_V_MAX, DEFAULT_CONSTRAINT_V_MAX);
     
@@ -190,25 +229,24 @@ void pos_asserv_step(void) {
     speed_order.vx = vx_world * cos_t + vy_world * sin_t;
     speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
 
-    float speed_order_vt = speed_order_vt = angular_speed_calculation(dt) * exp(-d);
-    speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX);
-
-    // printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0\n", speed_order.vx, speed_order.vy, speed_order_d, speed_robot.vx, speed_robot.vy, angle);
+    // --- Calcul de la vitesse angulaire
+    float speed_order_vt =  angular_speed_calculation(dt);
+    speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX) * exp(-d);
 
     // --- Activation de l’asservissement vitesse
     Pid_Speed_En = 1;
 
     // --- Stop condition globale (position + angle atteints)
     if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
-        set_Constraint_vitesse_max(DEFAULT_CONSTRAINT_V_MAX);
-        set_Constraint_vt_max(DEFAULT_CONSTRAINT_VT_MAX);
+        speed_constrainer_init();
+        acceleration_constrainer_init();
         motion_free();
         printf("Pos,done\n");
     }
 }
 
 float radial_speed_calculation(float distance) {
-    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.9f);
+    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.7f);
 }
 
 float angular_speed_calculation(float angle) {
@@ -217,10 +255,8 @@ float angular_speed_calculation(float angle) {
     if (angle < 0) {
         sign = -1;
     }
-    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle);
+    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.7f);
 }
-
-
 
 void speed_asserv_step(void) {
 
@@ -240,7 +276,6 @@ void absolute_speed_asserv_step(void) {
 }
 
 
-
 // indique si l'asservissement en cours a termine
 int Get_asserv_done(void) {
     if (asserv_mode == ASSERV_MODE_OFF) {
@@ -248,18 +283,6 @@ int Get_asserv_done(void) {
     } else {
         return 0;
     }
-}
-
-int Get_Sens_Deplacement(void) {
-//    float valf = speed_order.v;
-//    if (valf > 0.01)
-//        return 1;
-//    else if (valf < -0.01)
-//        return -1;
-//    else
-//        return 0;
-//    
-    return 0;
 }
 
 // verifier qu'on est pas bloque par un obstacle

@@ -42,48 +42,29 @@ int motor2_current_order = 0;
 int motor3_current_order = 0;
 
 
-void Can_Loop(void){
-	switch (can_loop_state){
-		case 0: 
-			if (Timer_ms1 - old_Can_Timer_ms1 > 5){
-				#ifdef DEBUG_CAN
-					xil_printf("Motor 1: angle = %d, torque = %d, speed = %d\r\n", angle_motor_1, torque_motor_1, speed_motor_1);
-					xil_printf("Motor 2: angle = %d, torque = %d, speed = %d\r\n", angle_motor_2, torque_motor_2, speed_motor_2);
-					xil_printf("Motor 3: angle = %d, torque = %d, speed = %d\r\n", angle_motor_3, torque_motor_3, speed_motor_3);
-				#endif
-				old_Can_Timer_ms1 = Timer_ms1;
-
-				TxFrame[2] = (u32)(motor2_current_order & 0xFF) << 24 | 
-									((motor2_current_order >> 8) & 0xFF) << 16 | 
-									((motor1_current_order & 0xFF) << 8) | 
-									((motor1_current_order >> 8) & 0xFF);
-				TxFrame[3] = (u32)(motor3_current_order & 0xFF) << 8 | 
-									((motor3_current_order >> 8) & 0xFF);
-				
-				can_loop_state++;
-			}
-			break;
-		case 1:
-			SendFrame(&CanInstance);
-			// can_loop_state = 0;
-			can_loop_state++;
-			break;
-		case 2:
-			if ((SendDone == TRUE) && (RecvDone == TRUE)){
-				can_loop_state = 0;
-				SendDone = FALSE;
-				RecvDone = FALSE;
-				if (LoopbackError == TRUE) {
-					xil_printf("Error: Loopback Error occurred\r\n");
-					LoopbackError = FALSE;
-				}
-			}
-			break;		
-	}
-	
+void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3){
+	TxFrame[2] = (u32)(motor2_current_order & 0xFF) << 24 | 
+						((motor2_current_order >> 8) & 0xFF) << 16 | 
+						((motor1_current_order & 0xFF) << 8) | 
+						((motor1_current_order >> 8) & 0xFF);
+	TxFrame[3] = (u32)(motor3_current_order & 0xFF) << 8 | 
+						((motor3_current_order >> 8) & 0xFF);
+	SendFrame(&CanInstance);
 }
 
+void init_CAN_MOTOR_variables(void){
+	angle_motor_1 = 0;
+	angle_motor_2 = 0;
+	angle_motor_3 = 0;
 
+	torque_motor_1 = 0;
+	torque_motor_2 = 0;
+	torque_motor_3 = 0;
+
+	speed_motor_1 = 0;
+	speed_motor_2 = 0;
+	speed_motor_3 = 0;
+}
 
 /*****************************************************************************/
 /**

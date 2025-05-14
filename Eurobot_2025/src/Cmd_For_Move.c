@@ -4,44 +4,59 @@
 
 //MOVE
 uint8_t Move_Cmd(void) {
-    Position Pos_Obj;
-    float valf;
-    if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
-    Pos_Obj.x = valf;
-    if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
-    Pos_Obj.y = valf;
-    if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
-    Pos_Obj.t = valf;
-    motion_pos(Pos_Obj);
-    return 0;
+    if (!AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }else{
+        Position Pos_Obj;
+        float valf;
+        if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
+        Pos_Obj.x = valf;
+        if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
+        Pos_Obj.y = valf;
+        if (Get_Param_Float(&valf))     return PARAM_ERROR_CODE;
+        Pos_Obj.t = valf;
+        motion_pos(Pos_Obj);
+        return 0;
+    }
 }
 
 // SPEED
 uint8_t SPEED_Cmd(void) {
-    Speed Vitesse_Obj;
-    float valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vx = valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vy = valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vt = valf;
-    motion_speed(Vitesse_Obj);
-    return 0;
+    if (!AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }else{
+        Speed Vitesse_Obj;
+        float valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vx = valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vy = valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vt = valf;
+        motion_speed(Vitesse_Obj);
+        return 0;
+    }
 }
 
 // ASPEED
 uint8_t Absolute_SPEED_Cmd(void) {
-    Speed Vitesse_Obj;
-    float valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vx = valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vy = valf;
-    if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
-    Vitesse_Obj.vt = valf;
-    motion_absolute_speed(Vitesse_Obj);
-    return 0;
+    if (!AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }else{
+        Speed Vitesse_Obj;
+        float valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vx = valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vy = valf;
+        if (Get_Param_Float(&valf)) return PARAM_ERROR_CODE;
+        Vitesse_Obj.vt = valf;
+        motion_absolute_speed(Vitesse_Obj);
+        return 0;
+    }
 }
 //
 
@@ -56,11 +71,13 @@ uint8_t FREE_Cmd(void) {
 
 // HOLD
 uint8_t BLOCK_Cmd(void) {
-    motion_block();
-    Wanted_Forced_Consigne.command1 = 0;
-    Wanted_Forced_Consigne.command2 = 0;
-    Wanted_Forced_Consigne.command3 = 0;
-    return 0;
+    if (!AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }else{
+        motion_block();
+        return 0;
+    }
 }
 
 
@@ -73,9 +90,9 @@ uint8_t Asserv_Done_Cmd(void) {
 
 uint8_t Get_Pos_Cmd(void) {
     Position pos = get_position();
-    printf("GETPOS,");
-    printf("%.4f,", (double) (pos.x));
-    printf("%.4f,", (double) (pos.y));
+    printf("GETPOS ");
+    printf("%.4f ", (double) (pos.x));
+    printf("%.4f ", (double) (pos.y));
     printf("%.4f\n", (double) (pos.t));
     return 0;
 }
@@ -258,6 +275,48 @@ uint8_t Param_Asserv_Cmd(void) {
     } else if (Param == 13) {
         pid_speed.coef.kd = valf2;
         printf("Set V_Lin KD to %f\n", (double)(pid_speed.coef.kd));
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////            20 PID_Dist
+    ////            21 PID_Dist KP
+    ////            22 PID_Dist KI
+    ////            23 PID_Dist KD
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    else if(Param == 20){
+        printf("PID_Dist\n");
+        printf("KP %f\n", (double)(pid_dist.coef.kp));
+        printf("KI %f\n", (double)(pid_dist.coef.ki));
+        printf("KD %f\n", (double)(pid_dist.coef.kd));
+    } else if(Param == 21){
+        pid_dist.coef.kp = valf2;
+        printf("Set PID_Dist KP to %f\n", (double)(pid_dist.coef.kp));
+    } else if(Param == 22){
+        pid_dist.coef.ki = valf2;
+        printf("Set PID_Dist KI to %f\n", (double)(pid_dist.coef.ki));
+    } else if(Param == 23){
+        pid_dist.coef.kd = valf2;
+        printf("Set PID_Dist KD to %f\n", (double)(pid_dist.coef.kd));
+    } 
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////            30 PID_ANGLE
+    ////            31 PID_ANGLE KP
+    ////            32 PID_ANGLE KI
+    ////            33 PID_ANGLE KD
+    //////////////////////////////////////////////////////////////////////////////////////////////           
+    else if(Param == 30){
+        printf("PID_ANGLE\n");
+        printf("KP %f\n", (double)(pid_angle.coef.kp));
+        printf("KI %f\n", (double)(pid_angle.coef.ki));
+        printf("KD %f\n", (double)(pid_angle.coef.kd));
+    } else if(Param == 41){
+        pid_angle.coef.kp = valf2;
+        printf("Set PID_ANGLE KP to %f\n", (double)(pid_angle.coef.kp));
+    } else if(Param == 42){
+        pid_angle.coef.ki = valf2;
+        printf("Set PID_ANGLE KI to %f\n", (double)(pid_angle.coef.ki));
+    } else if(Param == 43){
+        pid_angle.coef.kd = valf2;
+        printf("Set PID_ANGLE KD to %f\n", (double)(pid_angle.coef.kd));
     }
     return 0;
 }

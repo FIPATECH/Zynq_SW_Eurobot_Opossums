@@ -1,6 +1,7 @@
 #include "main.h"
 #include "lib_asserv/Lib_Asserv.h"
 
+
 int old_timer_ms1 = 0;
 int Status = 0;
 
@@ -45,6 +46,7 @@ int main()
    }
 
     // init_QEI();
+    init_CAN_MOTOR_variables();
     PWM_Init();
     Std_Com_Init();
     init_AU();
@@ -70,19 +72,19 @@ int main()
 
         if(AU_state == 0){
             LED_AU();
-            motion_block();
+            motion_free();
+            init_CAN_MOTOR_variables();
         }else{
             IHM_loop();
             LED_CLASSIC_MODE();
             MaP_Asserv_Loop();
             Asserv_Loop();
-            Can_Loop();
             PWM_Loop();
             Pump_Loop();
             Stepper_Loop();
         }
 
-        Asserv_test_loop();
+        // Asserv_test_loop();
     }
     cleanup_platform();
     return 0;

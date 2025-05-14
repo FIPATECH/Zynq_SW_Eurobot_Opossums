@@ -5,7 +5,7 @@
 // mode de l'asservissement
 #define ASSERV_MODE_OFF 0
 #define ASSERV_MODE_FREE 1
-
+#define ASSERV_MODE_BREAK 2
 #define ASSERV_MODE_POS 10
 #define ASSERV_MODE_SPEED 30
 #define ASSERV_MODE_ABSOLUTE_SPEED 31
@@ -34,6 +34,7 @@ void asserv_init(void);
 void motion_block(void) ;
 void motion_free(void) ;
 void motion_pos(Position pos);
+void motion_off(void);
 
 void motion_speed(Speed speed);
 void motion_absolute_speed(Speed speed);
@@ -51,6 +52,7 @@ void pos_asserv_step(void);
 
 
 void speed_asserv_step(void);
+void speed_asserv_break_step(void);
 void absolute_speed_asserv_step(void);
 
 
@@ -63,12 +65,7 @@ void asserv_check_blocked(float period);
 // indique si l'asservissement en cours a termine
 int Get_asserv_done();
 
-// renvoit 1 si la vitesse >1cm/s, -1 si <1cm/s, 0 sinon
-int Get_Sens_Deplacement(void);
-
 float radial_speed_calculation(float distance);
 float angular_speed_calculation(float angle);
-
-
 
 #endif // _ASSERV_H_

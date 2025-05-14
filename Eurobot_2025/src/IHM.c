@@ -98,8 +98,11 @@ void IHM_loop(void){
     if (leash_state != previous_leash_state){
         previous_leash_state = leash_state;
         if(leash_state == 1){
+            printf("LEASH\n");
             current_mode = 60;
             start_timer_match = Timer_ms1;
+        }else{
+            current_mode = 0;
         }
     }
     if(leash_state == 1){
