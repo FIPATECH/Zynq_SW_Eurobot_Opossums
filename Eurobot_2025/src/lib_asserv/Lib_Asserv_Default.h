@@ -13,15 +13,11 @@
 /*############################################################################*/
 /*                                  Motion                                    */
 /*############################################################################*/
+#define DEFAULT_CONSTRAINT_V_MAX 0.7
+#define DEFAULT_CONSTRAINT_VT_MAX 1.2
 
-// {v, vt} v = 0.9 * v max moteur, vt = v/(entre roues/2)
-#define DEFAULT_CONSTRAINT_V_ROUE_MAX 0.7//1.5 //0.7
-#define DEFAULT_CONSTRAINT_V_MAX  DEFAULT_CONSTRAINT_V_ROUE_MAX
-#define DEFAULT_CONSTRAINT_VT_MAX 1.2//1.0
-
-#define DEFAULT_CONSTRAINT_A_ROUE 0.5//0.7
-#define DEFAULT_CONSTRAINT_A_MAX DEFAULT_CONSTRAINT_A_ROUE
-#define DEFAULT_CONSTRAINT_AT_MAX 1.2//1.5 // 1 rad/s2
+#define DEFAULT_CONSTRAINT_A_MAX 0.7
+#define DEFAULT_CONSTRAINT_AT_MAX 1.2
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 
