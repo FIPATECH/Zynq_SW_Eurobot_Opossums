@@ -34,7 +34,6 @@ void asserv_init(void) {
 
     // init PID
 	pid_vitesse_init();
-    pid_position_init();
 
     // init kalman
     kalman_init(&position_robot);
@@ -47,13 +46,13 @@ void asserv_init(void) {
     Wanted_Pos.x = 0;
     Wanted_Pos.y = 0;
     Wanted_Pos.t = 0;
+    
 	Wanted_Speed.vx = 0;
 	Wanted_Speed.vy = 0;
 	Wanted_Speed.vt = 0;
 
     current_stop_distance = DEFAULT_STOP_DISTANCE;
     default_stop_distance = DEFAULT_STOP_DISTANCE;
-
 }
 
 
@@ -73,7 +72,7 @@ void motion_free(void) {
 void motion_pos(Position pos) {
     current_stop_distance = default_stop_distance;
     Wanted_Pos = pos;
-    Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
+    robot_a_max = DEFAULT_CONSTRAINT_A_MAX;
     asserv_mode = ASSERV_MODE_POS;
 }
 
@@ -87,25 +86,6 @@ void motion_absolute_speed(Speed speed) {
     asserv_mode = ASSERV_MODE_ABSOLUTE_SPEED;
 }
 
-void set_Constraint_vitesse_max(float v_max_in) {
-    if (v_max_in != 0) {
-        if (v_max_in <= DEFAULT_CONSTRAINT_V_MAX) {
-            v_max = v_max_in;
-        } else {
-            v_max = DEFAULT_CONSTRAINT_V_MAX;
-        }
-    } else {
-        v_max = DEFAULT_CONSTRAINT_V_MAX;
-    }
-}
-
-void set_Constraint_acceleration_max(float a_max_in) {
-    if (a_max_in != 0) {
-        a_max = a_max_in;
-    } else {
-        a_max = DEFAULT_CONSTRAINT_A_MAX;
-    }
-}
 
 // effectue un pas d'asservissement
 void motion_step(void) {
@@ -163,15 +143,18 @@ void asserv_free_step(void)
 	speed_order.vt = 0;
     Pid_Speed_En = 1;
 
-	if ((fabs(speed_robot.vx) < 0.05*Speed_Max.vx) && (fabs(speed_robot.vy) < 0.05*Speed_Max.vy) && (fabs(speed_robot.vt) < 0.05*Speed_Max.vt)) {
-        motion_off();
+	if ((fabs(speed_robot.vx) < DEFAULT_SPEED_LIN_STOP) && 
+        (fabs(speed_robot.vy) < DEFAULT_SPEED_LIN_STOP) && 
+        (fabs(speed_robot.vt) < DEFAULT_SPEED_ROT_STOP)) {
+        
+            motion_off();
 	}
 }
 
 void speed_asserv_break_step(void) {
     // break only if the robot is moving 
     if (fabs(speed_robot.vx) > 0.1 || fabs(speed_robot.vy) > 0.1 || fabs(speed_robot.vt) > 0.1){
-        Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
+        robot_a_max = 10 * DEFAULT_CONSTRAINT_A_MAX;
     }
     speed_order.vx = 0;
     speed_order.vy = 0;
@@ -179,11 +162,14 @@ void speed_asserv_break_step(void) {
     Pid_Speed_En = 1;
 
     // if the robot is almost not moving anymore, free the motion
-    if (fabs(speed_robot.vx) < 0.05 && fabs(speed_robot.vy) < 0.05 && fabs(speed_robot.vt) < 0.05) {
-        Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
-        motion_free();
-        printf("Break,done\n");
-        motion_done = 1;
+    if (fabs(speed_robot.vx) < DEFAULT_SPEED_LIN_STOP && 
+        fabs(speed_robot.vy) < DEFAULT_SPEED_LIN_STOP && 
+        fabs(speed_robot.vt) < DEFAULT_SPEED_ROT_STOP) {
+
+            acceleration_constrainer_init();
+            motion_free();
+            printf("Break,done\n");
+            motion_done = 1;
     }
 }
 
@@ -219,7 +205,6 @@ void pos_asserv_step(void) {
 
     // --- Calcul de la vitesse radiale
     float speed_order_d = radial_speed_calculation(d); // vitesse de consigne radiale
-    speed_order_d = limit_float(speed_order_d, -DEFAULT_CONSTRAINT_V_MAX, DEFAULT_CONSTRAINT_V_MAX);
     
     // Décomposition en X/Y monde
     float vx_world = speed_order_d * cosf(angle);
@@ -231,7 +216,6 @@ void pos_asserv_step(void) {
 
     // --- Calcul de la vitesse angulaire
     float speed_order_vt =  angular_speed_calculation(dt);
-    speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX) * exp(-d);
 
     // --- Activation de l’asservissement vitesse
     Pid_Speed_En = 1;
@@ -246,7 +230,7 @@ void pos_asserv_step(void) {
 }
 
 float radial_speed_calculation(float distance) {
-    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.7f);
+    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.9f);
 }
 
 float angular_speed_calculation(float angle) {
@@ -255,7 +239,7 @@ float angular_speed_calculation(float angle) {
     if (angle < 0) {
         sign = -1;
     }
-    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.7f);
+    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.9f);
 }
 
 void speed_asserv_step(void) {
