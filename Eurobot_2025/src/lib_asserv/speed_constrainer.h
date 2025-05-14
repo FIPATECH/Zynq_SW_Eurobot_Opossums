@@ -17,7 +17,8 @@ void speed_constrainer_init(void);
 void acceleration_constrainer_init(void);
 
 // contraint la consigne de vitesse selon les caracteristiques du robot
-void constrain_speed_order(float period);
+void constrain_speed_order(void);
+void constrain_acceleration_order(float period);
 
 void set_Constraint_vitesse_xy_max(float v_max);
 void set_Constraint_vt_max(float vt_max);

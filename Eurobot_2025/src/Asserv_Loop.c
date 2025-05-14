@@ -70,7 +70,7 @@ void Asserv_Loop(void)
             Last_Timer_Asserv += ODO_EVERY_MS;
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);       
         }
-        
+
     } else if (Asserv_State == 1) {
         // -----------------------------------
         // ODO step 2:
@@ -107,21 +107,28 @@ void Asserv_Loop(void)
         // motion step
         //-----------------------------------
         motion_step();
-        Asserv_State ++;
+        Asserv_State = 20;
 
     } else if (Asserv_State == 20) {
         //-----------------------------------
         // spped constrain
         //-----------------------------------
-        constrain_speed_order(ASSERV_EVERY*ODO_EVERY_MS*0.001);
-        Asserv_State = 20;
+        constrain_speed_order();
+        Asserv_State = 21;
+
+    } else if (Asserv_State == 21) {
+        //-----------------------------------
+        // acceleration constrain
+        //-----------------------------------
+        constrain_acceleration_order(ASSERV_EVERY*ODO_EVERY_MS*0.001f);
+        Asserv_State = 30;
 
     } else if (Asserv_State == 30) {
         //-----------------------------------
         // consigne
         //-----------------------------------
         Asserv_PWM_calculator(&Consigne);
-        Asserv_State = 30;
+        Asserv_State = 40;
 
 
     } else if (Asserv_State == 40) {
