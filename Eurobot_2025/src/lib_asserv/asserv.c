@@ -53,7 +53,6 @@ void asserv_init(void) {
 
     current_stop_distance = DEFAULT_STOP_DISTANCE;
     default_stop_distance = DEFAULT_STOP_DISTANCE;
-
 }
 
 
@@ -144,8 +143,11 @@ void asserv_free_step(void)
 	speed_order.vt = 0;
     Pid_Speed_En = 1;
 
-	if ((fabs(speed_robot.vx) < 0.05*robot_v_max) && (fabs(speed_robot.vy) < 0.05*robot_v_max) && (fabs(speed_robot.vt) < 0.05*robot_vt_max)) {
-        motion_off();
+	if ((fabs(speed_robot.vx) < DEFAULT_SPEED_LIN_STOP) && 
+        (fabs(speed_robot.vy) < DEFAULT_SPEED_LIN_STOP) && 
+        (fabs(speed_robot.vt) < DEFAULT_SPEED_ROT_STOP)) {
+        
+            motion_off();
 	}
 }
 
@@ -160,11 +162,14 @@ void speed_asserv_break_step(void) {
     Pid_Speed_En = 1;
 
     // if the robot is almost not moving anymore, free the motion
-    if (fabs(speed_robot.vx) < 0.05 && fabs(speed_robot.vy) < 0.05 && fabs(speed_robot.vt) < 0.05) {
-        robot_a_max = DEFAULT_CONSTRAINT_A_MAX;
-        motion_free();
-        printf("Break,done\n");
-        motion_done = 1;
+    if (fabs(speed_robot.vx) < DEFAULT_SPEED_LIN_STOP && 
+        fabs(speed_robot.vy) < DEFAULT_SPEED_LIN_STOP && 
+        fabs(speed_robot.vt) < DEFAULT_SPEED_ROT_STOP) {
+
+            acceleration_constrainer_init();
+            motion_free();
+            printf("Break,done\n");
+            motion_done = 1;
     }
 }
 
@@ -200,7 +205,6 @@ void pos_asserv_step(void) {
 
     // --- Calcul de la vitesse radiale
     float speed_order_d = radial_speed_calculation(d); // vitesse de consigne radiale
-    speed_order_d = limit_float(speed_order_d, -DEFAULT_CONSTRAINT_V_MAX, DEFAULT_CONSTRAINT_V_MAX);
     
     // Décomposition en X/Y monde
     float vx_world = speed_order_d * cosf(angle);
@@ -212,7 +216,6 @@ void pos_asserv_step(void) {
 
     // --- Calcul de la vitesse angulaire
     float speed_order_vt =  angular_speed_calculation(dt);
-    speed_order.vt = limit_float(speed_order_vt, -DEFAULT_CONSTRAINT_VT_MAX, DEFAULT_CONSTRAINT_VT_MAX) * exp(-d);
 
     // --- Activation de l’asservissement vitesse
     Pid_Speed_En = 1;
@@ -227,7 +230,7 @@ void pos_asserv_step(void) {
 }
 
 float radial_speed_calculation(float distance) {
-    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.7f);
+    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.9f);
 }
 
 float angular_speed_calculation(float angle) {
@@ -236,7 +239,7 @@ float angular_speed_calculation(float angle) {
     if (angle < 0) {
         sign = -1;
     }
-    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.7f);
+    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.9f);
 }
 
 void speed_asserv_step(void) {

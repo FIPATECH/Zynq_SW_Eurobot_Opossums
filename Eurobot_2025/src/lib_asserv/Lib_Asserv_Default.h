@@ -14,10 +14,10 @@
 /*                                  Motion                                    */
 /*############################################################################*/
 #define DEFAULT_CONSTRAINT_V_MAX 0.7
-#define DEFAULT_CONSTRAINT_VT_MAX 1.2
+#define DEFAULT_CONSTRAINT_VT_MAX 1
 
 #define DEFAULT_CONSTRAINT_A_MAX 0.7
-#define DEFAULT_CONSTRAINT_AT_MAX 1.2
+#define DEFAULT_CONSTRAINT_AT_MAX 1
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 
@@ -27,6 +27,9 @@
 
 #define DEFAULT_STOP_DISTANCE 0.005 // +-5mm
 #define DEFAULT_STOP_ANGLE 0.01745// +-1deg  // en radian
+
+#define DEFAULT_SPEED_LIN_STOP 0.05 // 5cm/s
+#define DEFAULT_SPEED_ROT_STOP 0.05 // 5rad/s
 
 /*############################################################################*/
 /*                                   PID                                      */
