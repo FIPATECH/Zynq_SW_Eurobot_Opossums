@@ -162,7 +162,7 @@ uint8_t VMAX_Cmd(void) {
     float valf;
     if (Get_Param_Float(&valf))
         return 1;
-    set_Constraint_vitesse_max(valf);
+    set_Constraint_vitesse_xy_max(valf);
     return 0;
 }
 
@@ -181,7 +181,7 @@ uint8_t VTMAX_Cmd(void) {
 uint8_t AMAX_Cmd(void) {
     float valfa;
     if (Get_Param_Float(&valfa))    return PARAM_ERROR_CODE;  //almax
-    set_Constraint_acceleration_max(valfa);
+    set_Constraint_a_xy_max(valfa);
     return 0;
 }
 

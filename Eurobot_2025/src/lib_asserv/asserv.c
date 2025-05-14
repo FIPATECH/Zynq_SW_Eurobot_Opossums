@@ -73,7 +73,7 @@ void motion_free(void) {
 void motion_pos(Position pos) {
     current_stop_distance = default_stop_distance;
     Wanted_Pos = pos;
-    Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
+    robot_a_max = DEFAULT_CONSTRAINT_A_ROUE;
     asserv_mode = ASSERV_MODE_POS;
 }
 
@@ -87,25 +87,6 @@ void motion_absolute_speed(Speed speed) {
     asserv_mode = ASSERV_MODE_ABSOLUTE_SPEED;
 }
 
-void set_Constraint_vitesse_max(float v_max_in) {
-    if (v_max_in != 0) {
-        if (v_max_in <= DEFAULT_CONSTRAINT_V_MAX) {
-            v_max = v_max_in;
-        } else {
-            v_max = DEFAULT_CONSTRAINT_V_MAX;
-        }
-    } else {
-        v_max = DEFAULT_CONSTRAINT_V_MAX;
-    }
-}
-
-void set_Constraint_acceleration_max(float a_max_in) {
-    if (a_max_in != 0) {
-        a_max = a_max_in;
-    } else {
-        a_max = DEFAULT_CONSTRAINT_A_MAX;
-    }
-}
 
 // effectue un pas d'asservissement
 void motion_step(void) {
@@ -163,7 +144,7 @@ void asserv_free_step(void)
 	speed_order.vt = 0;
     Pid_Speed_En = 1;
 
-	if ((fabs(speed_robot.vx) < 0.05*Speed_Max.vx) && (fabs(speed_robot.vy) < 0.05*Speed_Max.vy) && (fabs(speed_robot.vt) < 0.05*Speed_Max.vt)) {
+	if ((fabs(speed_robot.vx) < 0.05*robot_v_max) && (fabs(speed_robot.vy) < 0.05*robot_v_max) && (fabs(speed_robot.vt) < 0.05*robot_vt_max)) {
         motion_off();
 	}
 }
@@ -171,7 +152,7 @@ void asserv_free_step(void)
 void speed_asserv_break_step(void) {
     // break only if the robot is moving 
     if (fabs(speed_robot.vx) > 0.1 || fabs(speed_robot.vy) > 0.1 || fabs(speed_robot.vt) > 0.1){
-        Accel_Max_Roue = 10 * DEFAULT_CONSTRAINT_A_ROUE;
+        robot_a_max = 10 * DEFAULT_CONSTRAINT_A_MAX;
     }
     speed_order.vx = 0;
     speed_order.vy = 0;
@@ -180,7 +161,7 @@ void speed_asserv_break_step(void) {
 
     // if the robot is almost not moving anymore, free the motion
     if (fabs(speed_robot.vx) < 0.05 && fabs(speed_robot.vy) < 0.05 && fabs(speed_robot.vt) < 0.05) {
-        Accel_Max_Roue = DEFAULT_CONSTRAINT_A_ROUE;
+        robot_a_max = DEFAULT_CONSTRAINT_A_MAX;
         motion_free();
         printf("Break,done\n");
         motion_done = 1;
