@@ -21,6 +21,8 @@ float v_constrained = 0;
 float v_max = DEFAULT_CONSTRAINT_V_MAX;
 float a_max = DEFAULT_CONSTRAINT_A_MAX;
 
+int emergency_break_requested = 0;
+
 /******************************    Fonctions    *******************************/
 
 // init de tout l'asservissement
@@ -53,6 +55,8 @@ void asserv_init(void) {
 
     current_stop_distance = DEFAULT_STOP_DISTANCE;
     default_stop_distance = DEFAULT_STOP_DISTANCE;
+
+    emergency_break_requested = 0;
 }
 
 
@@ -128,7 +132,6 @@ void motion_step(void) {
 }
 
 void asserv_off_step(void) {
-    acceleration_constrainer_init();
 	speed_order.vx = 0;
 	speed_order.vy = 0;
 	speed_order.vt = 0;
@@ -137,7 +140,6 @@ void asserv_off_step(void) {
 
 void asserv_free_step(void)
 {   
-    acceleration_constrainer_init();
 	speed_order.vx = 0;
 	speed_order.vy = 0;
 	speed_order.vt = 0;
@@ -154,7 +156,7 @@ void asserv_free_step(void)
 void speed_asserv_break_step(void) {
     // break only if the robot is moving 
     if (fabs(speed_robot.vx) > 0.1 || fabs(speed_robot.vy) > 0.1 || fabs(speed_robot.vt) > 0.1){
-        robot_a_max = 10 * DEFAULT_CONSTRAINT_A_MAX;
+        emergency_break_requested = 1;
     }
     speed_order.vx = 0;
     speed_order.vy = 0;
@@ -166,7 +168,7 @@ void speed_asserv_break_step(void) {
         fabs(speed_robot.vy) < DEFAULT_SPEED_LIN_STOP && 
         fabs(speed_robot.vt) < DEFAULT_SPEED_ROT_STOP) {
 
-            acceleration_constrainer_init();
+            emergency_break_requested = 0;
             motion_free();
             printf("Break,done\n");
             motion_done = 1;
@@ -176,7 +178,6 @@ void speed_asserv_break_step(void) {
 float old_angle = 0;
 
 void pos_asserv_step(void) {
-    acceleration_constrainer_init();
     // --- Consignes
     float x_o = Wanted_Pos.x;
     float y_o = Wanted_Pos.y;
@@ -222,8 +223,6 @@ void pos_asserv_step(void) {
 
     // --- Stop condition globale (position + angle atteints)
     if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
-        speed_constrainer_init();
-        acceleration_constrainer_init();
         motion_free();
         printf("Pos,done\n");
     }

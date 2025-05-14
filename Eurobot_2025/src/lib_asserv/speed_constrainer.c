@@ -60,9 +60,17 @@ void constrain_acceleration_order(float period) {
 
     float dv_linear = sqrtf(delta_vx * delta_vx + delta_vy * delta_vy);
     if (dv_linear > delta_v_max) {
-        float scale = delta_v_max / dv_linear;
-        speed_order_constrained.vx = previous_vx_order + delta_vx * scale;
-        speed_order_constrained.vy = previous_vy_order + delta_vy * scale;
+        if (emergency_break_requested){
+            // in case the BREAK command is requested from the user
+            speed_order_constrained.vx = 0;
+            speed_order_constrained.vy = 0;
+            speed_order_constrained.vt = 0;
+            return;
+        }else{
+            float scale = delta_v_max / dv_linear;
+            speed_order_constrained.vx = previous_vx_order + delta_vx * scale;
+            speed_order_constrained.vy = previous_vy_order + delta_vy * scale;
+        }
     } else {
         speed_order_constrained.vx = speed_order_constrained_1.vx;
         speed_order_constrained.vy = speed_order_constrained_1.vy;

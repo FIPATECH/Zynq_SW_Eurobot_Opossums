@@ -23,6 +23,7 @@ extern float blocked_time;
 extern float current_stop_distance;
 extern float default_stop_distance;
 
+extern int emergency_break_requested;
 
 /******************************    Fonctions    *******************************/
 
