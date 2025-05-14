@@ -147,7 +147,7 @@ void Asserv_Loop(void)
         Asserv_State ++;
 
     } else if (Asserv_State == 5) {
-        if(!AU_state){
+        if(AU_state){
             asserv_off_step();
         }else{
             motor1_current_order = Consigne.command1;

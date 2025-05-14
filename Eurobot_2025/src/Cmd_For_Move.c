@@ -4,7 +4,7 @@
 
 //MOVE
 uint8_t Move_Cmd(void) {
-    if (!AU_state) {
+    if (AU_state) {
         printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
@@ -23,7 +23,7 @@ uint8_t Move_Cmd(void) {
 
 // SPEED
 uint8_t SPEED_Cmd(void) {
-    if (!AU_state) {
+    if (AU_state) {
         printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
@@ -42,7 +42,7 @@ uint8_t SPEED_Cmd(void) {
 
 // ASPEED
 uint8_t Absolute_SPEED_Cmd(void) {
-    if (!AU_state) {
+    if (AU_state) {
         printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
@@ -71,7 +71,7 @@ uint8_t FREE_Cmd(void) {
 
 // HOLD
 uint8_t BLOCK_Cmd(void) {
-    if (!AU_state) {
+    if (AU_state) {
         printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
