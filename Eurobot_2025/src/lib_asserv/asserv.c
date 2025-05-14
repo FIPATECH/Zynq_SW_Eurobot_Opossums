@@ -34,7 +34,6 @@ void asserv_init(void) {
 
     // init PID
 	pid_vitesse_init();
-    pid_position_init();
 
     // init kalman
     kalman_init(&position_robot);

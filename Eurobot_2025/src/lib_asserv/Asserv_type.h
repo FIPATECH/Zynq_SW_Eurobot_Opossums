@@ -51,11 +51,6 @@ typedef struct {
 
 typedef struct {
     PID_coef coef;
-    PID_err err;
-} PID_pos;
-
-typedef struct {
-    PID_coef coef;
     PID_err err1;
     PID_err err2;
     PID_err err3;
