@@ -6,9 +6,13 @@ float robot_wheel_distance;
 
 Position position_robot;    // en repere absolu
 Speed speed_robot;                  // en repere relatif
+Speed speed_robot_odom;
+Speed cumulated_speed;    
 Acceleration acceleration_robot;    // en repere relatif
 
 float Speed_1, Speed_2, Speed_3;
+float Cumulated_Speed_1, Cumulated_Speed_2, Cumulated_Speed_3;
+
 
 /******************************    Fonctions    *******************************/
 
@@ -40,6 +44,28 @@ void odo_set_spacing(float param_spacing) {
     robot_wheel_distance = param_spacing;
 }
 
+void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) {
+    // vitesse roues en m/s
+    float Odo_Speed_1 = (float)((Rotor_RPM1*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0)); //36 reducteur du moteur
+    float Odo_Speed_2 = (float)((Rotor_RPM2*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
+    float Odo_Speed_3 = (float)((Rotor_RPM3*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
+
+    // vitesse cumulee roues
+    Cumulated_Speed_1 += Odo_Speed_1;
+    Cumulated_Speed_2 += Odo_Speed_2;
+    Cumulated_Speed_3 += Odo_Speed_3;
+    
+    // maj des vitesses odometrique pur pour le calcul de la position
+    speed_robot_odom.vx = (2.0f/3.0f) * (Speed_1) - (1.0f/3.0f) * (Speed_2 + Speed_3);
+    speed_robot_odom.vy = (sqrtf(3.0f) / 3.0f) * (Speed_2 - Speed_3); // translation avant (X robot)
+    speed_robot_odom.vt = -(Speed_1 + Speed_2 + Speed_3) / (3.0f * robot_wheel_distance);
+
+    // maj des vitesses odometrique cumulé pour le calcul de la vitesse
+    cumulated_speed.vx += speed_robot_odom.vx;
+    cumulated_speed.vy += speed_robot_odom.vy;
+    cumulated_speed.vt += speed_robot_odom.vt;
+}
+
 void odo_position_step(float* dx, float* dy, float* delta_t) {   
     float dx_local = (speed_robot.vx * 0.001f);
     float dy_local = (speed_robot.vy * 0.001f);
@@ -60,32 +86,22 @@ void odo_position_step(float* dx, float* dy, float* delta_t) {
     position_robot.t = principal_angle(position_robot.t + dt);
 }
 
+void odo_speed_cumulate_step(float nbr_step) {
+    Speed_1 = (Cumulated_Speed_1 / nbr_step);
+    Speed_2 = (Cumulated_Speed_2 / nbr_step);
+    Speed_3 = (Cumulated_Speed_3 / nbr_step);
 
-float odo_dist_roue(int16_t delta_angle_motor) {
-    static const float facteur_conversion = TWO_PI / (MOTOR_ANGLE_CODEUR_MAX * 36.0f); // Conversion en radian
+    Cumulated_Speed_1 = 0;
+    Cumulated_Speed_2 = 0;
+    Cumulated_Speed_3 = 0;
+    
+    speed_robot.vx = (cumulated_speed.vx / nbr_step);
+    speed_robot.vy = (cumulated_speed.vy / nbr_step);
+    speed_robot.vt = (cumulated_speed.vt / nbr_step);
 
-    // Calcul de la variation d'angle normalisée
-    if (delta_angle_motor > (MOTOR_ANGLE_CODEUR_MAX / 2)) {
-        delta_angle_motor -= MOTOR_ANGLE_CODEUR_MAX;
-    } else if (delta_angle_motor < -(MOTOR_ANGLE_CODEUR_MAX / 2)) {
-        delta_angle_motor += MOTOR_ANGLE_CODEUR_MAX;
-    }
-
-    float deltaAngleRad = delta_angle_motor * facteur_conversion; // Conversion en radian
-    float distance = DEFAULT_WHEEL_RADIUS * deltaAngleRad; // Calcul de la distance parcourue
-    return distance; // Retourne la distance parcourue
-}
-
-void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) {
-    // vitesse roues en m/s
-    Speed_1 = (float)((Rotor_RPM1*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0)); //36 reducteur du moteur
-    Speed_2 = (float)((Rotor_RPM2*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
-    Speed_3 = (float)((Rotor_RPM3*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
-
-    // maj des vitesses
-    speed_robot.vx = (2.0f/3.0f) * (Speed_1) - (1.0f/3.0f) * (Speed_2 + Speed_3);
-    speed_robot.vy = (sqrtf(3.0f) / 3.0f) * (Speed_2 - Speed_3); // translation avant (X robot)
-    speed_robot.vt = -(Speed_1 + Speed_2 + Speed_3) / (3.0f * robot_wheel_distance);
+    cumulated_speed.vx = 0;
+    cumulated_speed.vy = 0;
+    cumulated_speed.vt = 0;
 }
 
 

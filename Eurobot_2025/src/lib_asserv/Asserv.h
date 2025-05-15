@@ -23,6 +23,7 @@ extern float blocked_time;
 extern float current_stop_distance;
 extern float default_stop_distance;
 
+extern int emergency_break_requested;
 
 /******************************    Fonctions    *******************************/
 
@@ -54,11 +55,6 @@ void pos_asserv_step(void);
 void speed_asserv_step(void);
 void speed_asserv_break_step(void);
 void absolute_speed_asserv_step(void);
-
-
-void set_Constraint_vitesse_max(float v_max_in);
-void set_Constraint_acceleration_max(float a_max_in);
-
 
 void asserv_check_blocked(float period);
 

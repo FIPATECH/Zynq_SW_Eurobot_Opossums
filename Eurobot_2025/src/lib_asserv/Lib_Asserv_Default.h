@@ -13,15 +13,11 @@
 /*############################################################################*/
 /*                                  Motion                                    */
 /*############################################################################*/
+#define DEFAULT_CONSTRAINT_V_MAX 0.5
+#define DEFAULT_CONSTRAINT_VT_MAX 1
 
-// {v, vt} v = 0.9 * v max moteur, vt = v/(entre roues/2)
-#define DEFAULT_CONSTRAINT_V_ROUE_MAX 0.7//1.5 //0.7
-#define DEFAULT_CONSTRAINT_V_MAX  DEFAULT_CONSTRAINT_V_ROUE_MAX
-#define DEFAULT_CONSTRAINT_VT_MAX 1.2//1.0
-
-#define DEFAULT_CONSTRAINT_A_ROUE 0.5//0.7
-#define DEFAULT_CONSTRAINT_A_MAX DEFAULT_CONSTRAINT_A_ROUE
-#define DEFAULT_CONSTRAINT_AT_MAX 1.2//1.5 // 1 rad/s2
+#define DEFAULT_CONSTRAINT_A_MAX 0.5
+#define DEFAULT_CONSTRAINT_AT_MAX 1
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 
@@ -29,22 +25,16 @@
 /*                                  Asserv                                    */
 /*############################################################################*/
 
-#define DEFAULT_STOP_DISTANCE 0.015 // +-5mm
-#define DEFAULT_STOP_ANGLE 0.04// +-1deg  // en radian
+#define DEFAULT_STOP_DISTANCE 0.005 // +-5mm
+#define DEFAULT_STOP_ANGLE 0.01745// +-1deg  // en radian
+
+#define DEFAULT_SPEED_LIN_STOP 0.05 // 5cm/s
+#define DEFAULT_SPEED_ROT_STOP 0.05 // 5rad/s
 
 /*############################################################################*/
 /*                                   PID                                      */
 /*############################################################################*/
-
-#define DEFAULT_PID_DIST_KP 1.8//1.3//1.8 // kp   
-#define DEFAULT_PID_DIST_KI 0 //ki    
-#define DEFAULT_PID_DIST_KD 0.2//0.2  //kd     
-
-#define DEFAULT_PID_ANGLE_KP 1.3//1.3//0.8//2.5   //2.3 // kp
-#define DEFAULT_PID_ANGLE_KI 0 //ki
-#define DEFAULT_PID_ANGLE_KD 0.2//1.5 //kd 
-
-// 2 PID lies a l'asserve en vitesse (vitesse lineaire et vitesse angulaire)
+// PID dre la vitesse de chaque roue
 #define DEFAULT_PID_V_LIN_KP 10000 // kp
 #define DEFAULT_PID_V_LIN_KI 100   //ki
 #define DEFAULT_PID_V_LIN_KD 0   //kd   
