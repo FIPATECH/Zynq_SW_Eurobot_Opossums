@@ -184,9 +184,9 @@ void pos_asserv_step(void) {
     float t_o = Wanted_Pos.t;
 
     // --- État actuel
-    float x = position_robot.x;
-    float y = position_robot.y;
-    float t = position_robot.t;
+    float x = position_robot_predict.x;
+    float y = position_robot_predict.y;
+    float t = position_robot_predict.t;
 
     // --- Erreurs
     float rdx = x_o - x;

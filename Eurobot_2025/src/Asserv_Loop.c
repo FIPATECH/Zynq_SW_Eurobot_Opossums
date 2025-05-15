@@ -78,7 +78,7 @@ void Asserv_Loop(void)
         // - calcul de la position du robot
         // -----------------------------------
 
-        odo_position_step(&dx, &dy, &dt);
+        odo_position_step();
         kalman_predict(); 
         Asserv_Odo_Count ++;
 

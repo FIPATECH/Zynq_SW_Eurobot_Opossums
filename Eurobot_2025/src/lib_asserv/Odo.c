@@ -66,7 +66,7 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
     cumulated_speed.vt += speed_robot_odom.vt;
 }
 
-void odo_position_step(float* dx, float* dy, float* delta_t) {   
+void odo_position_step(void) {   
     float dx_local = (speed_robot.vx * 0.001f);
     float dy_local = (speed_robot.vy * 0.001f);
     float dt = (speed_robot.vt * 0.001f);
@@ -76,10 +76,6 @@ void odo_position_step(float* dx, float* dy, float* delta_t) {
 
     float dx_global = dx_local * cos_t - dy_local * sin_t;
     float dy_global = dx_local * sin_t + dy_local * cos_t;
-
-    *dx = dx_global;
-    *dy = dy_global;
-    *delta_t = dt;
 
     position_robot_predict.x += dx_global;
     position_robot_predict.y += dy_global;
