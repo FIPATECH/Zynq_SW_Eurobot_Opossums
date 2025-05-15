@@ -220,7 +220,7 @@ uint8_t Set_Lidar_Cmd(void){
         position_lidar.x = z_x;
         position_lidar.y = z_y;
         position_lidar.t = principal_angle(z_theta);
-        // kalman_update(&position_robot, &position_robot_odom, position_lidar);
+        kalman_update(&position_robot, &position_robot_odom, position_lidar);
         return 0;
     }
 }
