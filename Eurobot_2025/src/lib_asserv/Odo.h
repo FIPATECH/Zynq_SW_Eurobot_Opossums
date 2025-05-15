@@ -18,7 +18,7 @@ void odo_set_tic_by_meter(double param_tic_by_meter);
 void odo_set_spacing(float param_spacing);
 
 // maj de la position du robot
-void odo_position_step(void);
+void odo_position_step(float period);
 
 // maj de la vitesse cumulee du robot
 void odo_speed_cumulate_step(float nbr_step);
