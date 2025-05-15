@@ -79,6 +79,7 @@ void Asserv_Loop(void)
         // -----------------------------------
 
         odo_position_step(&dx, &dy, &dt);
+        kalman_predict(&position_robot_odom, dx, dy, dt); 
         Asserv_Odo_Count ++;
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
@@ -100,7 +101,7 @@ void Asserv_Loop(void)
         // ODO step 4:
         // -kalman update
         // -----------------------------------
-        kalman_predict(&position_robot_odom, dx, dy, dt); 
+        
         Asserv_State = 10;
     
     } else if (Asserv_State == 10) {
