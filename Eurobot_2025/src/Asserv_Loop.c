@@ -95,13 +95,6 @@ void Asserv_Loop(void)
         // - calcul de la vitesse du robot
         // -----------------------------------
         odo_speed_cumulate_step(ASSERV_EVERY);
-        Asserv_State ++;
-    } else if (Asserv_State == 3) {
-        // -----------------------------------
-        // ODO step 4:
-        // -kalman update
-        // -----------------------------------
-        
         Asserv_State = 10;
     
     } else if (Asserv_State == 10) {

@@ -33,8 +33,8 @@ void kalman_predict(Position* pos, float dx, float dy, float dtheta) { // called
     pos->t += dtheta;
 
     // Mise à jour de la covariance : P = P + Q
-    for (int i = 0; i < 3; ++i)
-        for (int j = 0; j < 3; ++j)
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
             P[i][j] += Q[i][j];
 }
 
