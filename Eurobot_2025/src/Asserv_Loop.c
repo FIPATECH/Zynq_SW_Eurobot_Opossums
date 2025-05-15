@@ -69,6 +69,7 @@ void Asserv_Loop(void)
         if ((Timer_ms1 - Last_Timer_Asserv) > ODO_EVERY_MS) {
             Last_Timer_Asserv += ODO_EVERY_MS;
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);       
+            Asserv_State = 1;
         }
 
     } else if (Asserv_State == 1) {
@@ -218,7 +219,7 @@ uint8_t Set_Lidar_Cmd(void){
         position_lidar.x = z_x;
         position_lidar.y = z_y;
         position_lidar.t = principal_angle(z_theta);
-        kalman_update(&position_robot, &position_robot_odom, position_lidar);
+        // kalman_update(&position_robot, &position_robot_odom, position_lidar);
         return 0;
     }
 }
