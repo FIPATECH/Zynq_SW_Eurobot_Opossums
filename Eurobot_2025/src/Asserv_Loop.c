@@ -79,7 +79,7 @@ void Asserv_Loop(void)
         // -----------------------------------
 
         odo_position_step();
-        kalman_predict(); 
+        // kalman_predict(); 
         Asserv_Odo_Count ++;
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
@@ -236,7 +236,7 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_robot.y = z_y;
     position_robot.t = principal_angle(z_theta);
 
-    kalman_update(&position_robot, &position_robot_predict, position_lidar);
+    // kalman_update(&position_robot, &position_robot_predict, position_lidar);
 
     position_robot_predict = position_robot;
     return 0;
