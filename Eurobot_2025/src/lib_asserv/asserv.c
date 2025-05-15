@@ -38,7 +38,7 @@ void asserv_init(void) {
 	pid_vitesse_init();
 
     // init kalman
-    kalman_init(&position_robot);
+    kalman_init(&position_robot_predict);
 
 	// init des consignes / modes de ce fichier :
     asserv_mode = ASSERV_MODE_OFF;
@@ -250,8 +250,8 @@ void speed_asserv_step(void) {
 }
 
 void absolute_speed_asserv_step(void) {
-    float cos_t = cos(position_robot.t);
-    float sin_t = sin(position_robot.t);
+    float cos_t = cos(position_robot_predict.t);
+    float sin_t = sin(position_robot_predict.t);
 	speed_order.vx =  Wanted_Speed.vx*cos_t + Wanted_Speed.vy*sin_t;
 	speed_order.vy = -Wanted_Speed.vx*sin_t + Wanted_Speed.vy*cos_t;
 	speed_order.vt = Wanted_Speed.vt;

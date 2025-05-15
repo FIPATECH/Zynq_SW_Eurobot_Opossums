@@ -79,7 +79,7 @@ void Asserv_Loop(void)
         // -----------------------------------
 
         odo_position_step(&dx, &dy, &dt);
-        kalman_predict(&position_robot_odom, dx, dy, dt); 
+        kalman_predict(); 
         Asserv_Odo_Count ++;
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
@@ -166,9 +166,9 @@ void Asserv_Loop(void)
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
-            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot.x, position_robot.y, position_robot.t, speed_linear, speed_direction);          
+            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, speed_linear, speed_direction);          
             if (auto_printdebug_en) {
-                printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot_odom.x, position_robot_odom.y, position_robot_odom.t, speed_robot.vx, speed_robot.vy);
+                printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot.x, position_robot.y, position_robot.t, speed_robot.vx, speed_robot.vy);
             }
             Last_Timer_print_pos += auto_printpos_delay;
         }
@@ -207,13 +207,13 @@ uint8_t Set_Lidar_Cmd(void){
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
     // avoid to set the lidar position to a value that is too far from the robot position
-    if (fabs(z_x - position_robot.x) > 0.3 || fabs(z_y - position_robot.y) > 0.3 || fabs(z_theta - position_robot.t) > 0.2) {
+    if (fabs(z_x - position_robot_predict.x) > 0.3 || fabs(z_y - position_robot_predict.y) > 0.3 || fabs(z_theta - position_robot_predict.t) > 0.2) {
         return 0;
     }else{
         position_lidar.x = z_x;
         position_lidar.y = z_y;
         position_lidar.t = principal_angle(z_theta);
-        kalman_update(&position_robot, &position_robot_odom, position_lidar);
+        kalman_update(&position_robot, &position_robot_predict, position_lidar);
         return 0;
     }
 }
@@ -228,14 +228,16 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
 
+    position_robot_predict.x = z_x;
+    position_robot_predict.y = z_y;
+    position_robot_predict.t = principal_angle(z_theta);
+
     position_robot.x = z_x;
     position_robot.y = z_y;
     position_robot.t = principal_angle(z_theta);
 
-    position_robot_odom.x = z_x;
-    position_robot_odom.y = z_y;
-    position_robot_odom.t = principal_angle(z_theta);
+    kalman_update(&position_robot, &position_robot_predict, position_lidar);
 
-    kalman_update(&position_robot, &position_robot_odom, position_lidar);
+    position_robot_predict = position_robot;
     return 0;
 }
