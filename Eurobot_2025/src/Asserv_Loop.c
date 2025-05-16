@@ -79,7 +79,10 @@ void Asserv_Loop(void)
         // -----------------------------------
 
         odo_position_step(ODO_EVERY_MS*0.001f);
-        // kalman_predict(); 
+
+        kalman_predict(&kalman_current_state, kalman_history.dt);
+        kalman_store(&kalman_history, &kalman_current_state); 
+
         Asserv_Odo_Count ++;
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
@@ -213,7 +216,19 @@ uint8_t Set_Lidar_Cmd(void){
         position_lidar.x = z_x;
         position_lidar.y = z_y;
         position_lidar.t = principal_angle(z_theta);
-        // kalman_update(&position_robot, &position_robot_predict, position_lidar);
+
+        int delay_index = kalman_get_delayed_index(&kalman_history, LIDAR_DELAY);
+
+        // corriger l'état retardé
+        float lidar[3] = {lidar_x, lidar_y, lidar_theta};
+        kalman_update(&kalman_history.buffer[delay_index], lidar);
+
+        
+        // rejouer les prédictions depuis le point corrigé
+        kalman_replay_from(&kalman_history, delay_index, NULL, kalman_history.head);
+
+        // actualiser current_state
+        kalman_current_state = kalman_history.buffer[kalman_history.head];
         return 0;
     }
 }

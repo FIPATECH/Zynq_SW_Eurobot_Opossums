@@ -38,7 +38,7 @@ void asserv_init(void) {
 	pid_vitesse_init();
 
     // init kalman
-    kalman_init(&position_robot_predict);
+    kalman_init(&kalman_current_state);
 
 	// init des consignes / modes de ce fichier :
     asserv_mode = ASSERV_MODE_OFF;

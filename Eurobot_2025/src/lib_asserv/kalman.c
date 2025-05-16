@@ -1,93 +1,153 @@
 #include "../main.h"
 #include "lib_asserv.h"
 
-Position position_robot_predict; // Position odométrique
 
-float P[3][3]; // Covariance matrix
+KalmanState kalman_current_state;
+KalmanHistory kalman_history = {
+    .head = 0,
+    .dt = 0.01f // 10 ms
+};
 
-float Q[3][3] = {
-    {NOISE_XY_ODO, 0, 0},
-    {0, NOISE_XY_ODO, 0},
-    {0, 0, NOISE_T_ODO}
-}; // odometry noise covariance matrix
-
-float R[3][3] = {
-    {NOISE_XY_LIDAR, 0, 0},
-    {0, NOISE_XY_LIDAR, 0},
-    {0, 0, NOISE_T_LIDAR}
-}; // lidar noise covariance matrix
-
-void kalman_init(Position* pos) {
-    pos->x = 0;
-    pos->y = 0;
-    pos->t = 0;
-
-    memset(P, 0, sizeof(P));
-    P[0][0] = P[1][1] = 0.1f;
-    P[2][2] = 0.01f;
+void kalman_init(KalmanState* state) {
+    memset(state->x, 0, sizeof(state->x));
+    memset(state->P, 0, sizeof(state->P));
+    for (int i = 0; i < STATE_SIZE; i++)
+        state->P[i][i] = 0.01f;  // initial uncertainty
 }
 
-void kalman_predict(void) { // called each odo step : 1kHz
-    // Mise à jour de la covariance : P = P + Q
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            P[i][j] += Q[i][j];
+void kalman_predict(KalmanState* state, Speed* speed, float dt) {
+    float theta = state->x[2];
+
+    // Transformation de la vitesse robot → monde
+    float v_dx = speed->vx * cosf(theta) - speed->vy * sinf(theta);
+    float v_dy = speed->vx * sinf(theta) + speed->vy * cosf(theta);
+    float v_lin = sqrtf(v_dx * v_dx + v_dy * v_dy);
+    float v_ang = speed->vt;
+
+
+    float dx = v_lin * cosf(theta) * dt;
+    float dy = v_lin * sinf(theta) * dt;
+    float dtheta = v_ang * dt;
+
+    // Mise à jour état
+    state->x[0] += dx;
+    state->x[1] += dy;
+    state->x[2] = principal_angle(state->x[2] + dtheta);
+
+    // Jacobienne de la fonction de transition
+    float F[STATE_SIZE][STATE_SIZE] = {
+        {1, 0, -v_lin * sinf(theta) * dt},
+        {0, 1,  v_lin * cosf(theta) * dt},
+        {0, 0, 1}
+    };
+
+    // Mise à jour de la covariance : P = F * P * F^T + Q
+    float P_temp[STATE_SIZE][STATE_SIZE] = {0};
+    float P_new[STATE_SIZE][STATE_SIZE] = {0};
+
+    for (int i = 0; i < STATE_SIZE; i++)
+        for (int j = 0; j < STATE_SIZE; j++)
+            for (int k = 0; k < STATE_SIZE; k++)
+                P_temp[i][j] += F[i][k] * state->P[k][j];
+
+    for (int i = 0; i < STATE_SIZE; i++)
+        for (int j = 0; j < STATE_SIZE; j++)
+            for (int k = 0; k < STATE_SIZE; k++)
+                P_new[i][j] += P_temp[i][k] * F[j][k];
+
+    for (int i = 0; i < STATE_SIZE; i++)
+        for (int j = 0; j < STATE_SIZE; j++)
+            state->P[i][j] = P_new[i][j] + Q[i][j];
 }
 
-void kalman_update(Position* pos, const Position* pos_predict, const Position lidar_meas) {
-    // Innovation : différence entre la mesure et la prédiction
-    float y[3];
-    y[0] = lidar_meas.x - pos_predict->x;
-    y[1] = lidar_meas.y - pos_predict->y;
+void kalman_update(KalmanState* state, float z[STATE_SIZE], float R_diag[STATE_SIZE]) {
+    // z = [x, y, theta] mesure LiDAR
+    // state->x = [x, y, theta] état prédit
 
-    // gestion d'angle modulo 2pi :
-    float dt = lidar_meas.t - pos_predict->t;
-    while (dt > PI)  dt -= 2.0f * PI;
-    while (dt < -PI) dt += 2.0f * PI;
-    y[2] = dt;
+    // Innovation y = z - h(x)
+    float y[STATE_SIZE];
+    y[0] = z[0] - state->x[0];
+    y[1] = z[1] - state->x[1];
+    y[2] = principal_angle(z[2] - state->x[2]);
 
-    // Innovation covariance : S = P + R
-    float S[3][3];
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            S[i][j] = P[i][j] + R[i][j]; // H = I donc HPHᵀ = P
+    // Jacobienne H est identité 3x3 car mesure directe de l'état
+    // H = I
 
-    // Calcul inverse de S (matrice 3x3 symétrique → on suppose R diagonale pour simplifier)
-    float S_inv[3][3] = {0};
-    for (int i = 0; i < 3; i++) {
-        if (S[i][i] != 0.0f)
-            S_inv[i][i] = 1.0f / S[i][i];  // Inversion diagonale uniquement
+    // S = H * P * H^T + R = P + R (R est matrice diagonale)
+    float S[STATE_SIZE][STATE_SIZE];
+    for (int i = 0; i < STATE_SIZE; i++) {
+        for (int j = 0; j < STATE_SIZE; j++) {
+            S[i][j] = state->P[i][j];
+            if (i == j) S[i][j] += R_diag[i];
+        }
     }
 
-    // Gain de Kalman : K = P * S⁻¹
-    float K[3][3];
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            K[i][j] = P[i][j] * S_inv[j][j];  // simplifié car S_inv est diagonale
+    // Calcul de l'inverse de S (3x3) - on fait l'inverse exacte d'une matrice 3x3 symétrique positive définie
+    // Méthode directe pour matrice 3x3 inversible
 
-    // Mise à jour de l'état : x = x_pred + K * y
-    pos->x = pos_predict->x + K[0][0] * y[0] + K[0][1] * y[1] + K[0][2] * y[2];
-    pos->y = pos_predict->y + K[1][0] * y[0] + K[1][1] * y[1] + K[1][2] * y[2];
-    pos->t = pos_predict->t + K[2][0] * y[0] + K[2][1] * y[1] + K[2][2] * y[2];
+    float det = 
+        S[0][0] * (S[1][1]*S[2][2] - S[1][2]*S[2][1]) -
+        S[0][1] * (S[1][0]*S[2][2] - S[1][2]*S[2][0]) +
+        S[0][2] * (S[1][0]*S[2][1] - S[1][1]*S[2][0]);
 
-    // Normalise l'angle
-    while (pos->t > PI)  pos->t -= 2.0f * PI;
-    while (pos->t < -PI) pos->t += 2.0f * PI;
+    if (fabs(det) < 1e-6f) {
+        // Matrice quasi singulière, on skip la mise à jour
+        return;
+    }
 
-    // Mise à jour de la covariance : P = (I - K) * P
-    float I_minus_K[3][3];
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            I_minus_K[i][j] = (i == j ? 1.0f : 0.0f) - K[i][j];
+    float inv_det = 1.0f / det;
+    float S_inv[STATE_SIZE][STATE_SIZE];
 
-    float P_new[3][3] = {0};
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            for (int k = 0; k < 3; k++)
-                P_new[i][j] += I_minus_K[i][k] * P[k][j];
+    S_inv[0][0] =  (S[1][1]*S[2][2] - S[1][2]*S[2][1]) * inv_det;
+    S_inv[0][1] = -(S[0][1]*S[2][2] - S[0][2]*S[2][1]) * inv_det;
+    S_inv[0][2] =  (S[0][1]*S[1][2] - S[0][2]*S[1][1]) * inv_det;
 
-    // Copie dans P
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            P[i][j] = P_new[i][j];
+    S_inv[1][0] = -(S[1][0]*S[2][2] - S[1][2]*S[2][0]) * inv_det;
+    S_inv[1][1] =  (S[0][0]*S[2][2] - S[0][2]*S[2][0]) * inv_det;
+    S_inv[1][2] = -(S[0][0]*S[1][2] - S[0][2]*S[1][0]) * inv_det;
+
+    S_inv[2][0] =  (S[1][0]*S[2][1] - S[1][1]*S[2][0]) * inv_det;
+    S_inv[2][1] = -(S[0][0]*S[2][1] - S[0][1]*S[2][0]) * inv_det;
+    S_inv[2][2] =  (S[0][0]*S[1][1] - S[0][1]*S[1][0]) * inv_det;
+
+    // Calcul de K = P * H^T * S^-1 = P * S^-1 (car H=I)
+    float K[STATE_SIZE][STATE_SIZE] = {0};
+    for (int i = 0; i < STATE_SIZE; i++) {
+        for (int j = 0; j < STATE_SIZE; j++) {
+            for (int k = 0; k < STATE_SIZE; k++) {
+                K[i][j] += state->P[i][k] * S_inv[k][j];
+            }
+        }
+    }
+
+    // Mise à jour de l'état x = x + K * y
+    for (int i = 0; i < STATE_SIZE; i++) {
+        float delta = 0.0f;
+        for (int j = 0; j < STATE_SIZE; j++) {
+            delta += K[i][j] * y[j];
+        }
+        if (i == 2) // angle
+            state->x[i] = principal_angle(state->x[i] + delta);
+        else
+            state->x[i] += delta;
+    }
+
+    // Mise à jour de la covariance P = (I - K * H) * P = (I - K) * P (car H=I)
+    float I_K[STATE_SIZE][STATE_SIZE];
+    for (int i = 0; i < STATE_SIZE; i++) {
+        for (int j = 0; j < STATE_SIZE; j++) {
+            I_K[i][j] = (i == j ? 1.0f : 0.0f) - K[i][j];
+        }
+    }
+
+    float P_new[STATE_SIZE][STATE_SIZE] = {0};
+    for (int i = 0; i < STATE_SIZE; i++) {
+        for (int j = 0; j < STATE_SIZE; j++) {
+            for (int k = 0; k < STATE_SIZE; k++) {
+                P_new[i][j] += I_K[i][k] * state->P[k][j];
+            }
+        }
+    }
+
+    memcpy(state->P, P_new, sizeof(P_new));
 }

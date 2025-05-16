@@ -23,7 +23,6 @@
 #include "Motor_info.h"
 
 #include "kalman.h"
-
-
+#include "kalman_FIFO.h"
 
 #endif // _LIB_ASSERV_H_
