@@ -10,8 +10,8 @@ typedef struct {
     float t; // en radian
 } Position;
 
+extern Position position_robot_predict;
 extern Position position_robot;
-extern Position position_robot_odom;
 
 
 // Vitesse et vitesse angulaire du robot
@@ -48,11 +48,6 @@ typedef struct {
     float err_int;
     float err_der;
 } PID_err;
-
-typedef struct {
-    PID_coef coef;
-    PID_err err;
-} PID_pos;
 
 typedef struct {
     PID_coef coef;

@@ -1,7 +1,7 @@
 #include "../main.h"
 #include "lib_asserv.h"
 
-Position position_robot_odom; // Position estimée par le filtre de Kalman
+Position position_robot_predict; // Position odométrique
 
 float P[3][3]; // Covariance matrix
 
@@ -27,14 +27,10 @@ void kalman_init(Position* pos) {
     P[2][2] = 0.01f;
 }
 
-void kalman_predict(Position* pos, float dx, float dy, float dtheta) { // called each odo step : 1kHz
-    pos->x += dx;
-    pos->y += dy;
-    pos->t += dtheta;
-
+void kalman_predict(void) { // called each odo step : 1kHz
     // Mise à jour de la covariance : P = P + Q
-    for (int i = 0; i < 3; ++i)
-        for (int j = 0; j < 3; ++j)
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
             P[i][j] += Q[i][j];
 }
 

@@ -35,14 +35,6 @@ int Last_Timer_Asserv = 0;
 int Asserv_State = 0;
 int Asserv_Odo_Count = 0;
 
-int16_t previous_angle_motor_1 = 0;
-int16_t previous_angle_motor_2 = 0;
-int16_t previous_angle_motor_3 = 0;
-
-int16_t delta_angle_motor_1 = 0;
-int16_t delta_angle_motor_2 = 0;
-int16_t delta_angle_motor_3 = 0;
-
 ESC_Command Consigne;
 ESC_Command Wanted_Forced_Consigne;
 ESC_Command old_Consigne;
@@ -71,57 +63,70 @@ void Asserv_Loop(void)
 {
 	if (Asserv_State == 0) {
         //-----------------------------------
-        // ODO step :
-        // - calcul de la position du robot a partir de l'angle moteur 
-        // - calcul de la vitesse du robot a partir de la vitesse des moteurs
+        // ODO step 1:
+        // - calcul de la vitesse du robot 
         //-----------------------------------
         if ((Timer_ms1 - Last_Timer_Asserv) > ODO_EVERY_MS) {
             Last_Timer_Asserv += ODO_EVERY_MS;
-            Asserv_Odo_Count ++;
-
-            delta_angle_motor_1 = angle_motor_1 - previous_angle_motor_1;
-            delta_angle_motor_2 = angle_motor_2 - previous_angle_motor_2;
-            delta_angle_motor_3 = angle_motor_3 - previous_angle_motor_3;
-
-            odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);
-            odo_position_step(&dx, &dy, &dt);
-
-            kalman_predict(&position_robot_odom, dx, dy, dt);
-
-            previous_angle_motor_1 = angle_motor_1;
-            previous_angle_motor_2 = angle_motor_2;
-            previous_angle_motor_3 = angle_motor_3;
-
-            if (Asserv_Odo_Count >= ASSERV_EVERY){
-                Asserv_Odo_Count = 0;
-                Asserv_State ++;
-            } else {
-                Asserv_State = 0;
-            }   
+            odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);       
+            Asserv_State = 1;
         }
+
     } else if (Asserv_State == 1) {
+        // -----------------------------------
+        // ODO step 2:
+        // - calcul de la position du robot
+        // -----------------------------------
+
+        odo_position_step(ODO_EVERY_MS*0.001f);
+        // kalman_predict(); 
+        Asserv_Odo_Count ++;
+
+        if (Asserv_Odo_Count >= ASSERV_EVERY){
+            Asserv_Odo_Count = 0;
+            Asserv_State ++;
+        } else {
+            Asserv_State = 0;
+        }
+        
+    } else if (Asserv_State == 2) {
+        // -----------------------------------
+        // ODO step 3:
+        // - calcul de la vitesse du robot
+        // -----------------------------------
+        odo_speed_cumulate_step(ASSERV_EVERY);
+        Asserv_State = 10;
+    
+    } else if (Asserv_State == 10) {
         //-----------------------------------
         // motion step
         //-----------------------------------
         motion_step();
-        Asserv_State ++;
+        Asserv_State = 20;
 
-    } else if (Asserv_State == 2) {
+    } else if (Asserv_State == 20) {
         //-----------------------------------
         // spped constrain
         //-----------------------------------
-        constrain_speed_order(ASSERV_EVERY*ODO_EVERY_MS*0.001);
-        Asserv_State ++;
+        constrain_speed_order();
+        Asserv_State = 21;
 
-    } else if (Asserv_State == 3) {
+    } else if (Asserv_State == 21) {
+        //-----------------------------------
+        // acceleration constrain
+        //-----------------------------------
+        constrain_acceleration_order(ASSERV_EVERY*ODO_EVERY_MS*0.001f);
+        Asserv_State = 30;
+
+    } else if (Asserv_State == 30) {
         //-----------------------------------
         // consigne
         //-----------------------------------
         Asserv_PWM_calculator(&Consigne);
-        Asserv_State ++;
+        Asserv_State = 40;
 
 
-    } else if (Asserv_State == 4) {
+    } else if (Asserv_State == 40) {
         if ((Wanted_Forced_Consigne.command1 != 0) || 
             (Wanted_Forced_Consigne.command2 != 0) || 
             (Wanted_Forced_Consigne.command3 != 0)) {
@@ -144,10 +149,10 @@ void Asserv_Loop(void)
 
         old_Consigne = Consigne;
        
-        Asserv_State ++;
+        Asserv_State = 50;
 
-    } else if (Asserv_State == 5) {
-        if(!AU_state){
+    } else if (Asserv_State == 50) {
+        if(AU_state){
             asserv_off_step();
         }else{
             motor1_current_order = Consigne.command1;
@@ -155,15 +160,15 @@ void Asserv_Loop(void)
             motor3_current_order = Consigne.command3;
         }
         CAN_transmit_motor(motor1_current_order, motor2_current_order, motor3_current_order);
-        Asserv_State ++;
+        Asserv_State = 60;
 
-    } else if (Asserv_State == 6) {
+    } else if (Asserv_State == 60) {
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
-            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot.x, position_robot.y, position_robot.t, speed_linear, speed_direction);          
+            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, speed_linear, speed_direction);          
             if (auto_printdebug_en) {
-                printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot_odom.x, position_robot_odom.y, position_robot_odom.t, speed_robot.vx, speed_robot.vy);
+                printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot.x, position_robot.y, position_robot.t, speed_robot.vx, speed_robot.vy);
             }
             Last_Timer_print_pos += auto_printpos_delay;
         }
@@ -202,13 +207,13 @@ uint8_t Set_Lidar_Cmd(void){
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
     // avoid to set the lidar position to a value that is too far from the robot position
-    if (fabs(z_x - position_robot.x) > 0.3 || fabs(z_y - position_robot.y) > 0.3 || fabs(z_theta - position_robot.t) > 0.2) {
+    if (fabs(z_x - position_robot_predict.x) > 0.3 || fabs(z_y - position_robot_predict.y) > 0.3 || fabs(z_theta - position_robot_predict.t) > 0.2) {
         return 0;
     }else{
         position_lidar.x = z_x;
         position_lidar.y = z_y;
         position_lidar.t = principal_angle(z_theta);
-        kalman_update(&position_robot, &position_robot_odom, position_lidar);
+        // kalman_update(&position_robot, &position_robot_predict, position_lidar);
         return 0;
     }
 }
@@ -223,14 +228,16 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
 
+    position_robot_predict.x = z_x;
+    position_robot_predict.y = z_y;
+    position_robot_predict.t = principal_angle(z_theta);
+
     position_robot.x = z_x;
     position_robot.y = z_y;
     position_robot.t = principal_angle(z_theta);
 
-    position_robot_odom.x = z_x;
-    position_robot_odom.y = z_y;
-    position_robot_odom.t = principal_angle(z_theta);
+    // kalman_update(&position_robot, &position_robot_predict, position_lidar);
 
-    kalman_update(&position_robot, &position_robot_odom, position_lidar);
+    position_robot_predict = position_robot;
     return 0;
 }

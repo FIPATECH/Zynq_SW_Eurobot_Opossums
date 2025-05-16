@@ -74,6 +74,8 @@ int main()
             LED_AU();
             motion_free();
             init_CAN_MOTOR_variables();
+            Init_Pump();
+            PWM_Init();
         }else{
             IHM_loop();
             LED_CLASSIC_MODE();

@@ -3,126 +3,133 @@
 
 
 Acceleration Accel_Max;
-Speed Speed_Max;
 
 Speed speed_order;
 Speed speed_order_constrained;
-
-float Accel_Max_Roue;
-float Speed_Max_Roue;
+Speed speed_order_constrained_1;
 
 float Speed_Order_1, Speed_Order_2, Speed_Order_3;
 
-float tau_x, tau_y, tau_t = 0;
+float robot_v_max;
+float robot_vt_max;
 
-float old_vx1, old_vx2, old_vx3 = 0;
-float old_vy1, old_vy2, old_vy3 = 0;
-float old_vt1, old_vt2, old_vt3 = 0;
-
-float vx_o, vy_o, vt_o = 0;
-
-float old_vx_o, old_vy_o, old_vt_o = 0;
-
-float v_o, old_v_o = 0;
-
+float robot_a_max;
+float robot_at_max;
 
 void speed_constrainer_init(void)
 {
-	Speed_Max.vx   = DEFAULT_CONSTRAINT_V_MAX;
-	Speed_Max.vy   = DEFAULT_CONSTRAINT_V_MAX;
-	Speed_Max.vt   = DEFAULT_CONSTRAINT_VT_MAX;
-    Speed_Max_Roue = DEFAULT_CONSTRAINT_V_ROUE_MAX;
+    robot_v_max   = DEFAULT_CONSTRAINT_V_MAX;
+    robot_vt_max  = DEFAULT_CONSTRAINT_VT_MAX;
 }
 
 void acceleration_constrainer_init(void)
 {
-    Accel_Max.ax    = DEFAULT_CONSTRAINT_A_MAX;
-    Accel_Max.ay    = DEFAULT_CONSTRAINT_A_MAX;
-    Accel_Max.at    = DEFAULT_CONSTRAINT_AT_MAX;
-    Accel_Max_Roue  = DEFAULT_CONSTRAINT_A_ROUE;
+    robot_a_max = DEFAULT_CONSTRAINT_A_MAX;
+    robot_at_max = DEFAULT_CONSTRAINT_AT_MAX;
 }
 
-void constrain_speed_order(float period) {
-    float vx_o = speed_order.vx;
-    float vy_o = speed_order.vy;
-    float vt_o = speed_order.vt;
+void constrain_speed_order(void) {
+    speed_order_constrained_1.vx = speed_order.vx;
+    speed_order_constrained_1.vy = speed_order.vy;
+    speed_order_constrained_1.vt = speed_order.vt;
 
-    // vt_o = limit_float(vt_o, -Speed_Max.vt, Speed_Max.vt);
-    float vt_component = -(vt_o * robot_wheel_distance);
-	// vt_component  = limit_float(vt_component, -Speed_Max_Roue, Speed_Max_Roue);
+    float v_linear = sqrtf(speed_order_constrained_1.vx * speed_order_constrained_1.vx + speed_order_constrained_1.vy * speed_order_constrained_1.vy);
 
-    float wheel_speed_1 = vt_component + vx_o;  
-    float wheel_speed_2 = vt_component - (vx_o * 0.5f) + (vy_o * (sqrtf(3.0f) / 2.0f)); 
-    float wheel_speed_3 = vt_component - (vx_o * 0.5f) - (vy_o * (sqrtf(3.0f) / 2.0f)); 
-
-    //limitation on wheel speed and wheel acceleration
-    float speed_coef = maximum3(fabsf(wheel_speed_1), fabsf(wheel_speed_2), fabsf(wheel_speed_3));
-    if (speed_coef > Speed_Max_Roue) {
-        wheel_speed_1 = wheel_speed_1 * Speed_Max_Roue / speed_coef;
-        wheel_speed_2 = wheel_speed_2 * Speed_Max_Roue / speed_coef;
-        wheel_speed_3 = wheel_speed_3 * Speed_Max_Roue / speed_coef;
+    if(v_linear > robot_v_max) {
+        float scale = robot_v_max / v_linear;
+        speed_order_constrained_1.vx *= scale;
+        speed_order_constrained_1.vy *= scale;
     }
-
-    // --- Limitation d’accélération proportionnelle
-    float delta_1 = wheel_speed_1 - Speed_Order_1;
-    float delta_2 = wheel_speed_2 - Speed_Order_2;
-    float delta_3 = wheel_speed_3 - Speed_Order_3;
-
-    float max_delta = maximum3(fabsf(delta_1), fabsf(delta_2), fabsf(delta_3));
-    float delta_vr_max = Accel_Max_Roue * period;
-
-    if (max_delta > delta_vr_max) {
-        float scale = delta_vr_max / max_delta;
-        delta_1 *= scale;
-        delta_2 *= scale;
-        delta_3 *= scale;
-    }
-
-    Speed_Order_1 += delta_1;
-    Speed_Order_2 += delta_2;
-    Speed_Order_3 += delta_3;  
+    speed_order_constrained_1.vt = limit_float(speed_order_constrained_1.vt, -robot_vt_max, robot_vt_max);
 }
+
+void constrain_acceleration_order(float period) {
+    float delta_v_max   = robot_a_max * period;
+    float delta_vt_max  = robot_at_max * period;
+
+    // process old speed constrained (be aware of the rotation)
+    float delta_angle = speed_order_constrained.vt * period;
+    float cos_angle = cosf(delta_angle);
+    float sin_angle = sinf(delta_angle);
+    float previous_vx_order = speed_order_constrained.vx * cos_angle + speed_order_constrained.vy * sin_angle;
+    float previous_vy_order = - speed_order_constrained.vx * sin_angle + speed_order_constrained.vy * cos_angle;
+
+    // process acceleration steps
+    float delta_vx = speed_order_constrained_1.vx - previous_vx_order;
+    float delta_vy = speed_order_constrained_1.vy - previous_vy_order;
+
+    float dv_linear = sqrtf(delta_vx * delta_vx + delta_vy * delta_vy);
+    if (dv_linear > delta_v_max) {
+        if (emergency_break_requested){
+            // in case the BREAK command is requested from the user
+            speed_order_constrained.vx = 0;
+            speed_order_constrained.vy = 0;
+            speed_order_constrained.vt = 0;
+            return;
+        }else{
+            float scale = delta_v_max / dv_linear;
+            speed_order_constrained.vx = previous_vx_order + delta_vx * scale;
+            speed_order_constrained.vy = previous_vy_order + delta_vy * scale;
+        }
+    } else {
+        speed_order_constrained.vx = speed_order_constrained_1.vx;
+        speed_order_constrained.vy = speed_order_constrained_1.vy;
+    }
+    speed_order_constrained.vt = limit_float(speed_order_constrained_1.vt, speed_order_constrained.vt - delta_vt_max, speed_order_constrained.vt + delta_vt_max);
+
+    // process wheel speed
+    float vt_component = -(speed_order_constrained.vt * robot_wheel_distance);
+    Speed_Order_1 = vt_component + speed_order_constrained.vx;
+    Speed_Order_2 = vt_component - (speed_order_constrained.vx * 0.5f) + (speed_order_constrained.vy * (sqrtf(3.0f) / 2.0f)); 
+    Speed_Order_3 = vt_component - (speed_order_constrained.vx * 0.5f) - (speed_order_constrained.vy * (sqrtf(3.0f) / 2.0f)); 
+}
+
 
 void set_Constraint_vitesse_xy_max(float v_max) {
     if (v_max != 0) {
         if (v_max <= DEFAULT_CONSTRAINT_V_MAX) {
-            Speed_Max.vx = v_max;
-            Speed_Max.vy = v_max;
+            robot_v_max = v_max;
         } else {
-            Speed_Max.vx = DEFAULT_CONSTRAINT_V_MAX;
-            Speed_Max.vy = DEFAULT_CONSTRAINT_V_MAX;
+            robot_v_max = DEFAULT_CONSTRAINT_V_MAX;
         }
     } else {
-        Speed_Max.vx = DEFAULT_CONSTRAINT_V_MAX;
-        Speed_Max.vy = DEFAULT_CONSTRAINT_V_MAX;
+        robot_v_max = DEFAULT_CONSTRAINT_V_MAX;
     }
 }
 
 void set_Constraint_vt_max(float vt_max) {
     if (vt_max != 0) {
         if (vt_max <= DEFAULT_CONSTRAINT_VT_MAX) {
-            Speed_Max.vt = vt_max;
+            robot_vt_max = vt_max;
         } else {
-            Speed_Max.vt = DEFAULT_CONSTRAINT_VT_MAX;
+            robot_vt_max = DEFAULT_CONSTRAINT_VT_MAX;
         }         
     } else {
-        Speed_Max.vt = DEFAULT_CONSTRAINT_VT_MAX;
+        robot_vt_max = DEFAULT_CONSTRAINT_VT_MAX;
     }
 }
 
-void set_Constraint_acceleration_xy_max(float a_max, float at_max) {
+void set_Constraint_a_xy_max(float a_max) {
     if (a_max != 0) {
-        Accel_Max.ax = a_max;
-        Accel_Max.ay = a_max;
+        if (a_max <= DEFAULT_CONSTRAINT_A_MAX) {
+            robot_a_max = a_max;
+        } else {
+            robot_a_max = DEFAULT_CONSTRAINT_A_MAX;
+        }
     } else {
-        Accel_Max.ax = DEFAULT_CONSTRAINT_A_MAX;
-        Accel_Max.ay = DEFAULT_CONSTRAINT_A_MAX;
-    }
-    if (at_max != 0) {
-        Accel_Max.at = at_max;
-    } else {
-        Accel_Max.at = DEFAULT_CONSTRAINT_AT_MAX;
+        robot_a_max = DEFAULT_CONSTRAINT_A_MAX;
     }
 }
 
+void set_Constraint_at_max(float at_max) {
+    if (at_max != 0) {
+        if (at_max <= DEFAULT_CONSTRAINT_AT_MAX) {
+            robot_at_max = at_max;
+        } else {
+            robot_at_max = DEFAULT_CONSTRAINT_AT_MAX;
+        }
+    } else {
+        robot_at_max = DEFAULT_CONSTRAINT_AT_MAX;
+    }
+}
 
