@@ -12,6 +12,8 @@ typedef struct {
     int head;
 } KalmanFIFO;
 
+extern KalmanFIFO kalman_fifo;
+
 /**
  * Initialise la FIFO (position tête à 0, mémoire à zéro).
  */
@@ -23,7 +25,7 @@ void kalman_fifo_init(KalmanFIFO* fifo);
  * @param fifo La structure FIFO.
  * @param state L'état à ajouter.
  */
-void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state);
+void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot);
 
 /**
  * Récupère un état dans le passé à un délai donné (en ms).

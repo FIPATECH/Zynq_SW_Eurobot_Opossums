@@ -80,8 +80,10 @@ void Asserv_Loop(void)
 
         odo_position_step(ODO_EVERY_MS*0.001f);
 
-        kalman_predict(&kalman_current_state, kalman_history.dt);
-        kalman_store(&kalman_history, &kalman_current_state); 
+        // --- Kalman update
+        kalman_predict(&kalman_current_state, &speed_robot, ODO_EVERY_MS*0.001f);
+        kalman_fifo_push(&kalman_fifo, &kalman_current_state, &speed_robot);
+        
 
         Asserv_Odo_Count ++;
 
@@ -217,18 +219,19 @@ uint8_t Set_Lidar_Cmd(void){
         position_lidar.y = z_y;
         position_lidar.t = principal_angle(z_theta);
 
-        int delay_index = kalman_get_delayed_index(&kalman_history, LIDAR_DELAY);
+        int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
 
         // corriger l'état retardé
-        float lidar[3] = {lidar_x, lidar_y, lidar_theta};
-        kalman_update(&kalman_history.buffer[delay_index], lidar);
+        float lidar[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
+        float R_diag[3] = {0.01f, 0.01f, 0.01f}; // Bruit de mesure (tunable)
+        kalman_update(&kalman_fifo.buffer[delay_index], lidar, R_diag);
 
         
         // rejouer les prédictions depuis le point corrigé
-        kalman_replay_from(&kalman_history, delay_index, NULL, kalman_history.head);
+        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
 
         // actualiser current_state
-        kalman_current_state = kalman_history.buffer[kalman_history.head];
+        kalman_current_state = kalman_fifo.buffer[kalman_fifo.head];
         return 0;
     }
 }

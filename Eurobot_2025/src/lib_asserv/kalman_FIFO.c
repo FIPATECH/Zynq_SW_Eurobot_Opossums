@@ -6,9 +6,12 @@ void kalman_fifo_init(KalmanFIFO* fifo) {
     fifo->head = 0;
 }
 
-void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state) {
+void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) {
     // Stocke l'état à l'emplacement courant
     memcpy(&fifo->buffer[fifo->head], state, sizeof(KalmanState));
+
+    // Stocke la vitesse du robot à l'emplacement courant
+    memcpy(&fifo->speed_robot[fifo->head], speed_robot, sizeof(Speed));
     
     // Incrémente la tête de la FIFO en la ramenant dans les bornes
     fifo->head = (fifo->head + 1) % KALMAN_FIFO_LEN;

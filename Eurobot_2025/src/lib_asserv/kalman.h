@@ -22,14 +22,7 @@ typedef struct {
     float P[STATE_SIZE][STATE_SIZE];     // covariance
 } KalmanState;
 
-typedef struct {
-    KalmanState buffer[HISTORY_LEN];
-    int head;
-    float dt;
-} KalmanHistory;
-
 extern KalmanState kalman_current_state;
-extern KalmanHistory kalman_history;
 
 /**
  * Initialise l’état du filtre de Kalman.
