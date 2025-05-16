@@ -197,11 +197,6 @@ void pos_asserv_step(void) {
     float cos_t = cosf(t);
     float sin_t = sinf(t);
 
-    // --- Par défaut : pas de mouvement
-    speed_order.vx = 0.0f;
-    speed_order.vy = 0.0f;
-    speed_order.vt = 0.0f;
-
     float angle = atan2f(rdy, rdx);
 
     // --- Calcul de la vitesse radiale
@@ -216,7 +211,7 @@ void pos_asserv_step(void) {
     speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
 
     // --- Calcul de la vitesse angulaire
-    speed_order.vt =  angular_speed_calculation(dt);
+    speed_order.vt =  angular_speed_calculation(dt);;
 
     // --- Activation de l’asservissement vitesse
     Pid_Speed_En = 1;
