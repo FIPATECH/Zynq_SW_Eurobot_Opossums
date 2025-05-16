@@ -63,9 +63,9 @@ void Init_Stepper(void){
             // move stepper motor to higher position to press the endstop switch
             ///////////////////////////////////////////////////////////////////////////////
             if(high_switch_elevator_state == 1){
-                stepper_1.en = 1;
+                stepper_1.en = STEPPER_ENABLE;
                 stepper_1.step = 1000;
-                stepper_1.dir = 0;
+                stepper_1.dir = STEPPER_DIR_FORWARD;
                 XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
                 XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
                 XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
@@ -77,7 +77,7 @@ void Init_Stepper(void){
             // wait for the endstop switch to be pressed
             ///////////////////////////////////////////////////////////////////////////////
             if (XGpio_DiscreteRead(&high_switch_elevator, 1) == 0){
-                stepper_1.en = 0;
+                stepper_1.en = STEPPER_DISABLE;
                 stepper_1.step = 0;
                 stepper_1.dir = 0;
                 XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
@@ -99,6 +99,23 @@ void Stepper_Loop(void){
 
     if(Timer_ms1 - old_stepper_Timer_ms1 > 10){
         old_stepper_Timer_ms1 = Timer_ms1;
+        high_switch_elevator_state = XGpio_DiscreteRead(&high_switch_elevator, 1);
+        if(high_switch_elevator_state == 1){
+                stepper_1.en = STEPPER_ENABLE;
+                stepper_1.step = 1000;
+                stepper_1.dir = STEPPER_DIR_FORWARD;
+                XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
+                XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+                XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
+                init_stepper_state = 3;
+            }else{
+                stepper_1.en = STEPPER_DISABLE;
+                stepper_1.step = 0;
+                stepper_1.dir = 0;
+                XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
+                XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+                XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
+            }
         // if (XGpio_DiscreteRead(&stepper_1.DONE, 1) == 1){
         //     if (stepper_1.dir == STEPPER_DIR_BACKWARD){
         //         stepper_1.en = STEPPER_ENABLE;
