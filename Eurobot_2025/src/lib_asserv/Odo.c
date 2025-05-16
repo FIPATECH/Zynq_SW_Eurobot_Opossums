@@ -56,9 +56,9 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) 
     Cumulated_Speed_3 += Odo_Speed_3;
     
     // maj des vitesses odometrique pur pour le calcul de la position
-    speed_robot_odom.vx = (2.0f/3.0f) * (Speed_1) - (1.0f/3.0f) * (Speed_2 + Speed_3);
-    speed_robot_odom.vy = (sqrtf(3.0f) / 3.0f) * (Speed_2 - Speed_3); // translation avant (X robot)
-    speed_robot_odom.vt = -(Speed_1 + Speed_2 + Speed_3) / (3.0f * robot_wheel_distance);
+    speed_robot_odom.vx = (2.0f/3.0f) * (Odo_Speed_1) - (1.0f/3.0f) * (Odo_Speed_2 + Odo_Speed_3);
+    speed_robot_odom.vy = (sqrtf(3.0f) / 3.0f) * (Odo_Speed_2 - Odo_Speed_3); // translation avant (X robot)
+    speed_robot_odom.vt = -(Odo_Speed_1 + Odo_Speed_2 + Odo_Speed_3) / (3.0f * robot_wheel_distance);
 
     // maj des vitesses odometrique cumulé pour le calcul de la vitesse
     cumulated_speed.vx += speed_robot_odom.vx;

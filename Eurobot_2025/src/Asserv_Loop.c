@@ -79,7 +79,7 @@ void Asserv_Loop(void)
         // -----------------------------------
 
         odo_position_step(ODO_EVERY_MS*0.001f);
-        // kalman_predict(); 
+        kalman_predict(); 
         Asserv_Odo_Count ++;
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
