@@ -25,18 +25,13 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     // Transformation de la vitesse robot → monde
     float v_dx = speed->vx * cosf(theta) - speed->vy * sinf(theta);
     float v_dy = speed->vx * sinf(theta) + speed->vy * cosf(theta);
-    float v_lin = sqrtf(v_dx * v_dx + v_dy * v_dy);
     float v_ang = speed->vt;
-
-
-    float dx = v_dx * dt;
-    float dy = v_dy * dt;
-    float dtheta = v_ang * dt;
+    float v_lin = sqrtf(v_dx * v_dx + v_dy * v_dy);
 
     // Mise à jour état
-    state->x[0] += dx;
-    state->x[1] += dy;
-    state->x[2] = principal_angle(state->x[2] + dtheta);
+    state->x[0] = position_robot_predict.x;
+    state->x[1] = position_robot_predict.y;
+    state->x[2] = position_robot_predict.t;
     // Mise à jour des vitesses dans le repère monde dans l'état
     state->x[3] = v_dx;      // vx monde
     state->x[4] = v_dy;      // vy monde
