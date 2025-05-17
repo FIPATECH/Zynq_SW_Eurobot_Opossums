@@ -166,7 +166,7 @@ void Asserv_Loop(void)
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
-            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, speed_linear, speed_direction);          
+            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, speed_linear, speed_direction, speed_robot.vt);          
             if (auto_printdebug_en) {
                 printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot.x, position_robot.y, position_robot.t, speed_robot.vx, speed_robot.vy);
             }
