@@ -229,7 +229,7 @@ uint8_t Set_Lidar_Cmd(void) {
     // Récupération de l'index dans la FIFO correspondant au délai LiDAR
     int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
     if (delay_index < 0) {
-        return 1; // erreur
+        return 0; // erreur
     }
     // Correction de l’état dans la FIFO
     float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
