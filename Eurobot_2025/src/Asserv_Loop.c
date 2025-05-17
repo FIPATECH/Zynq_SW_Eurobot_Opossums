@@ -215,11 +215,11 @@ uint8_t Set_Lidar_Cmd(void) {
     if (Get_Param_Float(&z_theta)) return 1;
 
     // Filtrage anti-erreur : ignore les mesures trop éloignées de la prédiction
-    if (fabsf(z_x - kalman_current_state.x[0]) > 0.3f ||
-        fabsf(z_y - kalman_current_state.x[1]) > 0.3f ||
-        fabsf(z_theta - kalman_current_state.x[2]) > 0.2f) {
-        return 0;
-    }
+    // if (fabsf(z_x - kalman_current_state.x[0]) > 0.3f ||
+    //     fabsf(z_y - kalman_current_state.x[1]) > 0.3f ||
+    //     fabsf(z_theta - kalman_current_state.x[2]) > 0.2f) {
+    //     return 0;
+    // }
 
     // Mise à jour des données LIDAR (avec angle normalisé)
     position_lidar.x = z_x;
