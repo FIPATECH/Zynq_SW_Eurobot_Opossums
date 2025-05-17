@@ -3,10 +3,7 @@
 
 
 KalmanState kalman_current_state;
-KalmanHistory kalman_history = {
-    .head = 0,
-    .dt = 0.01f // 10 ms
-};
+
 
 void kalman_init(KalmanState* state) {
     memset(state->x, 0, sizeof(state->x));
@@ -25,14 +22,18 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     float v_ang = speed->vt;
 
 
-    float dx = v_lin * cosf(theta) * dt;
-    float dy = v_lin * sinf(theta) * dt;
+    float dx = v_dx * dt;
+    float dy = v_dy * dt;
     float dtheta = v_ang * dt;
 
     // Mise à jour état
     state->x[0] += dx;
     state->x[1] += dy;
     state->x[2] = principal_angle(state->x[2] + dtheta);
+    // Mise à jour des vitesses dans le repère monde dans l'état
+    state->x[3] = v_dx;      // vx monde
+    state->x[4] = v_dy;      // vy monde
+    state->x[5] = v_ang;     // vitesse angulaire
 
     // Jacobienne de la fonction de transition
     float F[STATE_SIZE][STATE_SIZE] = {

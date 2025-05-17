@@ -79,12 +79,15 @@ void Asserv_Loop(void)
         // -----------------------------------
 
         odo_position_step(ODO_EVERY_MS*0.001f);
+        Asserv_State = 2;
 
-        // --- Kalman update
+    } else if (Asserv_State == 2) {
+        // -----------------------------------
+        // ODO step 2:
+        // - calcul du kalman + history
+        // -----------------------------------
         kalman_predict(&kalman_current_state, &speed_robot, ODO_EVERY_MS*0.001f);
         kalman_fifo_push(&kalman_fifo, &kalman_current_state, &speed_robot);
-        
-
         Asserv_Odo_Count ++;
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
@@ -93,8 +96,8 @@ void Asserv_Loop(void)
         } else {
             Asserv_State = 0;
         }
-        
-    } else if (Asserv_State == 2) {
+
+    } else if (Asserv_State == 3) {
         // -----------------------------------
         // ODO step 3:
         // - calcul de la vitesse du robot
@@ -219,7 +222,7 @@ uint8_t Set_Lidar_Cmd(void){
         position_lidar.y = z_y;
         position_lidar.t = principal_angle(z_theta);
 
-        int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
+        kalman_fifo. = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
 
         // corriger l'état retardé
         float lidar[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
@@ -231,7 +234,7 @@ uint8_t Set_Lidar_Cmd(void){
         kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
 
         // actualiser current_state
-        kalman_current_state = kalman_fifo.buffer[kalman_fifo.head];
+        kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
         return 0;
     }
 }
