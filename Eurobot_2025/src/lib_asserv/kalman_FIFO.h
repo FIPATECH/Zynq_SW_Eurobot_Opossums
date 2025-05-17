@@ -52,10 +52,8 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s);
  * @brief Initialise la kalman avec les valeurs du lidar
  * 
  * @param fifo fifo de kalman
- * @param x position x lidar
- * @param y position y lidar
- * @param theta position theta lidar
+ * @param pos lidar_pos
  */
-void kalman_init_with_lidar(KalmanFIFO* fifo, float x, float y, float theta);
+void kalman_init_with_lidar(KalmanFIFO* fifo, Position* lidar_pos);
 
 #endif // __KALMAN_FIFO_H_

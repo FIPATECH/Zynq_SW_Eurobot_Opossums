@@ -259,6 +259,6 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
 
-    kalman_init_with_lidar(&kalman_fifo, position_lidar.x, position_lidar.y, position_lidar.t);
+    kalman_init_with_lidar(&kalman_fifo, &position_lidar);
     return 0;
 }

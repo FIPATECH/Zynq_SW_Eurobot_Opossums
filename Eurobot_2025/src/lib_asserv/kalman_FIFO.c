@@ -44,13 +44,13 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s) {
     }
 }
 
-void kalman_init_with_lidar(KalmanFIFO* fifo, float x, float y, float theta) {
+void kalman_init_with_lidar(KalmanFIFO* fifo, Position* lidar_pos) {
     KalmanState init_state;
 
     // Initialiser la position
-    init_state.x[0] = x;
-    init_state.x[1] = y;
-    init_state.x[2] = principal_angle(theta);
+    init_state.x[0] = lidar_pos->x;
+    init_state.x[1] = lidar_pos->y;
+    init_state.x[2] = principal_angle(lidar_pos->t);
 
     // Initialiser les vitesses à 0 (ou valeurs par défaut)
     init_state.x[3] = 0.0f; // vx
