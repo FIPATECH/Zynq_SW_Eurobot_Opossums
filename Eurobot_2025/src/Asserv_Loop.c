@@ -4,7 +4,7 @@
 u32 Last_Timer_print_pos = 0;
 
 uint8_t auto_printpos_en = 1;
-uint8_t auto_printdebug_en = 1;
+uint8_t auto_printdebug_en = 0;
 uint16_t auto_printpos_delay = 10;
 
 uint8_t Debug_Timing = 0;
@@ -238,6 +238,6 @@ uint8_t Synchro_Lidar_Cmd(void){
 
     // kalman_update(&position_robot, &position_robot_predict, position_lidar);
 
-    position_robot_predict = position_robot;
+    // position_robot_predict = position_robot;
     return 0;
 }
