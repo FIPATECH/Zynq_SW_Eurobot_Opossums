@@ -8,7 +8,7 @@ Speed speed_robot;                  // en repere relatif
 Speed speed_robot_odom;
 Speed cumulated_speed;    
 Position position_robot; // Position odometrique
-Position position_robot_predict; // Position odometrique pur
+Position position_robot_odom; // Position odometrique pur
 Acceleration acceleration_robot;    // en repere relatif
 
 float Speed_1, Speed_2, Speed_3;
@@ -21,9 +21,9 @@ float Cumulated_Speed_1, Cumulated_Speed_2, Cumulated_Speed_3;
 void odo_init(void) {
     odo_set_spacing(DEFAULT_ODO_SPACING);
 
-    position_robot_predict.x = 0;
-    position_robot_predict.y = 0;
-    position_robot_predict.t = 0;
+    position_robot_odom.x = 0;
+    position_robot_odom.y = 0;
+    position_robot_odom.t = 0;
 
     position_robot.x = 0;
     position_robot.y = 0;
@@ -72,15 +72,15 @@ void odo_position_step(float period) {
     float dy_local = (speed_robot_odom.vy * period);
     float dt = (speed_robot_odom.vt * period);
     
-    float cos_t = cosf(position_robot_predict.t);
-    float sin_t = sinf(position_robot_predict.t);
+    float cos_t = cosf(position_robot_odom.t);
+    float sin_t = sinf(position_robot_odom.t);
 
     float dx_global = dx_local * cos_t - dy_local * sin_t;
     float dy_global = dx_local * sin_t + dy_local * cos_t;
 
-    position_robot_predict.x += dx_global;
-    position_robot_predict.y += dy_global;
-    position_robot_predict.t = principal_angle(position_robot_predict.t + dt);
+    position_robot_odom.x += dx_global;
+    position_robot_odom.y += dy_global;
+    position_robot_odom.t = principal_angle(position_robot_odom.t + dt);
 }
 
 void odo_speed_cumulate_step(float nbr_step) {
@@ -103,22 +103,22 @@ void odo_speed_cumulate_step(float nbr_step) {
 
 
 void set_position(Position pos) {
-    position_robot_predict = pos;
+    position_robot_odom = pos;
     position_robot = pos;
 }
 
 void set_position_x(float x) {
-    position_robot_predict.x = x;
+    position_robot_odom.x = x;
     position_robot.x = x;
 }
 
 void set_position_y(float y) {
-    position_robot_predict.y = y;
+    position_robot_odom.y = y;
     position_robot.y = y;
 }
 
 void set_position_t(float t) {
-    position_robot_predict.t = t;
+    position_robot_odom.t = t;
     position_robot.t = t;
 }
 

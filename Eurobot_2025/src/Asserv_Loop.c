@@ -174,7 +174,7 @@ void Asserv_Loop(void)
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
-            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, speed_linear, speed_direction, speed_robot.vt);          
+            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_odom.x, position_robot_odom.y, position_robot_odom.t, speed_linear, speed_direction, speed_robot.vt);          
             if (auto_printdebug_en) {
                 printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot.x, position_robot.y, position_robot.t, speed_robot.vx, speed_robot.vy);
             }
@@ -218,9 +218,9 @@ uint8_t Set_Lidar_Cmd(void) {
     if (Get_Param_Float(&z_theta)) return 1;
 
     // Filtrage anti-erreur : ignore les mesures trop éloignées de la prédiction
-    if (fabsf(z_x - position_robot_predict.x) > 0.3f ||
-        fabsf(z_y - position_robot_predict.y) > 0.3f ||
-        fabsf(z_theta - position_robot_predict.t) > 0.2f) {
+    if (fabsf(z_x - kalman_current_state.x[0]) > 0.3f ||
+        fabsf(z_y - kalman_current_state.x[1]) > 0.3f ||
+        fabsf(z_theta - kalman_current_state.x[2]) > 0.2f) {
         return 0;
     }
 

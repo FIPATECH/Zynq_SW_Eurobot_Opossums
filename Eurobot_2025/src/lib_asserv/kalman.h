@@ -1,7 +1,7 @@
 #ifndef __KALMAN_H_
 #define __KALMAN_H_
 
-#define STATE_SIZE 3  // x, y, theta
+#define STATE_SIZE 6  // x, y, theta
 #define HISTORY_LEN 200  // pour 200 ms à 1 kHz
 
 #define LIDAR_DELAY 100 // 100 ms
@@ -12,7 +12,7 @@
 
 
 typedef struct {
-    float x[STATE_SIZE];                 // état X[x, y, theta]
+    float x[STATE_SIZE];                 // état X[x, y, theta, vx, vy, vtheta]
     float P[STATE_SIZE][STATE_SIZE];     // covariance
 } KalmanState;
 

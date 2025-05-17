@@ -10,7 +10,7 @@ typedef struct {
     float t; // en radian
 } Position;
 
-extern Position position_robot_predict;
+extern Position position_robot_odom;
 extern Position position_robot;
 
 
