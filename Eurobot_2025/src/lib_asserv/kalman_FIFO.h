@@ -4,7 +4,7 @@
 #include "kalman.h"
 #include "Asserv_type.h"
 
-#define KALMAN_FIFO_LEN 100
+#define KALMAN_FIFO_LEN 200
 
 typedef struct {
     KalmanState buffer[KALMAN_FIFO_LEN];
