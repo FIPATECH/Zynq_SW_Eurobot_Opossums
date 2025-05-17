@@ -57,6 +57,8 @@ void kalman_init_with_lidar(KalmanFIFO* fifo, Position* lidar_pos) {
     init_state.x[4] = 0.0f; // vy
     init_state.x[5] = 0.0f; // vtheta
 
+    kalman_current_state = init_state;
+
     // Initialiser la matrice de covariance P (confiance initiale)
     for (int i = 0; i < STATE_SIZE; i++) {
         for (int j = 0; j < STATE_SIZE; j++) {

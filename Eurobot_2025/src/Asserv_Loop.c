@@ -174,10 +174,7 @@ void Asserv_Loop(void)
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
-            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_odom.x, position_robot_odom.y, position_robot_odom.t, speed_linear, speed_direction, speed_robot.vt);          
-            if (auto_printdebug_en) {
-                printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot.x, position_robot.y, position_robot.t, speed_robot.vx, speed_robot.vy);
-            }
+            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", kalman_current_state.x[0], kalman_current_state.x[1], kalman_current_state.x[2], speed_linear, speed_direction, speed_robot.vt);          
             Last_Timer_print_pos += auto_printpos_delay;
         }
         Asserv_State = 0;
