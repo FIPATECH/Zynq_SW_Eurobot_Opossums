@@ -159,3 +159,4 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE], float R_diag[STATE_S
 
     memcpy(state->P, P_new, sizeof(P_new));
 }
+

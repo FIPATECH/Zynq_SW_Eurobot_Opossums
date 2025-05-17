@@ -43,3 +43,34 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s) {
         i = next_i;
     }
 }
+
+void kalman_init_with_lidar(KalmanFIFO* fifo, float x, float y, float theta) {
+    KalmanState init_state;
+
+    // Initialiser la position
+    init_state.x[0] = x;
+    init_state.x[1] = y;
+    init_state.x[2] = principal_angle(theta);
+
+    // Initialiser les vitesses à 0 (ou valeurs par défaut)
+    init_state.x[3] = 0.0f; // vx
+    init_state.x[4] = 0.0f; // vy
+    init_state.x[5] = 0.0f; // vtheta
+
+    // Initialiser la matrice de covariance P (confiance initiale)
+    for (int i = 0; i < STATE_SIZE; i++) {
+        for (int j = 0; j < STATE_SIZE; j++) {
+            init_state.P[i][j] = 0.0f;
+        }
+        init_state.P[i][i] = 0.01f;  // petite incertitude initiale
+    }
+
+    // Initialiser la FIFO : on remplit tout avec cet état initial
+    for (int i = 0; i < KALMAN_FIFO_LEN; i++) {
+        fifo->buffer[i] = init_state;
+        fifo->speed_robot[i].vx = 0.0f;
+        fifo->speed_robot[i].vy = 0.0f;
+        fifo->speed_robot[i].vt = 0.0f;
+    }
+    fifo->head = 0;
+}

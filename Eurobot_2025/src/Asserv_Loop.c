@@ -86,8 +86,8 @@ void Asserv_Loop(void)
         // ODO step 2:
         // - calcul du kalman + history
         // -----------------------------------
-        kalman_predict(&kalman_current_state, &speed_robot, ODO_EVERY_MS*0.001f);
-        kalman_fifo_push(&kalman_fifo, &kalman_current_state, &speed_robot);
+        kalman_predict(&kalman_current_state, &speed_robot_odom, ODO_EVERY_MS*0.001f);
+        kalman_fifo_push(&kalman_fifo, &kalman_current_state, &speed_robot_odom);
         Asserv_Odo_Count ++;
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
@@ -174,7 +174,7 @@ void Asserv_Loop(void)
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
-            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, speed_linear, speed_direction);          
+            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, speed_linear, speed_direction, speed_robot.vt);          
             if (auto_printdebug_en) {
                 printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot.x, position_robot.y, position_robot.t, speed_robot.vx, speed_robot.vy);
             }
@@ -259,16 +259,6 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
 
-    position_robot_predict.x = z_x;
-    position_robot_predict.y = z_y;
-    position_robot_predict.t = principal_angle(z_theta);
-
-    position_robot.x = z_x;
-    position_robot.y = z_y;
-    position_robot.t = principal_angle(z_theta);
-
-    // kalman_update(&position_robot, &position_robot_predict, position_lidar);
-
-    position_robot_predict = position_robot;
+    kalman_init_with_lidar(&kalman_fifo, position_lidar.x, position_lidar.y, position_lidar.t);
     return 0;
 }

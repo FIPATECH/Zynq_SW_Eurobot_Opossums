@@ -24,6 +24,8 @@ typedef struct {
 extern Position Wanted_Pos;
 extern Speed Wanted_Speed;
 extern Speed speed_robot;
+extern Speed speed_robot_odom;
+
 
 
 // acceleration du robot (dv/dt,  d2theta/dt2   et   v*(dtheta/dt))

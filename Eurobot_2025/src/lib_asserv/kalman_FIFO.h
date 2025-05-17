@@ -48,4 +48,14 @@ int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms);
  */
 void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s);
 
+/**
+ * @brief Initialise la kalman avec les valeurs du lidar
+ * 
+ * @param fifo fifo de kalman
+ * @param x position x lidar
+ * @param y position y lidar
+ * @param theta position theta lidar
+ */
+void kalman_init_with_lidar(KalmanFIFO* fifo, float x, float y, float theta);
+
 #endif // __KALMAN_FIFO_H_
