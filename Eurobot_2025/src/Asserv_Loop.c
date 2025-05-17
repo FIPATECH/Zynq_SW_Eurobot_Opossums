@@ -227,7 +227,7 @@ uint8_t Set_Lidar_Cmd(void) {
     position_lidar.t = principal_angle(z_theta);
 
     // Récupération de l'index dans la FIFO correspondant au délai LiDAR
-    int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
+    int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 1);
     if (delay_index < 0) {
         return 0; // erreur
     }

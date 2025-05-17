@@ -65,11 +65,13 @@ void IHM_loop(void){
         previous_yellow_state = yellow_state;
         if(yellow_state == 0){
             printf("YELLOWSWITCH\n");
-            if(current_mode == 1){ // start selection color
-                current_mode = 10;
-                validation_blue = 1;
-            } else if (current_mode == 20){ //abort selection color
-                current_mode = 1;
+            if(AU_state == 0){
+                if(current_mode == 1){ // start selection color
+                    current_mode = 10;
+                    validation_blue = 1;
+                } else if (current_mode == 20){ //abort selection color
+                    current_mode = 1;
+                }
             }
         }
     }
@@ -77,10 +79,12 @@ void IHM_loop(void){
         previous_green_state = green_state;
         if(green_state == 0){
             printf("GREENSWITCH\n");
-            if(current_mode == 0){ // start selection color
-                current_mode = 1;
-            } else if (current_mode == 1){ //abort selection color
-                current_mode = 0;
+            if(AU_state == 0){
+                if(current_mode == 0){ // start selection color
+                    current_mode = 1;
+                } else if (current_mode == 1){ //abort selection color
+                    current_mode = 0;
+                }
             }
         }
     }
@@ -88,11 +92,13 @@ void IHM_loop(void){
         previous_blue_state = blue_state;
         if(blue_state == 0){
             printf("BLUESWITCH\n");
-            if(current_mode == 1){ // start selection color
-                current_mode = 10;
-                validation_yellow = 1;
-            }else if(current_mode == 30){ //abort selection color
-                current_mode = 1;
+            if(AU_state == 0){
+                if(current_mode == 1){ // start selection color
+                    current_mode = 10;
+                    validation_yellow = 1;
+                }else if(current_mode == 30){ //abort selection color
+                    current_mode = 1;
+                }
             }
         }
     }

@@ -20,12 +20,8 @@ void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) 
 }
 
 int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms) {
-    int steps_back = (int)((float)delay_ms / dt_ms + 0.5f); // arrondi
-    if (steps_back >= KALMAN_FIFO_LEN) return -1;
-
-    int index = fifo->head - steps_back - 1;
+    int index = fifo->head - 100 - 1;
     if (index < 0) index += KALMAN_FIFO_LEN;
-
     return index;
 }
 
