@@ -10,12 +10,6 @@
 #define PROCESS_NOISE_Y 0.001f
 #define PROCESS_NOISE_THETA 0.0001f
 
-// Bruit de processus Q (tunable)
-float Q[STATE_SIZE][STATE_SIZE] = {
-    {PROCESS_NOISE_X, 0, 0},
-    {0, PROCESS_NOISE_Y, 0},
-    {0, 0, PROCESS_NOISE_THETA}
-};
 
 typedef struct {
     float x[STATE_SIZE];                 // état X[x, y, theta]

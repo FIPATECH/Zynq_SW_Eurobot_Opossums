@@ -8,6 +8,7 @@ Speed speed_robot;                  // en repere relatif
 Speed speed_robot_odom;
 Speed cumulated_speed;    
 Position position_robot; // Position odometrique
+Position position_robot_predict; // Position odometrique pur
 Acceleration acceleration_robot;    // en repere relatif
 
 float Speed_1, Speed_2, Speed_3;

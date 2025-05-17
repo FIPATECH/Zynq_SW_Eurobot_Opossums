@@ -34,17 +34,18 @@ void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot);
  * @param delay_ms Le délai souhaité (ex : 100 ms).
  * @param dt_ms Période de l’odométrie en ms (ex : 1.0f).
  * 
- * @return Un pointeur vers l’état correspondant au délai.
+ * @return L'état à l'index correspondant au délai, ou NULL si le délai est trop long.
  */
-KalmanState* kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms);
+int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms);
 
 
 /**
  * Repropagation des états dans la FIFO à partir d’un état corrigé.
  *
  * @param fifo La structure FIFO.
- * @param corrected_index L’index de l’état corrigé dans la FIFO.
- * @param dt Le pas de temps (s).
+ * @param delay_index L’index de l’état corrigé dans la FIFO.
+ * @param dt_s Le pas de temps (s).
  */
-void kalman_fifo_repropagate(KalmanFIFO* fifo, int corrected_index, float dt);
+void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s);
+
 #endif // __KALMAN_FIFO_H_

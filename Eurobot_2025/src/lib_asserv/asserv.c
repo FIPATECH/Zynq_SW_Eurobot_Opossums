@@ -184,9 +184,12 @@ void pos_asserv_step(void) {
     float t_o = Wanted_Pos.t;
 
     // --- État actuel
-    float x = position_robot_predict.x;
-    float y = position_robot_predict.y;
-    float t = position_robot_predict.t;
+    // float x = position_robot_predict.x;
+    // float y = position_robot_predict.y;
+    // float t = position_robot_predict.t;
+    float x = kalman_current_state.x[0];
+    float y = kalman_current_state.x[1];
+    float t = kalman_current_state.x[2];
 
     // --- Erreurs
     float rdx = x_o - x;

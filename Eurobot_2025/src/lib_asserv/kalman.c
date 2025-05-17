@@ -4,6 +4,13 @@
 
 KalmanState kalman_current_state;
 
+// Bruit de processus Q (tunable)
+float Q[STATE_SIZE][STATE_SIZE] = {
+    {PROCESS_NOISE_X, 0, 0},
+    {0, PROCESS_NOISE_Y, 0},
+    {0, 0, PROCESS_NOISE_THETA}
+};
+
 
 void kalman_init(KalmanState* state) {
     memset(state->x, 0, sizeof(state->x));

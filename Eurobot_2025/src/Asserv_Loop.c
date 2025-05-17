@@ -230,18 +230,17 @@ uint8_t Set_Lidar_Cmd(void) {
     position_lidar.t = principal_angle(z_theta);
 
     // Récupération de l'index dans la FIFO correspondant au délai LiDAR
-    KalmanState* delayed_state = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
-    if (delayed_state == NULL) {
-        return 1;
+    int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
+    if (delay_index < 0) {
+        return 1; // erreur
     }
-    
     // Correction de l’état dans la FIFO
     float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
     float R_diag[3] = {0.01f, 0.01f, 0.01f}; // Bruit de mesure
-    kalman_update(delayed_state, z, R_diag);
+    kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag);
 
     // Repropagation depuis l’état corrigé
-    kalman_fifo_repropagate(&kalman_fifo, delayed_state, 0.001f);
+    kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
 
     // Mise à jour de l’état courant
     kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
