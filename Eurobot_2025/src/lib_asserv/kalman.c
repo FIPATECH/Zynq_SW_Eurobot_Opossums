@@ -4,12 +4,17 @@
 
 KalmanState kalman_current_state;
 
-// Bruit de processus Q (tunable)
+// Bruit de processus Q (tunable) pour l'odométrie
 float Q[STATE_SIZE][STATE_SIZE] = {
-    {PROCESS_NOISE_X, 0, 0},
-    {0, PROCESS_NOISE_Y, 0},
-    {0, 0, PROCESS_NOISE_THETA}
+    {PROCESS_NOISE_ODOM_X, 0, 0, 0, 0, 0},
+    {0, PROCESS_NOISE_ODOM_Y, 0, 0, 0, 0},
+    {0, 0, PROCESS_NOISE_ODOM_THETA, 0, 0, 0},
+    {0, 0, 0, PROCESS_NOISE_ODOM_VX, 0, 0},
+    {0, 0, 0, 0, PROCESS_NOISE_ODOM_VY, 0},
+    {0, 0, 0, 0, 0, PROCESS_NOISE_ODOM_VTHETA}
 };
+
+float R_diag[3] = {PROCESS_NOISE_LIDAR_X, PROCESS_NOISE_LIDAR_Y, PROCESS_NOISE_LIDAR_THETA}; // Bruit de mesure lidar
 
 
 void kalman_init(KalmanState* state) {
@@ -67,7 +72,7 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
             state->P[i][j] = P_new[i][j] + Q[i][j];
 }
 
-void kalman_update(KalmanState* state, float z[STATE_SIZE], float R_diag[STATE_SIZE]) {
+void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
     // Innovation y = z - h(x)
     float y[3];
     y[0] = z[0] - state->x[0];  // x

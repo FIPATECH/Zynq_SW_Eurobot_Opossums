@@ -75,7 +75,7 @@ uint8_t BLOCK_Cmd(void) {
         printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
-        // motion_block();
+        motion_block();
         return 0;
     }
 }

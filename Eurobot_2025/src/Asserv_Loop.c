@@ -233,8 +233,7 @@ uint8_t Set_Lidar_Cmd(void) {
     }
     // Correction de l’état dans la FIFO
     float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
-    float R_diag[3] = {0.01f, 0.01f, 0.01f}; // Bruit de mesure
-    kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag);
+    kalman_update(&kalman_fifo.buffer[delay_index], z);
 
     // Repropagation depuis l’état corrigé
     kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);

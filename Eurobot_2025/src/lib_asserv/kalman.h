@@ -6,10 +6,17 @@
 
 #define LIDAR_DELAY 100 // 100 ms
 
-#define PROCESS_NOISE_X 0.001f
-#define PROCESS_NOISE_Y 0.001f
-#define PROCESS_NOISE_THETA 0.0001f
+#define PROCESS_NOISE_ODOM_X 0.001f
+#define PROCESS_NOISE_ODOM_Y 0.001f
+#define PROCESS_NOISE_ODOM_THETA 0.0001f
 
+#define PROCESS_NOISE_ODOM_VX 0.1f
+#define PROCESS_NOISE_ODOM_VY 0.1f
+#define PROCESS_NOISE_ODOM_VTHETA 0.01f
+
+#define PROCESS_NOISE_LIDAR_X 0.01f
+#define PROCESS_NOISE_LIDAR_Y 0.01f
+#define PROCESS_NOISE_LIDAR_THETA 0.01f
 
 typedef struct {
     float x[STATE_SIZE];                 // état X[x, y, theta, vx, vy, vtheta]
@@ -39,8 +46,7 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt);
  * 
  * @param state L’état à corriger (potentiellement un état passé issu du FIFO).
  * @param z Mesure du LiDAR : position et angle absolus.
- * @param R_diag Diagonale de la matrice de bruit de mesure R (taille 3).
  */
-void kalman_update(KalmanState* state, float z[STATE_SIZE], float R_diag[STATE_SIZE]);
+void kalman_update(KalmanState* state, float z[STATE_SIZE]);
 
 #endif // __KALMAN_H_
