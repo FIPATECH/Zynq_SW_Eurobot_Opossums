@@ -209,35 +209,46 @@ uint8_t Set_Odo_Spacing_Cmd(void){
     return 0;
 }
 
-uint8_t Set_Lidar_Cmd(void){
+uint8_t Set_Lidar_Cmd(void) {
     float z_x, z_y, z_theta;
+
+    // Récupération des mesures LIDAR
     if (Get_Param_Float(&z_x)) return 1;
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
-    // avoid to set the lidar position to a value that is too far from the robot position
-    if (fabs(z_x - position_robot_predict.x) > 0.3 || fabs(z_y - position_robot_predict.y) > 0.3 || fabs(z_theta - position_robot_predict.t) > 0.2) {
-        return 0;
-    }else{
-        position_lidar.x = z_x;
-        position_lidar.y = z_y;
-        position_lidar.t = principal_angle(z_theta);
 
-         kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
-
-        // corriger l'état retardé
-        float lidar[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
-        float R_diag[3] = {0.01f, 0.01f, 0.01f}; // Bruit de mesure (tunable)
-        kalman_update(&kalman_fifo.buffer[delay_index], lidar, R_diag);
-
-        
-        // rejouer les prédictions depuis le point corrigé
-        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
-
-        // actualiser current_state
-        kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
+    // Filtrage anti-erreur : ignore les mesures trop éloignées de la prédiction
+    if (fabsf(z_x - position_robot_predict.x) > 0.3f ||
+        fabsf(z_y - position_robot_predict.y) > 0.3f ||
+        fabsf(z_theta - position_robot_predict.t) > 0.2f) {
         return 0;
     }
+
+    // Mise à jour des données LIDAR (avec angle normalisé)
+    position_lidar.x = z_x;
+    position_lidar.y = z_y;
+    position_lidar.t = principal_angle(z_theta);
+
+    // Récupération de l'index dans la FIFO correspondant au délai LiDAR
+    KalmanState* delayed_state = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
+    if (delayed_state == NULL) {
+        return 1;
+    }
+    
+    // Correction de l’état dans la FIFO
+    float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
+    float R_diag[3] = {0.01f, 0.01f, 0.01f}; // Bruit de mesure
+    kalman_update(delayed_state, z, R_diag);
+
+    // Repropagation depuis l’état corrigé
+    kalman_fifo_repropagate(&kalman_fifo, delayed_state, 0.001f);
+
+    // Mise à jour de l’état courant
+    kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
+
+    return 0;
 }
+
 
 uint8_t Synchro_Lidar_Cmd(void){
     float z_x, z_y, z_theta;

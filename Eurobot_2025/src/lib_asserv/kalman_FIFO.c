@@ -20,7 +20,7 @@ void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) 
 KalmanState* kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms) {
     int steps_back = (int)((float)delay_ms / dt_ms + 0.5f); // arrondi
     if (steps_back >= KALMAN_FIFO_LEN) {
-        steps_back = KALMAN_FIFO_LEN - 1;  // Clamp
+        steps_back = KALMAN_FIFO_LEN - 1;
     }
 
     int index = fifo->head - steps_back - 1;
@@ -31,17 +31,19 @@ KalmanState* kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms) 
     return &fifo->buffer[index];
 }
 
-void kalman_fifo_repropagate(KalmanFIFO* fifo, int corrected_idx, float dt) {
-    int i = (corrected_idx + 1) % KALMAN_FIFO_LEN;
+void kalman_fifo_repropagate(KalmanFIFO* fifo, int corrected_index, float dt) {
+    // Calcul de l'index dans le buffer de l'état corrigé
+    int base = (fifo->head - 1 - corrected_index + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN;
 
-    // Tant qu'on n'a pas atteint l'état le plus récent (head)
-    while (i != fifo->head) {
-        // Copier l'état précédent corrigé dans l'état courant avant prédiction
-        memcpy(&fifo->buffer[i], &fifo->buffer[(i - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN], sizeof(KalmanState));
+    // Rejouer les prédictions à partir de cet index
+    for (int i = 1; i <= corrected_index; i++) {
+        int prev_idx = (base + i - 1) % KALMAN_FIFO_LEN;
+        int curr_idx = (base + i) % KALMAN_FIFO_LEN;
 
-        // Prédire l'état courant à partir de l'état précédent corrigé
-        kalman_predict(&fifo->buffer[i], &fifo->speed_robot[i], dt);
+        // Copier l'état précédent comme base de prédiction
+        fifo->buffer[curr_idx] = fifo->buffer[prev_idx];
 
-        i = (i + 1) % KALMAN_FIFO_LEN;
+        // Appliquer la prédiction avec la vitesse historique
+        kalman_predict(&fifo->buffer[curr_idx], &fifo->speed_robot[prev_idx], dt);
     }
 }

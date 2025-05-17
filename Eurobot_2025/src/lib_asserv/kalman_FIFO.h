@@ -40,12 +40,11 @@ KalmanState* kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms);
 
 
 /**
- * Reprédire les états à partir d'un état corrigé.
- * 
+ * Repropagation des états dans la FIFO à partir d’un état corrigé.
+ *
  * @param fifo La structure FIFO.
- * @param corrected_idx L'index de l'état corrigé.
+ * @param corrected_index L’index de l’état corrigé dans la FIFO.
  * @param dt Le pas de temps (s).
  */
-void kalman_fifo_repropagate(KalmanFIFO* fifo, int corrected_idx, float dt);
-
+void kalman_fifo_repropagate(KalmanFIFO* fifo, int corrected_index, float dt);
 #endif // __KALMAN_FIFO_H_
