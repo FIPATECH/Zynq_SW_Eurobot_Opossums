@@ -222,7 +222,7 @@ uint8_t Set_Lidar_Cmd(void){
         position_lidar.y = z_y;
         position_lidar.t = principal_angle(z_theta);
 
-        kalman_fifo. = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
+         kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 0.001f);
 
         // corriger l'état retardé
         float lidar[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
