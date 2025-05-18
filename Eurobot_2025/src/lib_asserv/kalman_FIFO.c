@@ -4,7 +4,11 @@
 KalmanFIFO kalman_fifo;
 
 void kalman_fifo_init(KalmanFIFO* fifo) {
+    KalmanState default_state = {0};
     memset(fifo, 0, sizeof(KalmanFIFO));
+    for (int i = 0; i < KALMAN_FIFO_LEN; i++) {
+        fifo->buffer[i] = default_state;
+    }
     fifo->head = 0;
 }
 
