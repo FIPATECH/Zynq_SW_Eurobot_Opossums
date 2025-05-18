@@ -32,7 +32,7 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s) {
     // On repropague en boucle circulaire jusqu'à la tête-1
     while (i != ((fifo->head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN)) {
         next_i = (i + 1) % KALMAN_FIFO_LEN;
-
+        fifo->buffer[next_i] = fifo->buffer[i];
         // On prédit l'état suivant à partir de l'état courant i et de la vitesse à i
         kalman_predict(&fifo->buffer[next_i], &fifo->speed_robot[i], dt_s);
 
