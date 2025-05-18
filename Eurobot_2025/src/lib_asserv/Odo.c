@@ -103,22 +103,24 @@ void odo_speed_cumulate_step(float nbr_step) {
 
 
 void set_position(Position pos) {
-    position_robot_odom = pos;
+    kalman_current_state.x[0] = pos.x;
+    kalman_current_state.x[1] = pos.y;
+    kalman_current_state.x[2] = pos.t;
     position_robot = pos;
 }
 
 void set_position_x(float x) {
-    position_robot_odom.x = x;
+    kalman_current_state.x[0] = x;
     position_robot.x = x;
 }
 
 void set_position_y(float y) {
-    position_robot_odom.y = y;
+    kalman_current_state.x[1] = y;
     position_robot.y = y;
 }
 
 void set_position_t(float t) {
-    position_robot_odom.t = t;
+    kalman_current_state.x[2] = t;
     position_robot.t = t;
 }
 
