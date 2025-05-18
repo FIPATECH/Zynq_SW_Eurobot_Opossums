@@ -236,13 +236,14 @@ uint8_t Set_Lidar_Cmd(void) {
     int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 1);
     if (delay_index < 0) {
         return 0; // erreur
-    } else if ( fabsf(z_x - kalman_fifo.buffer[delay_index].x[0]) > 0.3f ||
-                fabsf(z_y - kalman_fifo.buffer[delay_index].x[1]) > 0.3f ||
-                fabsf(z_theta - kalman_fifo.buffer[delay_index].x[2]) > 0.2f) {
-        // Si la mesure est trop éloignée de la prédiction, on ne fait rien et on incrémente le commpteur d'erreur 
-        Lidar_inconsistency_count++;
-        return 0;
     }
+    // } else if ( fabsf(z_x - kalman_fifo.buffer[delay_index].x[0]) > 0.3f ||
+    //             fabsf(z_y - kalman_fifo.buffer[delay_index].x[1]) > 0.3f ||
+    //             fabsf(z_theta - kalman_fifo.buffer[delay_index].x[2]) > 0.2f) {
+    //     // Si la mesure est trop éloignée de la prédiction, on ne fait rien et on incrémente le commpteur d'erreur 
+    //     Lidar_inconsistency_count++;
+    //     return 0;
+    // }
     // Correction de l’état dans la FIFO
     float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
     kalman_update(&kalman_fifo.buffer[delay_index], z);
