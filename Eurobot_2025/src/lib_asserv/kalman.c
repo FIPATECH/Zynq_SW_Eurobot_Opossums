@@ -3,7 +3,6 @@
 
 
 KalmanState kalman_current_state;
-KalmanState kalman_previous_state;
 
 // Bruit de processus Q (tunable) pour l'odométrie
 float Q[STATE_SIZE][STATE_SIZE] = {
@@ -25,8 +24,8 @@ void kalman_init(KalmanState* state) {
         state->P[i][i] = 0.01f;  // initial uncertainty
 }
 
-void kalman_predict(KalmanState* state_out, const KalmanState* state_in, const Speed* speed, float dt) {
-    float theta = state_in->x[2];
+void kalman_predict(KalmanState* state, Speed* speed, float dt) {
+    float theta = state->x[2];
 
     // Transformation des vitesses robot → monde
     float v_dx = speed->vx * cosf(theta) - speed->vy * sinf(theta);
@@ -34,43 +33,43 @@ void kalman_predict(KalmanState* state_out, const KalmanState* state_in, const S
     float v_ang = speed->vt;
 
     // Mise à jour de la position estimée
-    state_out->x[0] = state_in->x[0] + v_dx * dt;
-    state_out->x[1] = state_in->x[1] + v_dy * dt;
-    state_out->x[2] = principal_angle(state_in->x[2] + v_ang * dt);
+    state->x[0] += v_dx * dt;
+    state->x[1] += v_dy * dt;
+    state->x[2] = principal_angle(state->x[2] + v_ang * dt);
 
-    // Mise à jour des vitesses (optionnel)
-    state_out->x[3] = v_dx;
-    state_out->x[4] = v_dy;
-    state_out->x[5] = v_ang;
+    // Mise à jour des vitesses (optionnel, utile pour debug ou asserv)
+    state->x[3] = v_dx;  // vitesse monde en x
+    state->x[4] = v_dy;  // vitesse monde en y
+    state->x[5] = v_ang; // vitesse angulaire
 
-    // Jacobienne F autour de l’état précédent
-    float v_lin = sqrtf(v_dx * v_dx + v_dy * v_dy);
+    // Jacobienne de la fonction de transition
+    float v_lin = sqrtf(v_dx * v_dx + v_dy * v_dy); // vitesse linéaire
     float F[STATE_SIZE][STATE_SIZE] = {
         {1, 0, -v_lin * sinf(theta) * dt, 0, 0, 0},
         {0, 1,  v_lin * cosf(theta) * dt, 0, 0, 0},
-        {0, 0, 1,                         0, 0, 0},
-        {0, 0, 0,                         1, 0, 0},
-        {0, 0, 0,                         0, 1, 0},
-        {0, 0, 0,                         0, 0, 1}
+        {0, 0, 1,                          0, 0, 0},
+        {0, 0, 0,                          1, 0, 0},
+        {0, 0, 0,                          0, 1, 0},
+        {0, 0, 0,                          0, 0, 1}
     };
 
-    // Mise à jour de la covariance : P_out = F * P_in * F^T + Q
+    // Mise à jour de la covariance : P = F * P * F^T + Q
     float P_temp[STATE_SIZE][STATE_SIZE] = {0};
     float P_new[STATE_SIZE][STATE_SIZE] = {0};
 
     for (int i = 0; i < STATE_SIZE; i++)
         for (int j = 0; j < STATE_SIZE; j++)
             for (int k = 0; k < STATE_SIZE; k++)
-                P_temp[i][j] += F[i][k] * state_in->P[k][j];
+                P_temp[i][j] += F[i][k] * state->P[k][j];
 
     for (int i = 0; i < STATE_SIZE; i++)
         for (int j = 0; j < STATE_SIZE; j++)
             for (int k = 0; k < STATE_SIZE; k++)
-                P_new[i][j] += P_temp[i][k] * F[j][k];  // F^T multiplié ici
+                P_new[i][j] += P_temp[i][k] * F[j][k];
 
     for (int i = 0; i < STATE_SIZE; i++)
         for (int j = 0; j < STATE_SIZE; j++)
-            state_out->P[i][j] = P_new[i][j] + Q[i][j];
+            state->P[i][j] = P_new[i][j] + Q[i][j];
 }
 
 void kalman_update(KalmanState* state, float z[STATE_SIZE]) {

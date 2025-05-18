@@ -86,8 +86,7 @@ void Asserv_Loop(void)
         // ODO step 2:
         // - calcul du kalman + history
         // -----------------------------------
-        kalman_predict(&kalman_current_state, &kalman_previous_state, &speed_robot_odom, ODO_EVERY_MS*0.001f);
-        kalman_previous_state = kalman_current_state;
+        kalman_predict(&kalman_current_state, &speed_robot_odom, ODO_EVERY_MS*0.001f);
         kalman_fifo_push(&kalman_fifo, &kalman_current_state, &speed_robot_odom);
         Asserv_Odo_Count ++;
 
@@ -214,6 +213,13 @@ uint8_t Set_Lidar_Cmd(void) {
     if (Get_Param_Float(&z_x)) return 1;
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
+
+    // Filtrage anti-erreur : ignore les mesures trop éloignées de la prédiction
+    // if (fabsf(z_x - kalman_current_state.x[0]) > 0.3f ||
+    //     fabsf(z_y - kalman_current_state.x[1]) > 0.3f ||
+    //     fabsf(z_theta - kalman_current_state.x[2]) > 0.2f) {
+    //     return 0;
+    // }
 
     // Mise à jour des données LIDAR (avec angle normalisé)
     position_lidar.x = z_x;

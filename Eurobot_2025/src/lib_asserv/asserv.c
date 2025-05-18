@@ -39,7 +39,6 @@ void asserv_init(void) {
 
     // init kalman
     kalman_init(&kalman_current_state);
-    kalman_init(&kalman_previous_state);
 
 	// init des consignes / modes de ce fichier :
     asserv_mode = ASSERV_MODE_OFF;
