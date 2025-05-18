@@ -10,7 +10,7 @@ typedef struct {
     float t; // en radian
 } Position;
 
-extern Position position_robot_predict;
+extern Position position_robot_odom;
 extern Position position_robot;
 
 
@@ -24,6 +24,8 @@ typedef struct {
 extern Position Wanted_Pos;
 extern Speed Wanted_Speed;
 extern Speed speed_robot;
+extern Speed speed_robot_odom;
+
 
 
 // acceleration du robot (dv/dt,  d2theta/dt2   et   v*(dtheta/dt))
@@ -66,5 +68,6 @@ typedef struct{
 extern ESC_Command Consigne;
 extern ESC_Command Wanted_Forced_Consigne;
 extern ESC_Command old_Consigne;
+
 
 #endif

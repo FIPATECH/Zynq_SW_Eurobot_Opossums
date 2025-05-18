@@ -4,8 +4,7 @@
 u32 Last_Timer_print_pos = 0;
 
 uint8_t auto_printpos_en = 1;
-uint8_t auto_printdebug_en = 0;
-uint16_t auto_printpos_delay = 10;
+uint16_t auto_printpos_delay = 100;
 
 uint8_t Debug_Timing = 0;
 
@@ -79,7 +78,15 @@ void Asserv_Loop(void)
         // -----------------------------------
 
         odo_position_step(ODO_EVERY_MS*0.001f);
-        // kalman_predict(); 
+        Asserv_State = 2;
+
+    } else if (Asserv_State == 2) {
+        // -----------------------------------
+        // ODO step 2:
+        // - calcul du kalman + history
+        // -----------------------------------
+        kalman_predict(&kalman_current_state, &speed_robot_odom, ODO_EVERY_MS*0.001f);
+        kalman_fifo_push(&kalman_fifo, &kalman_current_state, &speed_robot_odom);
         Asserv_Odo_Count ++;
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
@@ -88,8 +95,8 @@ void Asserv_Loop(void)
         } else {
             Asserv_State = 0;
         }
-        
-    } else if (Asserv_State == 2) {
+
+    } else if (Asserv_State == 3) {
         // -----------------------------------
         // ODO step 3:
         // - calcul de la vitesse du robot
@@ -166,10 +173,7 @@ void Asserv_Loop(void)
         if (auto_printpos_en && ((Timer_ms1 - Last_Timer_print_pos) > auto_printpos_delay)) {
             float speed_linear = sqrtf(speed_robot.vx*speed_robot.vx + speed_robot.vy*speed_robot.vy);
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
-            printf("ROBOTDATA %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f\n", position_robot_predict.x, position_robot_predict.y, position_robot_predict.t, speed_linear, speed_direction, speed_robot.vt);          
-            if (auto_printdebug_en) {
-                printf("DEBUG %0.2f %0.2f %0.2f %0.2f %0.2f 0 0 0 0\n", position_robot.x, position_robot.y, position_robot.t, speed_robot.vx, speed_robot.vy);
-            }
+            printf("ROBOTDATA %0.4f %0.4f %0.4f %0.2f %0.2f %0.2f\n", kalman_current_state.x[0], kalman_current_state.x[1], kalman_current_state.x[2], speed_linear, speed_direction, speed_robot.vt);          
             Last_Timer_print_pos += auto_printpos_delay;
         }
         Asserv_State = 0;
@@ -201,22 +205,43 @@ uint8_t Set_Odo_Spacing_Cmd(void){
     return 0;
 }
 
-uint8_t Set_Lidar_Cmd(void){
+uint8_t Set_Lidar_Cmd(void) {
     float z_x, z_y, z_theta;
+
+    // Récupération des mesures LIDAR
     if (Get_Param_Float(&z_x)) return 1;
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
-    // avoid to set the lidar position to a value that is too far from the robot position
-    if (fabs(z_x - position_robot_predict.x) > 0.3 || fabs(z_y - position_robot_predict.y) > 0.3 || fabs(z_theta - position_robot_predict.t) > 0.2) {
-        return 0;
-    }else{
-        position_lidar.x = z_x;
-        position_lidar.y = z_y;
-        position_lidar.t = principal_angle(z_theta);
-        // kalman_update(&position_robot, &position_robot_predict, position_lidar);
-        return 0;
+
+    // Filtrage anti-erreur : ignore les mesures trop éloignées de la prédiction
+    // if (fabsf(z_x - kalman_current_state.x[0]) > 0.3f ||
+    //     fabsf(z_y - kalman_current_state.x[1]) > 0.3f ||
+    //     fabsf(z_theta - kalman_current_state.x[2]) > 0.2f) {
+    //     return 0;
+    // }
+
+    // Mise à jour des données LIDAR (avec angle normalisé)
+    position_lidar.x = z_x;
+    position_lidar.y = z_y;
+    position_lidar.t = principal_angle(z_theta);
+
+    // Récupération de l'index dans la FIFO correspondant au délai LiDAR
+    int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 1);
+    if (delay_index < 0) {
+        return 0; // erreur
     }
+    // Correction de l’état dans la FIFO
+    float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
+    kalman_update(&kalman_fifo.buffer[delay_index], z);
+
+    // Repropagation depuis l’état corrigé
+    kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
+
+    // Mise à jour de l’état courant
+    kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
+    return 0;
 }
+
 
 uint8_t Synchro_Lidar_Cmd(void){
     float z_x, z_y, z_theta;
@@ -228,16 +253,6 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
 
-    position_robot_predict.x = z_x;
-    position_robot_predict.y = z_y;
-    position_robot_predict.t = principal_angle(z_theta);
-
-    position_robot.x = z_x;
-    position_robot.y = z_y;
-    position_robot.t = principal_angle(z_theta);
-
-    // kalman_update(&position_robot, &position_robot_predict, position_lidar);
-
-    // position_robot_predict = position_robot;
+    kalman_init_with_lidar(&kalman_fifo, &position_lidar);
     return 0;
 }
