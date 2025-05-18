@@ -177,6 +177,11 @@ void Asserv_Loop(void)
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
             printf("ROBOTDATA %0.4f %0.4f %0.4f %0.2f %0.2f %0.2f\n", kalman_current_state.x[0], kalman_current_state.x[1], kalman_current_state.x[2], speed_linear, speed_direction, speed_robot.vt);          
             Last_Timer_print_pos += auto_printpos_delay;
+
+            if(Lidar_inconsistency_count > 10){
+                printf("Lidar inconsistency count: %d\n", Lidar_inconsistency_count);
+                Lidar_inconsistency_count = 0;
+            }
         }
         Asserv_State = 0;
         
