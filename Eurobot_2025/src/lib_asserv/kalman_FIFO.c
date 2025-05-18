@@ -4,12 +4,23 @@
 KalmanFIFO kalman_fifo;
 
 void kalman_fifo_init(KalmanFIFO* fifo) {
-    KalmanState default_state = {0};
     memset(fifo, 0, sizeof(KalmanFIFO));
+
+    // Initialiser la tête de la FIFO
+    fifo->head = 0;
+    // Initialiser le compteur d'éléments
+    fifo->count = 0;
+
+    // Initialiser la mémoire de la FIFO
+    KalmanState default_state;
+    kalman_init(&default_state);
+
     for (int i = 0; i < KALMAN_FIFO_LEN; i++) {
         fifo->buffer[i] = default_state;
+        fifo->speed_robot[i].vx = 0.0f;
+        fifo->speed_robot[i].vy = 0.0f;
+        fifo->speed_robot[i].vt = 0.0f;
     }
-    fifo->head = 0;
 }
 
 void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) {
@@ -21,11 +32,22 @@ void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) 
     
     // Incrémente la tête de la FIFO en la ramenant dans les bornes
     fifo->head = (fifo->head + 1) % KALMAN_FIFO_LEN;
+
+    // Incrémente le compteur d'éléments    
+    if (fifo->count < KALMAN_FIFO_LEN) {
+        fifo->count++;
+    }
 }
 
 int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms) {
-    int index = fifo->head - 100 - 1;
+    int samples_back = (int)(delay_ms / dt_ms); 
+    if (fifo->count < samples_back) {
+        return -1; // Erreur : pas assez d'échantillons dans la FIFO
+    }
+
+    int index = fifo->head - samples_back - 1;
     if (index < 0) index += KALMAN_FIFO_LEN;
+
     return index;
 }
 
