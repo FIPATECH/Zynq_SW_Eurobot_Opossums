@@ -24,6 +24,7 @@ typedef struct {
 } KalmanState;
 
 extern KalmanState kalman_current_state;
+extern KalmanState kalman_previous_state;
 
 /**
  * Initialise l’état du filtre de Kalman.
@@ -35,11 +36,12 @@ void kalman_init(KalmanState* state);
 /**
  * Applique la prédiction du modèle EKF à partir des vitesses dans le repère robot.
  * 
- * @param state L’état courant à prédire.
+ * @param state_out L’état courant à prédire.
+ * @param state_in L’état précédent.
  * @param speed Vitesse du robot dans le repère robot.
  * @param dt Pas de temps (s).
  */
-void kalman_predict(KalmanState* state, Speed* speed, float dt);
+void kalman_predict(KalmanState* state_out, const KalmanState* state_in, const Speed* speed, float dt);
 
 /**
  * Applique la correction EKF à partir d’une mesure z = [x, y, theta] dans le repère monde.
