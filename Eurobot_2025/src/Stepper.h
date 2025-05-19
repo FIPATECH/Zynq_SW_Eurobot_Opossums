@@ -25,8 +25,8 @@
 #define STEPPER_MODE_SIXTY_FOURTH_STEP 6
 #define STEPPER_MODE_ONE_HUNDRED_TWENTY_EIGHTH_STEP 7
 
-#define STEPPER_DIR_FORWARD 0
-#define STEPPER_DIR_BACKWARD 1
+#define STEPPER_DIR_FORWARD 1 // elevator up
+#define STEPPER_DIR_BACKWARD 0 // elevator down
 
 
 typedef struct {
@@ -43,9 +43,11 @@ typedef struct {
     uint8_t en;
 } STEPPER;
 
+extern int init_stepper_done;
 
 
 void Init_Stepper(void);
+void Init_Stepper_Loop(void);
 void Stepper_Loop(void);
 
 void Set_Stepper_Mode(STEPPER *stepper, uint8_t mode);

@@ -53,8 +53,8 @@ int main()
     ws2812b_init();
     init_switch();
     Init_Pump();
-    Init_Stepper();
     Init_Asserv();
+    Init_Stepper();
     xil_printf("Init done\n\r");
 
     while(1){
@@ -66,6 +66,9 @@ int main()
         if (Get_Std_In(&c)) {
             Interp(c);
         }
+
+        
+
         AU_Loop();
         LED_loop();
         Std_Com_Loop();
@@ -76,7 +79,9 @@ int main()
             init_CAN_MOTOR_variables();
             Init_Pump();
             PWM_Init();
+            init_stepper_done = 0;
         }else{
+            Init_Stepper_Loop();
             LED_CLASSIC_MODE();
             MaP_Asserv_Loop();
             Asserv_Loop();
