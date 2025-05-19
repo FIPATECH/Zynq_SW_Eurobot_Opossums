@@ -77,7 +77,6 @@ int main()
             Init_Pump();
             PWM_Init();
         }else{
-            IHM_loop();
             LED_CLASSIC_MODE();
             MaP_Asserv_Loop();
             Asserv_Loop();
@@ -85,6 +84,7 @@ int main()
             Pump_Loop();
             Stepper_Loop();
         }
+        IHM_loop();
 
         // Asserv_test_loop();
     }

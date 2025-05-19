@@ -1,93 +1,162 @@
 #include "../main.h"
 #include "lib_asserv.h"
 
-Position position_robot_predict; // Position odométrique
 
-float P[3][3]; // Covariance matrix
+KalmanState kalman_current_state;
 
-float Q[3][3] = {
-    {NOISE_XY_ODO, 0, 0},
-    {0, NOISE_XY_ODO, 0},
-    {0, 0, NOISE_T_ODO}
-}; // odometry noise covariance matrix
+// Bruit de processus Q (tunable) pour l'odométrie
+float Q[STATE_SIZE][STATE_SIZE] = {
+    {PROCESS_NOISE_ODOM_X * PROCESS_NOISE_ODOM_X, 0, 0, 0, 0, 0},
+    {0, PROCESS_NOISE_ODOM_Y * PROCESS_NOISE_ODOM_X, 0, 0, 0, 0},
+    {0, 0, PROCESS_NOISE_ODOM_THETA * PROCESS_NOISE_ODOM_THETA, 0, 0, 0},
+    {0, 0, 0, PROCESS_NOISE_ODOM_VX, 0, 0},
+    {0, 0, 0, 0, PROCESS_NOISE_ODOM_VY, 0},
+    {0, 0, 0, 0, 0, PROCESS_NOISE_ODOM_VTHETA}
+};
 
-float R[3][3] = {
-    {NOISE_XY_LIDAR, 0, 0},
-    {0, NOISE_XY_LIDAR, 0},
-    {0, 0, NOISE_T_LIDAR}
-}; // lidar noise covariance matrix
+float R_diag[3] = {PROCESS_NOISE_LIDAR_X, PROCESS_NOISE_LIDAR_Y, PROCESS_NOISE_LIDAR_THETA}; // Bruit de mesure lidar
 
-void kalman_init(Position* pos) {
-    pos->x = 0;
-    pos->y = 0;
-    pos->t = 0;
 
-    memset(P, 0, sizeof(P));
-    P[0][0] = P[1][1] = 0.1f;
-    P[2][2] = 0.01f;
+void kalman_init(KalmanState* state) {
+    memset(state->x, 0, sizeof(state->x));
+    memset(state->P, 0, sizeof(state->P));
+    for (int i = 0; i < STATE_SIZE; i++)
+        state->P[i][i] = 0.01f;  // initial uncertainty
 }
 
-void kalman_predict(void) { // called each odo step : 1kHz
-    // Mise à jour de la covariance : P = P + Q
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            P[i][j] += Q[i][j];
+void kalman_predict(KalmanState* state, Speed* speed, float dt) {
+    float theta = state->x[2];
+
+    // Transformation des vitesses robot → monde
+    float v_dx = speed->vx * cosf(theta) - speed->vy * sinf(theta);
+    float v_dy = speed->vx * sinf(theta) + speed->vy * cosf(theta);
+    float v_ang = speed->vt;
+
+    // Mise à jour de la position estimée
+    state->x[0] += v_dx * dt;
+    state->x[1] += v_dy * dt;
+    state->x[2] = principal_angle(state->x[2] + v_ang * dt);
+
+    // Mise à jour des vitesses (optionnel, utile pour debug ou asserv)
+    state->x[3] = v_dx;  // vitesse monde en x
+    state->x[4] = v_dy;  // vitesse monde en y
+    state->x[5] = v_ang; // vitesse angulaire
+
+    // Jacobienne de la fonction de transition
+    float v_lin = sqrtf(v_dx * v_dx + v_dy * v_dy); // vitesse linéaire
+    float F[STATE_SIZE][STATE_SIZE] = {
+        {1, 0, -v_lin * sinf(theta) * dt, 0, 0, 0},
+        {0, 1,  v_lin * cosf(theta) * dt, 0, 0, 0},
+        {0, 0, 1,                          0, 0, 0},
+        {0, 0, 0,                          1, 0, 0},
+        {0, 0, 0,                          0, 1, 0},
+        {0, 0, 0,                          0, 0, 1}
+    };
+
+    // Mise à jour de la covariance : P = F * P * F^T + Q
+    float P_temp[STATE_SIZE][STATE_SIZE] = {0};
+    float P_new[STATE_SIZE][STATE_SIZE] = {0};
+
+    for (int i = 0; i < STATE_SIZE; i++)
+        for (int j = 0; j < STATE_SIZE; j++)
+            for (int k = 0; k < STATE_SIZE; k++)
+                P_temp[i][j] += F[i][k] * state->P[k][j];
+
+    for (int i = 0; i < STATE_SIZE; i++)
+        for (int j = 0; j < STATE_SIZE; j++)
+            for (int k = 0; k < STATE_SIZE; k++)
+                P_new[i][j] += P_temp[i][k] * F[j][k];
+
+    for (int i = 0; i < STATE_SIZE; i++)
+        for (int j = 0; j < STATE_SIZE; j++)
+            state->P[i][j] = P_new[i][j] + Q[i][j];
 }
 
-void kalman_update(Position* pos, const Position* pos_predict, const Position lidar_meas) {
-    // Innovation : différence entre la mesure et la prédiction
+void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
+    // Innovation y = z - h(x)
     float y[3];
-    y[0] = lidar_meas.x - pos_predict->x;
-    y[1] = lidar_meas.y - pos_predict->y;
+    y[0] = z[0] - state->x[0];  // x
+    y[1] = z[1] - state->x[1];  // y
+    y[2] = principal_angle(z[2] - state->x[2]);  // theta
 
-    // gestion d'angle modulo 2pi :
-    float dt = lidar_meas.t - pos_predict->t;
-    while (dt > PI)  dt -= 2.0f * PI;
-    while (dt < -PI) dt += 2.0f * PI;
-    y[2] = dt;
-
-    // Innovation covariance : S = P + R
-    float S[3][3];
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            S[i][j] = P[i][j] + R[i][j]; // H = I donc HPHᵀ = P
-
-    // Calcul inverse de S (matrice 3x3 symétrique → on suppose R diagonale pour simplifier)
-    float S_inv[3][3] = {0};
+    // S = H * P * H^T + R
+    // Ici H est 3x6 : on extrait juste les 3 premières lignes de l'identité
+    float S[3][3] = {0};
     for (int i = 0; i < 3; i++) {
-        if (S[i][i] != 0.0f)
-            S_inv[i][i] = 1.0f / S[i][i];  // Inversion diagonale uniquement
+        for (int j = 0; j < 3; j++) {
+            S[i][j] = state->P[i][j];
+            if (i == j) S[i][j] += R_diag[i];
+        }
     }
 
-    // Gain de Kalman : K = P * S⁻¹
-    float K[3][3];
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            K[i][j] = P[i][j] * S_inv[j][j];  // simplifié car S_inv est diagonale
+    // Inverse de S (3x3)
+    float det = 
+        S[0][0] * (S[1][1]*S[2][2] - S[1][2]*S[2][1]) -
+        S[0][1] * (S[1][0]*S[2][2] - S[1][2]*S[2][0]) +
+        S[0][2] * (S[1][0]*S[2][1] - S[1][1]*S[2][0]);
 
-    // Mise à jour de l'état : x = x_pred + K * y
-    pos->x = pos_predict->x + K[0][0] * y[0] + K[0][1] * y[1] + K[0][2] * y[2];
-    pos->y = pos_predict->y + K[1][0] * y[0] + K[1][1] * y[1] + K[1][2] * y[2];
-    pos->t = pos_predict->t + K[2][0] * y[0] + K[2][1] * y[1] + K[2][2] * y[2];
+    if (fabs(det) < 1e-6f) return;
 
-    // Normalise l'angle
-    while (pos->t > PI)  pos->t -= 2.0f * PI;
-    while (pos->t < -PI) pos->t += 2.0f * PI;
+    float inv_det = 1.0f / det;
+    float S_inv[3][3];
 
-    // Mise à jour de la covariance : P = (I - K) * P
-    float I_minus_K[3][3];
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            I_minus_K[i][j] = (i == j ? 1.0f : 0.0f) - K[i][j];
+    S_inv[0][0] =  (S[1][1]*S[2][2] - S[1][2]*S[2][1]) * inv_det;
+    S_inv[0][1] = -(S[0][1]*S[2][2] - S[0][2]*S[2][1]) * inv_det;
+    S_inv[0][2] =  (S[0][1]*S[1][2] - S[0][2]*S[1][1]) * inv_det;
 
-    float P_new[3][3] = {0};
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            for (int k = 0; k < 3; k++)
-                P_new[i][j] += I_minus_K[i][k] * P[k][j];
+    S_inv[1][0] = -(S[1][0]*S[2][2] - S[1][2]*S[2][0]) * inv_det;
+    S_inv[1][1] =  (S[0][0]*S[2][2] - S[0][2]*S[2][0]) * inv_det;
+    S_inv[1][2] = -(S[0][0]*S[1][2] - S[0][2]*S[1][0]) * inv_det;
 
-    // Copie dans P
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            P[i][j] = P_new[i][j];
+    S_inv[2][0] =  (S[1][0]*S[2][1] - S[1][1]*S[2][0]) * inv_det;
+    S_inv[2][1] = -(S[0][0]*S[2][1] - S[0][1]*S[2][0]) * inv_det;
+    S_inv[2][2] =  (S[0][0]*S[1][1] - S[0][1]*S[1][0]) * inv_det;
+
+    // K = P * H^T * S^-1 ; H^T est une matrice 6x3, ici on prend les 3 premières colonnes de l'identité
+    float K[6][3] = {0};
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 3; j++) {
+            for (int k = 0; k < 3; k++) {
+                K[i][j] += state->P[i][k] * S_inv[k][j];
+            }
+        }
+    }
+
+    // Mise à jour de l'état x = x + K * y
+    for (int i = 0; i < 6; i++) {
+        float delta = 0.0f;
+        for (int j = 0; j < 3; j++) {
+            delta += K[i][j] * y[j];
+        }
+        if (i == 2)  // angle
+            state->x[i] = principal_angle(state->x[i] + delta);
+        else
+            state->x[i] += delta;
+    }
+
+    // Mise à jour de la covariance : P = (I - K * H) * P
+    float KH[6][6] = {0};  // K * H est 6x6 ici
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 6; j++) {
+            if (j < 3) {
+                for (int k = 0; k < 3; k++) {
+                    KH[i][j] += K[i][k] * (j == k ? 1.0f : 0.0f);
+                }
+            }
+        }
+    }
+
+    float I_KH[6][6];
+    for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 6; j++)
+            I_KH[i][j] = (i == j ? 1.0f : 0.0f) - KH[i][j];
+
+    float P_new[6][6] = {0};
+    for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 6; j++)
+            for (int k = 0; k < 6; k++)
+                P_new[i][j] += I_KH[i][k] * state->P[k][j];
+
+    memcpy(state->P, P_new, sizeof(P_new));
 }
+

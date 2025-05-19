@@ -38,7 +38,7 @@ void asserv_init(void) {
 	pid_vitesse_init();
 
     // init kalman
-    kalman_init(&position_robot_predict);
+    kalman_init(&kalman_current_state);
 
 	// init des consignes / modes de ce fichier :
     asserv_mode = ASSERV_MODE_OFF;
@@ -184,9 +184,9 @@ void pos_asserv_step(void) {
     float t_o = Wanted_Pos.t;
 
     // --- État actuel
-    float x = position_robot_predict.x;
-    float y = position_robot_predict.y;
-    float t = position_robot_predict.t;
+    float x = kalman_current_state.x[0];
+    float y = kalman_current_state.x[1];
+    float t = kalman_current_state.x[2];
 
     // --- Erreurs
     float rdx = x_o - x;
@@ -196,11 +196,6 @@ void pos_asserv_step(void) {
 
     float cos_t = cosf(t);
     float sin_t = sinf(t);
-
-    // --- Par défaut : pas de mouvement
-    speed_order.vx = 0.0f;
-    speed_order.vy = 0.0f;
-    speed_order.vt = 0.0f;
 
     float angle = atan2f(rdy, rdx);
 
@@ -216,7 +211,7 @@ void pos_asserv_step(void) {
     speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
 
     // --- Calcul de la vitesse angulaire
-    speed_order.vt =  angular_speed_calculation(dt);
+    speed_order.vt =  angular_speed_calculation(dt);;
 
     // --- Activation de l’asservissement vitesse
     Pid_Speed_En = 1;
@@ -250,8 +245,8 @@ void speed_asserv_step(void) {
 }
 
 void absolute_speed_asserv_step(void) {
-    float cos_t = cos(position_robot_predict.t);
-    float sin_t = sin(position_robot_predict.t);
+    float cos_t = cos(position_robot_odom.t);
+    float sin_t = sin(position_robot_odom.t);
 	speed_order.vx =  Wanted_Speed.vx*cos_t + Wanted_Speed.vy*sin_t;
 	speed_order.vy = -Wanted_Speed.vx*sin_t + Wanted_Speed.vy*cos_t;
 	speed_order.vt = Wanted_Speed.vt;

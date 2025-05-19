@@ -52,7 +52,7 @@ void constrain_acceleration_order(float period) {
     float cos_angle = cosf(delta_angle);
     float sin_angle = sinf(delta_angle);
     float previous_vx_order = speed_order_constrained.vx * cos_angle + speed_order_constrained.vy * sin_angle;
-    float previous_vy_order = - speed_order_constrained.vx * sin_angle + speed_order_constrained.vy * cos_angle;
+    float previous_vy_order = speed_order_constrained.vy * cos_angle - speed_order_constrained.vx * sin_angle;
 
     // process acceleration steps
     float delta_vx = speed_order_constrained_1.vx - previous_vx_order;

@@ -64,32 +64,41 @@ void IHM_loop(void){
     if (yellow_state != previous_yellow_state){
         previous_yellow_state = yellow_state;
         if(yellow_state == 0){
-            if(current_mode == 1){ // start selection color
-                current_mode = 10;
-                validation_blue = 1;
-            } else if (current_mode == 20){ //abort selection color
-                current_mode = 1;
+            printf("YELLOWSWITCH\n");
+            if(AU_state == 0){
+                if(current_mode == 1){ // start selection color
+                    current_mode = 10;
+                    validation_blue = 1;
+                } else if (current_mode == 20){ //abort selection color
+                    current_mode = 1;
+                }
             }
         }
     }
     if (green_state != previous_green_state){
         previous_green_state = green_state;
         if(green_state == 0){
-            if(current_mode == 0){ // start selection color
-                current_mode = 1;
-            } else if (current_mode == 1){ //abort selection color
-                current_mode = 0;
+            printf("GREENSWITCH\n");
+            if(AU_state == 0){
+                if(current_mode == 0){ // start selection color
+                    current_mode = 1;
+                } else if (current_mode == 1){ //abort selection color
+                    current_mode = 0;
+                }
             }
         }
     }
     if (blue_state != previous_blue_state){
         previous_blue_state = blue_state;
         if(blue_state == 0){
-            if(current_mode == 1){ // start selection color
-                current_mode = 10;
-                validation_yellow = 1;
-            }else if(current_mode == 30){ //abort selection color
-                current_mode = 1;
+            printf("BLUESWITCH\n");
+            if(AU_state == 0){
+                if(current_mode == 1){ // start selection color
+                    current_mode = 10;
+                    validation_yellow = 1;
+                }else if(current_mode == 30){ //abort selection color
+                    current_mode = 1;
+                }
             }
         }
     }
