@@ -91,16 +91,13 @@ void Init_Stepper_Loop(void){
                     ///////////////////////////////////////////////////////////////////////////////
                     // wait for the endstop switch to be pressed
                     ///////////////////////////////////////////////////////////////////////////////
-                    if (high_switch_elevator_state != 1){
-                        stepper_1.en = STEPPER_DISABLE;
-                        stepper_1.step = 0;
-
-                        XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
-                        XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
-                        init_stepper_state++;
-                        init_stepper_done = 1;
-                        printf("stepper init done\n\r");
-                    }
+                    stepper_1.en = STEPPER_DISABLE;
+                    stepper_1.step = 0;
+                    XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
+                    XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+                    init_stepper_state++;
+                    init_stepper_done = 1;
+                    printf("stepper init done\n\r");
                     break;
                 default:
                     break;
