@@ -44,7 +44,7 @@ typedef struct {
 } STEPPER;
 
 extern int init_stepper_done;
-
+extern int stepper_loop_state;
 
 void Init_Stepper(void);
 void Init_Stepper_Loop(void);
@@ -58,5 +58,6 @@ void Set_Stepper_En(STEPPER *stepper, uint8_t en);
 
 uint8_t Stepper_cmd(void);
 uint8_t Stepper_help_cmd(void);
+uint8_t Stepper_1_cmd(void);
 
 #endif

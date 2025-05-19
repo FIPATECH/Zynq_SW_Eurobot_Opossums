@@ -66,6 +66,9 @@ void IHM_loop(void){
         if(yellow_state == 0){
             printf("YELLOWSWITCH\n");
             if(AU_state == 0){
+
+                stepper_loop_state = 10;
+
                 if(current_mode == 1){ // start selection color
                     current_mode = 10;
                     validation_blue = 1;
@@ -80,6 +83,9 @@ void IHM_loop(void){
         if(green_state == 0){
             printf("GREENSWITCH\n");
             if(AU_state == 0){
+
+                stepper_loop_state = 20;
+                
                 if(current_mode == 0){ // start selection color
                     current_mode = 1;
                 } else if (current_mode == 1){ //abort selection color
