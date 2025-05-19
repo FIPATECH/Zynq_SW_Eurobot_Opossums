@@ -75,6 +75,7 @@ int main()
             init_CAN_MOTOR_variables();
             Init_Pump();
             PWM_Init();
+            // Init_Asserv();
         }else{
             LED_CLASSIC_MODE();
             MaP_Asserv_Loop();

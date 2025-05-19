@@ -57,7 +57,7 @@ void Init_Asserv(void) {
 
     asserv_init();
 
-    xil_printf("Asserv Init done\n");
+    // xil_printf("Asserv Init done\n");
 }
 
 void Asserv_Loop(void)
@@ -231,7 +231,7 @@ uint8_t Set_Lidar_Cmd(void) {
     position_lidar.x = z_x;
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
-
+    
     // Récupération de l'index dans la FIFO correspondant au délai LiDAR
     int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 1);
     if (delay_index < 0) {
@@ -253,6 +253,7 @@ uint8_t Set_Lidar_Cmd(void) {
 
     // Mise à jour de l’état courant
     kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
+    
     return 0;
 }
 
