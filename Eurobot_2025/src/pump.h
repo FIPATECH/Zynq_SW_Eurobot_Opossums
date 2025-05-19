@@ -20,6 +20,8 @@
 #define MASK_PUMP_5 0x10
 #define MASK_PUMP_6 0x20
 
+extern uint8_t pump_state[6];
+
 void Init_Pump(void);
 void Pump_Loop(void);
 

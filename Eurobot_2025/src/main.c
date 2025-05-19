@@ -79,15 +79,16 @@ int main()
             init_CAN_MOTOR_variables();
             Init_Pump();
             PWM_Init();
-            init_stepper_done = 0;
         }else{
+            // stepper functions
             Init_Stepper_Loop();
+            Stepper_Loop();
+
             LED_CLASSIC_MODE();
             MaP_Asserv_Loop();
             Asserv_Loop();
             PWM_Loop();
             Pump_Loop();
-            Stepper_Loop();
         }
         IHM_loop();
 
