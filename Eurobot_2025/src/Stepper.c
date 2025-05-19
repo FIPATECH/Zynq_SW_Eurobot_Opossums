@@ -50,7 +50,7 @@ void Init_Stepper(void){
             ///////////////////////////////////////////////////////////////////////////////
             // init endstop switches
             ///////////////////////////////////////////////////////////////////////////////
-            XGpio_Initialize(&high_switch_elevator, HIGH_SWITCH_ELEVATOR_DEVICE_ID);
+            XGpio_Initialize(&high_switch_elevator, LOW_SWITCH_ELEVATOR_DEVICE_ID);
             // XGpio_Initialize(&low_switch_elevator, LOW_SWITCH_ELEVATOR_DEVICE_ID);
             XGpio_SetDataDirection(&high_switch_elevator, 1, 1);
             // XGpio_SetDataDirection(&low_switch_elevator, 1, 1);
@@ -62,30 +62,30 @@ void Init_Stepper(void){
             ///////////////////////////////////////////////////////////////////////////////
             // move stepper motor to higher position to press the endstop switch
             ///////////////////////////////////////////////////////////////////////////////
-            if(high_switch_elevator_state == 1){
-                stepper_1.en = STEPPER_ENABLE;
-                stepper_1.step = 1000;
-                stepper_1.dir = STEPPER_DIR_FORWARD;
-                XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
-                XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
-                XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
-                init_stepper_state = 3;
-            }
+            // if(high_switch_elevator_state == 1){
+            //     stepper_1.en = STEPPER_ENABLE;
+            //     stepper_1.step = 1000;
+            //     stepper_1.dir = STEPPER_DIR_FORWARD;
+            //     XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
+            //     XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+            //     XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
+            //     init_stepper_state = 3;
+            // }
             break;
         case 3:
             ///////////////////////////////////////////////////////////////////////////////
             // wait for the endstop switch to be pressed
             ///////////////////////////////////////////////////////////////////////////////
-            if (XGpio_DiscreteRead(&high_switch_elevator, 1) == 0){
-                stepper_1.en = STEPPER_DISABLE;
-                stepper_1.step = 0;
-                stepper_1.dir = 0;
-                XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
-                XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
-                XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
-                init_stepper_state = 4;
-                printf("stepper init done\n\r");
-            }
+            // if (XGpio_DiscreteRead(&high_switch_elevator, 1) == 0){
+            //     stepper_1.en = STEPPER_DISABLE;
+            //     stepper_1.step = 0;
+            //     stepper_1.dir = 0;
+            //     XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
+            //     XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+            //     XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
+            //     init_stepper_state = 4;
+            //     printf("stepper init done\n\r");
+            // }
             break;
     }
 }

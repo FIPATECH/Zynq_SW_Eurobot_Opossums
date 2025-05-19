@@ -23,7 +23,7 @@ void PWM_Init(void)
     int angle_max = DEFAULT_ANGLE_MAX;
     int step = DEFAULT_ANGLE_STEP;
     
-    for (int i = 0; i < NBR_SERVO; i++){
+    for (int i = 0; i < 8; i++){
         switch (i){
             case 0:
                 gpio_id = XPAR_AXI_GPIO_2_DEVICE_ID;
@@ -52,9 +52,9 @@ void PWM_Init(void)
             case 7:
                 gpio_id = XPAR_AXI_GPIO_9_DEVICE_ID;
                 break;
-            case 8:
-                gpio_id = XPAR_AXI_GPIO_10_DEVICE_ID;
-                break;
+            // case 8:
+            //     gpio_id = XPAR_AXI_GPIO_10_DEVICE_ID;
+            //     break;
         }
         Init_Servo(&servo[i], gpio_id, angle, angle_min, angle_max, step, 1); 
         XGpio_Initialize(&servo[i].gpio, servo[i].axi_id);
