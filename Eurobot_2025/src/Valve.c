@@ -30,7 +30,7 @@ void Pump_Loop(void){
                 Timer_valve_on[i] = Timer_ms1;
             }
 
-            if(Timer_ms1 - Timer_valve_on[i] > 1000 && valve_state[i] == 1){
+            if(Timer_ms1 - Timer_valve_on[i] > 2000 && valve_state[i] == 1){
                 // if the valve has been on for more than 1 second, turn it off
                 valve_state[i] = 0;
             }
