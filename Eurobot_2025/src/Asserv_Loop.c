@@ -38,6 +38,8 @@ ESC_Command Consigne;
 ESC_Command Wanted_Forced_Consigne;
 ESC_Command old_Consigne;
 
+int Lidar_inconsistency_count = 0;
+
 float dx, dy, dt = 0;
 
 void Init_Asserv(void) {
@@ -55,7 +57,7 @@ void Init_Asserv(void) {
 
     asserv_init();
 
-    xil_printf("Asserv Init done\n");
+    // xil_printf("Asserv Init done\n");
 }
 
 void Asserv_Loop(void)
@@ -175,6 +177,11 @@ void Asserv_Loop(void)
             float speed_direction = atan2f(speed_robot.vy, speed_robot.vx);
             printf("ROBOTDATA %0.4f %0.4f %0.4f %0.2f %0.2f %0.2f\n", kalman_current_state.x[0], kalman_current_state.x[1], kalman_current_state.x[2], speed_linear, speed_direction, speed_robot.vt);          
             Last_Timer_print_pos += auto_printpos_delay;
+
+            if(Lidar_inconsistency_count > 10){
+                printf("Lidar inconsistency count: %d\n", Lidar_inconsistency_count);
+                Lidar_inconsistency_count = 0;
+            }
         }
         Asserv_State = 0;
         
@@ -224,12 +231,19 @@ uint8_t Set_Lidar_Cmd(void) {
     position_lidar.x = z_x;
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
-
+    
     // Récupération de l'index dans la FIFO correspondant au délai LiDAR
     int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 1);
     if (delay_index < 0) {
         return 0; // erreur
     }
+    // } else if ( fabsf(z_x - kalman_fifo.buffer[delay_index].x[0]) > 0.3f ||
+    //             fabsf(z_y - kalman_fifo.buffer[delay_index].x[1]) > 0.3f ||
+    //             fabsf(z_theta - kalman_fifo.buffer[delay_index].x[2]) > 0.2f) {
+    //     // Si la mesure est trop éloignée de la prédiction, on ne fait rien et on incrémente le commpteur d'erreur 
+    //     Lidar_inconsistency_count++;
+    //     return 0;
+    // }
     // Correction de l’état dans la FIFO
     float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
     kalman_update(&kalman_fifo.buffer[delay_index], z);
@@ -239,6 +253,7 @@ uint8_t Set_Lidar_Cmd(void) {
 
     // Mise à jour de l’état courant
     kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
+    
     return 0;
 }
 
@@ -253,6 +268,6 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
 
-    kalman_init_with_lidar(&kalman_fifo, &position_lidar);
+    // kalman_init_with_lidar(&kalman_fifo, &position_lidar);
     return 0;
 }

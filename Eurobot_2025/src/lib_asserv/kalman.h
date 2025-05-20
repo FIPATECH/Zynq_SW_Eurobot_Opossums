@@ -46,6 +46,13 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt);
  * 
  * @param state L’état à corriger (potentiellement un état passé issu du FIFO).
  * @param z Mesure du LiDAR : position et angle absolus.
+ * 
+ * @note plusieurs returns possibles :
+ *      - 1 : erreur de mesure (NaN)
+ *      - 2 : erreur d’état (NaN)
+ *      - 3 : matrice S singulière (non inversible)
+ *      - 4 : Clamp de sécurité post update
+ *      - 5 : Clamp de sécurité post update
  */
 void kalman_update(KalmanState* state, float z[STATE_SIZE]);
 

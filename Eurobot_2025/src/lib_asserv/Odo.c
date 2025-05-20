@@ -37,7 +37,7 @@ void odo_init(void) {
     acceleration_robot.ay = 0;
     acceleration_robot.at = 0;
 
-    xil_printf("Odo init done\n");
+    // xil_printf("Odo init done\n");
 }
 
 // assigner une valeur e l'ecart entre les roues d'odometrie

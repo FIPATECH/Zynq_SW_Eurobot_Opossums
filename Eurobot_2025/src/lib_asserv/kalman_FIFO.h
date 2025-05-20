@@ -9,7 +9,8 @@
 typedef struct {
     KalmanState buffer[KALMAN_FIFO_LEN];
     Speed speed_robot[KALMAN_FIFO_LEN];
-    int head;
+    int head; // index de la tête de la FIFO
+    int count; // nombre d'éléments dans la FIFO actuellement valides
 } KalmanFIFO;
 
 extern KalmanFIFO kalman_fifo;
