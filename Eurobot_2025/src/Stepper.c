@@ -33,7 +33,7 @@ void Init_Stepper(void){
     XGpio_SetDataDirection(&stepper_1.EN, 1, 0);
     XGpio_SetDataDirection(&stepper_1.DONE, 1, 1);
     stepper_1.step = 0; 
-    stepper_1.speed =  1000; // 0 to 65535 in us between each steps
+    stepper_1.speed =  700; // 0 to 65535 in us between each steps
     stepper_1.mode = 0; // 0 to full step, 1 to half step, 2 to quarter step, 3 to eighth step, 4 to sixteenth step, 5 to thirty-second step, 6 to sixty-fourth step, 7 to one hundred twenty-eighth step
     stepper_1.dir = 1; // 0 to go forward, 1 to go backward
     stepper_1.en = 1; // 0 to enable, 1 to disable
@@ -95,10 +95,11 @@ void Init_Stepper_Loop(void){
                     stepper_1.step = 0;
                     XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
                     XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
-                    init_stepper_state++;
-                    init_stepper_done = 1;
                     printf("stepper init done\n\r");
+                    init_stepper_state = 0;
+                    init_stepper_done = 1;
                     break;
+
                 default:
                     break;
             }
@@ -146,6 +147,7 @@ void Stepper_Loop(void){
                         stepper_loop_state = 0;
                     }
                     break;
+                
                 case 20: // goes to lower position
                     ///////////////////////////////////////////////////////////////////////////////
                     // check the state of the endstop switch
@@ -156,22 +158,25 @@ void Stepper_Loop(void){
                         stepper_loop_state = 0;
                     } else{
                         stepper_1.en = STEPPER_ENABLE;
-                        stepper_1.step = 200;
+                        stepper_1.step = 1250;
                         stepper_1.dir = STEPPER_DIR_BACKWARD;
                         XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
-                        XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
                         XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+                        XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
                         stepper_loop_state ++;
                     }
-                    break;
-                case 11:
+                    break;              
+                case 21:
                     stepper_done = XGpio_DiscreteRead(&stepper_1.DONE, 1);
                     if(stepper_done == 1){
                         stepper_1.en = STEPPER_DISABLE;
+                        stepper_1.step = 0;
+                        XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
                         XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
                         printf("STEPPER DONE\n\r");
                         stepper_loop_state = 0;
                     }
+                    break;
                     
                 default:
                     break;
@@ -286,7 +291,10 @@ uint8_t Stepper_1_cmd(void){
     if (Get_Param_u32(&mode)){
         return PARAM_ERROR_CODE;
     }
-    if (mode == 1){
+    if (mode == 0){
+        stepper_loop_state = 0;
+        init_stepper_done = 0;
+    }else if (mode == 1){
         stepper_loop_state = 10;
     } else if (mode == 2){
         stepper_loop_state = 20;
