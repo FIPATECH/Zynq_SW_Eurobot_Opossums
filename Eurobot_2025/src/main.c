@@ -53,6 +53,7 @@ int main()
     ws2812b_init();
     init_switch();
     Init_Pump();
+    Init_Valve();
     Init_Asserv();
     Init_Stepper();
     xil_printf("Init done\n\r");
@@ -89,7 +90,9 @@ int main()
             MaP_Asserv_Loop();
             Asserv_Loop();
             PWM_Loop();
+
             Pump_Loop();
+            Valve_Loop();
         }
         IHM_loop();
 
