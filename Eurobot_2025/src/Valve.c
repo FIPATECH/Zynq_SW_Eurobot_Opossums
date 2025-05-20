@@ -7,7 +7,7 @@ uint32_t Timer_valve_on[4];
 
 uint8_t valve_cmd = 0;
 
-void Init_Pump(void){
+void Init_Valve(void){
     XGpio_Initialize(&Valve, XPAR_AXI_GPIO_17_DEVICE_ID);
     XGpio_SetDataDirection(&Valve, 1, 0);
     for (int i = 0; i < 4; i++){
@@ -20,14 +20,17 @@ void Init_Pump(void){
 uint32_t old_valve_Timer_ms1 = 0;
 
 
-void Pump_Loop(void){
+void Valve_Loop(void){
     if(Timer_ms1 - old_valve_Timer_ms1 > 10){
         old_valve_Timer_ms1 = Timer_ms1;
 
         for (int i = 0; i < 4; i++){
             // check if the valve state has changed and keep track of the time it was turned on
-            if (valve_state[i] != previous_valve_state[i] && valve_state[i] == 1){
-                Timer_valve_on[i] = Timer_ms1;
+            if (valve_state[i] != previous_valve_state[i]){
+                if (valve_state[i] == 1){
+                    Timer_valve_on[i] = Timer_ms1;
+                }
+                previous_valve_state[i] = valve_state[i];
             }
 
             if(Timer_ms1 - Timer_valve_on[i] > 2000 && valve_state[i] == 1){
