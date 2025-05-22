@@ -21,7 +21,7 @@ void kalman_init(KalmanState* state) {
     memset(state->x, 0, sizeof(state->x));
     memset(state->P, 0, sizeof(state->P));
     for (int i = 0; i < STATE_SIZE; i++)
-        state->P[i][i] = 0.01f;  // initial uncertainty
+        state->P[i][i] = 0.005f * 0.005f;  // initial uncertainty
 }
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
