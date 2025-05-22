@@ -33,6 +33,9 @@ void PWM_Init(void)
                 break;
             case 1:
                 gpio_id = XPAR_AXI_GPIO_3_DEVICE_ID;
+                angle = SERVO_2_ANGLE_MIN;
+                angle_min = SERVO_2_ANGLE_MIN;
+                angle_max = SERVO_2_ANGLE_MAX;
                 break;
             case 2:
                 gpio_id = XPAR_AXI_GPIO_4_DEVICE_ID;
