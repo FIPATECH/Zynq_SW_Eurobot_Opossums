@@ -80,7 +80,7 @@ int main()
             init_CAN_MOTOR_variables();
             Init_Pump();
             PWM_Init();
-            // Init_Asserv();
+            Init_Asserv();
         }else{
             // stepper functions
             Init_Stepper_Loop();
