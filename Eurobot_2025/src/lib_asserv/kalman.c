@@ -51,13 +51,13 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
 
     // Jacobienne de la fonction de transition
     float F[STATE_SIZE][STATE_SIZE] = {
-    {1, 0, (-speed->vx * sinf(theta) - speed->vy * cosf(theta)) * dt, cosf(theta) * dt, -sinf(theta) * dt, 0},
-    {0, 1, ( speed->vx * cosf(theta) - speed->vy * sinf(theta)) * dt, sinf(theta) * dt,  cosf(theta) * dt, 0},
-    {0, 0, 1, 0, 0, dt},
-    {0, 0, 0, 1, 0, 0},
-    {0, 0, 0, 0, 1, 0},
-    {0, 0, 0, 0, 0, 1}
-};
+        {1, 0, (-speed->vx * sinf(theta) - speed->vy * cosf(theta)) * dt, cosf(theta) * dt, -sinf(theta) * dt, 0},
+        {0, 1, ( speed->vx * cosf(theta) - speed->vy * sinf(theta)) * dt, sinf(theta) * dt,  cosf(theta) * dt, 0},
+        {0, 0, 1, 0, 0, dt},
+        {0, 0, 0, 1, 0, 0},
+        {0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 1}
+    };
 
     // Mise à jour de la covariance : P = F * P * F^T + Q
     float P_temp[STATE_SIZE][STATE_SIZE] = {0};
