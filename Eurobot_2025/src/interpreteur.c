@@ -23,6 +23,7 @@ const Command Command_List[] = {
     // Asserv print
     { "SETLIDAR", Set_Lidar_Cmd},
     { "SYNCHROLIDAR", Synchro_Lidar_Cmd},
+    { "ENKALMAN", Enable_Kalman_Cmd},
 
     { "MOTIONTEST", asserv_test_cmd},
 

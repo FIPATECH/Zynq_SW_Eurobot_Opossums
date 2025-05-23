@@ -26,6 +26,9 @@ uint8_t Set_Odo_Spacing_Cmd(void);
 
 uint8_t Set_Lidar_Cmd(void);
 uint8_t Synchro_Lidar_Cmd(void);
+
+uint8_t Enable_Kalman_Cmd(void);
+
 #endif
 
 
