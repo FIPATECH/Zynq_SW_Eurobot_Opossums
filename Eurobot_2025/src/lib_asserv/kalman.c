@@ -76,10 +76,10 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
     // Vérification de l'entrée
     for (int i = 0; i < 3; i++) {
         if (isnan(z[i]) ) {
-            printf("KALMANERROR 1\n"); // Invalid Lidar measurement
+            printf("ERROR KALMANERROR 1\n"); // Invalid Lidar measurement
             return;
         }else if (isnan(state->x[i])) {
-            printf("KALMANERROR 2\n"); // Invalid Kalman state
+            printf("ERROR KALMANERROR 2\n"); // Invalid Kalman state
             return;
         }
     }
@@ -109,7 +109,7 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
         S[0][2] * (S[1][0]*S[2][1] - S[1][1]*S[2][0]);
 
     if (fabs(det) < 1e-8f || isnan(det) || isinf(det)) {
-        printf("KALMANERROR 3\n"); // Singular matrix
+        printf("ERROR KALMANERROR 3\n"); // Singular matrix
         return;
     }
 
@@ -150,7 +150,7 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
             state->x[i] += delta;
         }
         if (isnan(state->x[i]) || isinf(state->x[i]) || fabsf(state->x[i]) > 1e6f) {
-            printf("KALMANERROR 4\n"); // Invalid state after update
+            printf("ERROR KALMANERROR 4\n"); // Invalid state after update
             return;
         }
     }
@@ -187,7 +187,7 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
     for (int i = 0; i < 6; i++)
         for (int j = 0; j < 6; j++) {
             if (isnan(P_new[i][j]) || isinf(P_new[i][j])) {
-                printf("KALMANERROR 5\n"); // Invalid covariance after update
+                printf("ERROR KALMANERROR 5\n"); // Invalid covariance after update
                 return;
             }
         }
