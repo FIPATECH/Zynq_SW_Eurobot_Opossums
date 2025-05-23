@@ -62,7 +62,7 @@ int main()
         if (Timer_ms1 - old_timer_ms1 >= 100) {
             old_timer_ms1 = Timer_ms1;
             if (AU_state == 1){
-                xil_printf("AU 2\n\r");            
+                // xil_printf("AU 2\n\r");            
             }
         }
 

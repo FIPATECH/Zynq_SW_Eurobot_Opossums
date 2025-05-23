@@ -57,6 +57,8 @@ void Init_Asserv(void) {
     old_Consigne.command2 = 0;
     old_Consigne.command3 = 0;
 
+    enable_kalman = 1;
+    
     asserv_init();
 
     // xil_printf("Asserv Init done\n");

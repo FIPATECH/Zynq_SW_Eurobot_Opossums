@@ -137,6 +137,8 @@ void asserv_off_step(void) {
 	speed_order.vy = 0;
 	speed_order.vt = 0;
     Pid_Speed_En = 0;
+
+    motion_off();
 }
 
 void asserv_free_step(void)
