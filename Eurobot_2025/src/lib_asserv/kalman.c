@@ -78,7 +78,7 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
         if (isnan(z[i]) ) {
             printf("ERROR KALMANERROR 1\n"); // Invalid Lidar measurement
             return;
-        }else if (isnan(state->x[i])) {
+        } else if (isnan(state->x[i])) {
             printf("ERROR KALMANERROR 2\n"); // Invalid Kalman state
             return;
         }
@@ -86,30 +86,27 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
 
     // Innovation y = z - h(x)
     float y[3];
-    y[0] = z[0] - state->x[0];  // x
-    y[1] = z[1] - state->x[1];  // y
-    y[2] = principal_angle(z[2] - state->x[2]);  // theta
+    y[0] = z[0] - state->x[0];
+    y[1] = z[1] - state->x[1];
+    y[2] = principal_angle(z[2] - state->x[2]);
 
-    // S = H * P * H^T + R
-    // Ici H est 3x6 : on extrait juste les 3 premières lignes de l'identité
+    // Calcul de S = HPH^T + R (3x3)
     float S[3][3] = {0};
-    // const float epsilon = 1e-6f;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             S[i][j] = state->P[i][j];
             if (i == j) S[i][j] += R_diag[i];
         }
-        // S[i][i] += epsilon;  // éviter la singularité et permet de garder la matrice S inversible
     }
 
-    // Inverse de S (3x3)
+    // Inversion de S
     float det = 
-        S[0][0] * (S[1][1]*S[2][2] - S[1][2]*S[2][1]) -
-        S[0][1] * (S[1][0]*S[2][2] - S[1][2]*S[2][0]) +
-        S[0][2] * (S[1][0]*S[2][1] - S[1][1]*S[2][0]);
+        S[0][0]*(S[1][1]*S[2][2] - S[1][2]*S[2][1]) -
+        S[0][1]*(S[1][0]*S[2][2] - S[1][2]*S[2][0]) +
+        S[0][2]*(S[1][0]*S[2][1] - S[1][1]*S[2][0]);
 
-    if (fabs(det) < 1e-8f || isnan(det) || isinf(det)) {
-        printf("ERROR KALMANERROR 3\n"); // Singular matrix
+    if (fabsf(det) < 1e-8f || isnan(det) || isinf(det)) {
+        printf("ERROR KALMANERROR 3\n");
         return;
     }
 
@@ -128,7 +125,7 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
     S_inv[2][1] = -(S[0][0]*S[2][1] - S[0][1]*S[2][0]) * inv_det;
     S_inv[2][2] =  (S[0][0]*S[1][1] - S[0][1]*S[1][0]) * inv_det;
 
-    // K = P * H^T * S^-1 ; H^T est une matrice 6x3, ici on prend les 3 premières colonnes de l'identité
+    // K = P * H^T * S^-1 (6x3)
     float K[6][3] = {0};
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 3; j++) {
@@ -138,60 +135,66 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
         }
     }
 
-    // Mise à jour de l'état x = x + K * y
+    // Mise à jour état : x = x + K * y
     for (int i = 0; i < 6; i++) {
         float delta = 0.0f;
         for (int j = 0; j < 3; j++) {
             delta += K[i][j] * y[j];
         }
-        if (i == 2){  // angle
+        if (i == 2) {
             state->x[i] = principal_angle(state->x[i] + delta);
-        }else{
+        } else {
             state->x[i] += delta;
         }
+
         if (isnan(state->x[i]) || isinf(state->x[i]) || fabsf(state->x[i]) > 1e6f) {
-            printf("ERROR KALMANERROR 4\n"); // Invalid state after update
+            printf("ERROR KALMANERROR 4\n");
             return;
         }
     }
 
-    // Mise à jour de la covariance : P = (I - K * H) * P
-    float KH[6][6] = {0};  // K * H est 6x6 ici
+    // Formule de Joseph : P = (I - KH) * P * (I - KH)^T + K * R * K^T
+    float I_KH[6][6] = {0};
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 6; j++) {
             if (j < 3) {
-                for (int k = 0; k < 3; k++) {
-                    KH[i][j] += K[i][k] * (j == k ? 1.0f : 0.0f);
-                }
+                I_KH[i][j] = (i == j ? 1.0f : 0.0f) - K[i][j];
+            } else {
+                I_KH[i][j] = (i == j ? 1.0f : 0.0f);
             }
         }
     }
 
-    float I_KH[6][6];
-    for (int i = 0; i < 6; i++){
-        for (int j = 0; j < 6; j++){
-            I_KH[i][j] = (i == j ? 1.0f : 0.0f) - KH[i][j];
-        }
-    }
+    // Temp = (I - KH) * P
+    float temp[6][6] = {0};
+    for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 6; j++)
+            for (int k = 0; k < 6; k++)
+                temp[i][j] += I_KH[i][k] * state->P[k][j];
 
+    // P_new = Temp * (I - KH)^T + K * R * K^T
     float P_new[6][6] = {0};
-    for (int i = 0; i < 6; i++){
-        for (int j = 0; j < 6; j++){
-            for (int k = 0; k < 6; k++){
-                P_new[i][j] += I_KH[i][k] * state->P[k][j];
-            }
-        }
-    }
+    for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 6; j++) {
+            // Temp * (I - KH)^T
+            for (int k = 0; k < 6; k++)
+                P_new[i][j] += temp[i][k] * I_KH[j][k];
 
-    // Vérification de la nouvelle covariance
+            // + K * R * K^T
+            for (int k = 0; k < 3; k++)
+                P_new[i][j] += K[i][k] * R_diag[k] * K[j][k];
+        }
+
+    // Vérification finale
     for (int i = 0; i < 6; i++)
         for (int j = 0; j < 6; j++) {
             if (isnan(P_new[i][j]) || isinf(P_new[i][j])) {
-                printf("ERROR KALMANERROR 5\n"); // Invalid covariance after update
+                printf("ERROR KALMANERROR 5\n");
                 return;
             }
         }
 
     memcpy(state->P, P_new, sizeof(P_new));
 }
+
 
