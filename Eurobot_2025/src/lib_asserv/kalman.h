@@ -14,9 +14,9 @@
 #define PROCESS_NOISE_ODOM_VY 0.01f
 #define PROCESS_NOISE_ODOM_VTHETA 0.01f
 
-#define PROCESS_NOISE_LIDAR_X 0.01f
-#define PROCESS_NOISE_LIDAR_Y 0.01f
-#define PROCESS_NOISE_LIDAR_THETA 0.01f
+#define PROCESS_NOISE_LIDAR_X 0.03f
+#define PROCESS_NOISE_LIDAR_Y 0.03f
+#define PROCESS_NOISE_LIDAR_THETA 0.08f
 
 typedef struct {
     float x[STATE_SIZE];                 // état X[x, y, theta, vx, vy, vtheta]
