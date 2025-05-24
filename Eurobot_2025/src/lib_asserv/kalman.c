@@ -77,7 +77,7 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     for (int i = 0; i < STATE_SIZE; i++)
         for (int j = 0; j < STATE_SIZE; j++)
             for (int k = 0; k < STATE_SIZE; k++)
-                P_new[i][j] += P_temp[i][k] * F[j][k];
+                P_new[i][j] += P_temp[i][k] * F[k][j];
 
     for (int i = 0; i < STATE_SIZE; i++)
         for (int j = 0; j < STATE_SIZE; j++)
