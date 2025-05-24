@@ -12,6 +12,9 @@
 #define SERVO_1_ANGLE_MIN 20
 #define SERVO_1_ANGLE_MAX 180
 
+#define SERVO_2_ANGLE_MIN 20
+#define SERVO_2_ANGLE_MAX 180
+
 typedef struct{
     int axi_id;
     int default_pos;

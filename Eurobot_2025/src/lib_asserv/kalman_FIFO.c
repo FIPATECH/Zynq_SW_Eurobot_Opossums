@@ -42,6 +42,7 @@ void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) 
 int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms) {
     int samples_back = (int)(delay_ms / dt_ms); 
     if (fifo->count < samples_back) {
+        // printf("WARNING: FIFO not enough samples\n");
         return -1; // Erreur : pas assez d'échantillons dans la FIFO
     }
 

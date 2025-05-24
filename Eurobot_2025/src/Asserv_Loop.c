@@ -40,6 +40,9 @@ ESC_Command old_Consigne;
 
 int Lidar_inconsistency_count = 0;
 
+int enable_kalman = 1;
+int kalman_initialized = 0;
+
 float dx, dy, dt = 0;
 
 void Init_Asserv(void) {
@@ -55,6 +58,8 @@ void Init_Asserv(void) {
     old_Consigne.command2 = 0;
     old_Consigne.command3 = 0;
 
+    enable_kalman = 1;
+
     asserv_init();
 
     // xil_printf("Asserv Init done\n");
@@ -68,6 +73,9 @@ void Asserv_Loop(void)
         // - calcul de la vitesse du robot 
         //-----------------------------------
         if ((Timer_ms1 - Last_Timer_Asserv) > ODO_EVERY_MS) {
+            // if((Timer_ms1 - Last_Timer_Asserv) > 2*ODO_EVERY_MS){
+            //     printf("ERROR ODO TIMEOUT");
+            // }
             Last_Timer_Asserv += ODO_EVERY_MS;
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);       
             Asserv_State = 1;
@@ -220,40 +228,38 @@ uint8_t Set_Lidar_Cmd(void) {
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
 
-    // Filtrage anti-erreur : ignore les mesures trop éloignées de la prédiction
-    // if (fabsf(z_x - kalman_current_state.x[0]) > 0.3f ||
-    //     fabsf(z_y - kalman_current_state.x[1]) > 0.3f ||
-    //     fabsf(z_theta - kalman_current_state.x[2]) > 0.2f) {
-    //     return 0;
-    // }
+    if(!enable_kalman) {
+        position_lidar.x = z_x;
+        position_lidar.y = z_y;
+        position_lidar.t = principal_angle(z_theta);
+    }else{
+        // Mise à jour des données LIDAR (avec angle normalisé)
+        position_lidar.x = z_x;
+        position_lidar.y = z_y;
+        position_lidar.t = principal_angle(z_theta);
 
-    // Mise à jour des données LIDAR (avec angle normalisé)
-    position_lidar.x = z_x;
-    position_lidar.y = z_y;
-    position_lidar.t = principal_angle(z_theta);
-    
-    // Récupération de l'index dans la FIFO correspondant au délai LiDAR
-    int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 1);
-    if (delay_index < 0) {
-        return 0; // erreur
+        if(!kalman_initialized){
+            // Initialisation du filtre de Kalman avec les données LIDAR
+            kalman_init_with_lidar(&kalman_fifo, &position_lidar);
+            kalman_initialized = 1;
+        }else{
+            // Récupération de l'index dans la FIFO correspondant au délai LiDAR
+            int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 1);
+            if (delay_index < 0) {
+                return 0; // erreur
+            }
+            
+            // Correction de l’état dans la FIFO
+            float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
+            kalman_update(&kalman_fifo.buffer[delay_index], z);
+
+            // Repropagation depuis l’état corrigé
+            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
+
+            // Mise à jour de l’état courant
+            kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
+        }
     }
-    // } else if ( fabsf(z_x - kalman_fifo.buffer[delay_index].x[0]) > 0.3f ||
-    //             fabsf(z_y - kalman_fifo.buffer[delay_index].x[1]) > 0.3f ||
-    //             fabsf(z_theta - kalman_fifo.buffer[delay_index].x[2]) > 0.2f) {
-    //     // Si la mesure est trop éloignée de la prédiction, on ne fait rien et on incrémente le commpteur d'erreur 
-    //     Lidar_inconsistency_count++;
-    //     return 0;
-    // }
-    // Correction de l’état dans la FIFO
-    float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
-    kalman_update(&kalman_fifo.buffer[delay_index], z);
-
-    // Repropagation depuis l’état corrigé
-    kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
-
-    // Mise à jour de l’état courant
-    kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
-    
     return 0;
 }
 
@@ -268,6 +274,13 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
 
-    // kalman_init_with_lidar(&kalman_fifo, &position_lidar);
+    kalman_init_with_lidar(&kalman_fifo, &position_lidar);
+    return 0;
+}
+
+uint8_t Enable_Kalman_Cmd(void){
+    uint32_t state;
+    if (Get_Param_u32(&state)) return PARAM_ERROR_CODE;
+    enable_kalman = state;
     return 0;
 }

@@ -7,25 +7,38 @@ KalmanState kalman_current_state;
 // Bruit de processus Q (tunable) pour l'odométrie
 float Q[STATE_SIZE][STATE_SIZE] = {
     {PROCESS_NOISE_ODOM_X * PROCESS_NOISE_ODOM_X, 0, 0, 0, 0, 0},
-    {0, PROCESS_NOISE_ODOM_Y * PROCESS_NOISE_ODOM_X, 0, 0, 0, 0},
+    {0, PROCESS_NOISE_ODOM_Y * PROCESS_NOISE_ODOM_Y, 0, 0, 0, 0},
     {0, 0, PROCESS_NOISE_ODOM_THETA * PROCESS_NOISE_ODOM_THETA, 0, 0, 0},
-    {0, 0, 0, PROCESS_NOISE_ODOM_VX, 0, 0},
-    {0, 0, 0, 0, PROCESS_NOISE_ODOM_VY, 0},
-    {0, 0, 0, 0, 0, PROCESS_NOISE_ODOM_VTHETA}
+    {0, 0, 0, PROCESS_NOISE_ODOM_VX * PROCESS_NOISE_ODOM_VX, 0, 0},
+    {0, 0, 0, 0, PROCESS_NOISE_ODOM_VY * PROCESS_NOISE_ODOM_VY, 0},
+    {0, 0, 0, 0, 0, PROCESS_NOISE_ODOM_VTHETA * PROCESS_NOISE_ODOM_VTHETA}
 };
 
-float R_diag[3] = {PROCESS_NOISE_LIDAR_X, PROCESS_NOISE_LIDAR_Y, PROCESS_NOISE_LIDAR_THETA}; // Bruit de mesure lidar
+float R_diag[3] = {PROCESS_NOISE_LIDAR_X * PROCESS_NOISE_LIDAR_X,
+                    PROCESS_NOISE_LIDAR_Y * PROCESS_NOISE_LIDAR_Y, 
+                    PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA}; // Bruit de mesure lidar
 
 
 void kalman_init(KalmanState* state) {
     memset(state->x, 0, sizeof(state->x));
     memset(state->P, 0, sizeof(state->P));
-    for (int i = 0; i < STATE_SIZE; i++)
-        state->P[i][i] = 0.01f;  // initial uncertainty
+
+    // state->P[0][0] = 0.01f;                     // x: ±10 cm
+    // state->P[1][1] = 0.01f;                     // y: ±10 cm
+    // state->P[2][2] = 0.030f;                    // theta: ±10°
+    // state->P[3][3] = 0.04f;                     // vx: ±0.2 m/s
+    // state->P[4][4] = 0.04f;                     // vy: ±0.2 m/s
+    // state->P[5][5] = 0.27f;                     // vtheta: ±30°/s
+    state->P[0][0] = 1.0f;                     
+    state->P[1][1] = 1.0f;
+    state->P[2][2] = 1.0f;                     // theta: ±10°
+    state->P[3][3] = 1.0f;                     // vx: ±0.2 m/s
+    state->P[4][4] = 1.0f;                     // vy: ±0.2 m/s
+    state->P[5][5] = 1.0f;                     // vtheta: ±30°/s
 }
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
-    float theta = state->x[2];
+    float theta = principal_angle(state->x[2]);
 
     // Transformation des vitesses robot → monde
     float v_dx = speed->vx * cosf(theta) - speed->vy * sinf(theta);
@@ -43,14 +56,13 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     state->x[5] = v_ang; // vitesse angulaire
 
     // Jacobienne de la fonction de transition
-    float v_lin = sqrtf(v_dx * v_dx + v_dy * v_dy); // vitesse linéaire
     float F[STATE_SIZE][STATE_SIZE] = {
-        {1, 0, -v_lin * sinf(theta) * dt, 0, 0, 0},
-        {0, 1,  v_lin * cosf(theta) * dt, 0, 0, 0},
-        {0, 0, 1,                          0, 0, 0},
-        {0, 0, 0,                          1, 0, 0},
-        {0, 0, 0,                          0, 1, 0},
-        {0, 0, 0,                          0, 0, 1}
+        {1, 0, (-speed->vx * sinf(theta) - speed->vy * cosf(theta)) * dt, cosf(theta) * dt, -sinf(theta) * dt, 0},
+        {0, 1, ( speed->vx * cosf(theta) - speed->vy * sinf(theta)) * dt, sinf(theta) * dt,  cosf(theta) * dt, 0},
+        {0, 0, 1, 0, 0, dt},
+        {0, 0, 0, 1, 0, 0},
+        {0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 1}
     };
 
     // Mise à jour de la covariance : P = F * P * F^T + Q
@@ -65,21 +77,24 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     for (int i = 0; i < STATE_SIZE; i++)
         for (int j = 0; j < STATE_SIZE; j++)
             for (int k = 0; k < STATE_SIZE; k++)
-                P_new[i][j] += P_temp[i][k] * F[j][k];
+                P_new[i][j] += P_temp[i][k] * F[k][j];
 
     for (int i = 0; i < STATE_SIZE; i++)
         for (int j = 0; j < STATE_SIZE; j++)
             state->P[i][j] = P_new[i][j] + Q[i][j];
+
+    // make the angle is in the range [-pi, pi]
+    state->x[2] = principal_angle(state->x[2]);
 }
 
 void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
     // Vérification de l'entrée
     for (int i = 0; i < 3; i++) {
         if (isnan(z[i]) ) {
-            printf("KALMANERROR 1\n"); // Invalid Lidar measurement
+            printf("ERROR KALMANERROR 1\n"); // Invalid Lidar measurement
             return;
         }else if (isnan(state->x[i])) {
-            printf("KALMANERROR 2\n"); // Invalid Kalman state
+            printf("ERROR KALMANERROR 2\n"); // Invalid Kalman state
             return;
         }
     }
@@ -93,13 +108,13 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
     // S = H * P * H^T + R
     // Ici H est 3x6 : on extrait juste les 3 premières lignes de l'identité
     float S[3][3] = {0};
-    // const float epsilon = 1e-6f;
+    const float epsilon = 1e-4f;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             S[i][j] = state->P[i][j];
             if (i == j) S[i][j] += R_diag[i];
         }
-        // S[i][i] += epsilon;  // éviter la singularité et permet de garder la matrice S inversible
+        S[i][i] += epsilon;  // éviter la singularité et permet de garder la matrice S inversible
     }
 
     // Inverse de S (3x3)
@@ -109,7 +124,7 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
         S[0][2] * (S[1][0]*S[2][1] - S[1][1]*S[2][0]);
 
     if (fabs(det) < 1e-8f || isnan(det) || isinf(det)) {
-        printf("KALMANERROR 3\n"); // Singular matrix
+        printf("ERROR KALMANERROR 3\n"); // Singular matrix
         return;
     }
 
@@ -150,7 +165,7 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
             state->x[i] += delta;
         }
         if (isnan(state->x[i]) || isinf(state->x[i]) || fabsf(state->x[i]) > 1e6f) {
-            printf("KALMANERROR 4\n"); // Invalid state after update
+            printf("ERROR KALMANERROR 4\n"); // Invalid state after update
             return;
         }
     }
@@ -187,10 +202,14 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
     for (int i = 0; i < 6; i++)
         for (int j = 0; j < 6; j++) {
             if (isnan(P_new[i][j]) || isinf(P_new[i][j])) {
-                printf("KALMANERROR 5\n"); // Invalid covariance after update
+                printf("ERROR KALMANERROR 5\n"); // Invalid covariance after update
                 return;
             }
         }
+
+    //make sure that the angle is in the range [-pi, pi]
+    state->x[2] = principal_angle(state->x[2]);
+
 
     memcpy(state->P, P_new, sizeof(P_new));
 }
