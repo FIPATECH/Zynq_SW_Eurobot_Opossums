@@ -77,6 +77,7 @@ void motion_free(void) {
 void motion_pos(Position pos) {
     current_stop_distance = default_stop_distance;
     Wanted_Pos = pos;
+    emergency_break_requested = 0;
     robot_a_max = DEFAULT_CONSTRAINT_A_MAX;
     asserv_mode = ASSERV_MODE_POS;
 }
