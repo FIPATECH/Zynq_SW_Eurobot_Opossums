@@ -105,7 +105,7 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
     // S = H * P * H^T + R
     // Ici H est 3x6 : on extrait juste les 3 premières lignes de l'identité
     float S[3][3] = {0};
-    const float epsilon = 1e-6f;
+    const float epsilon = 1e-4f;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             S[i][j] = state->P[i][j];

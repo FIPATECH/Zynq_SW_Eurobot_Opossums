@@ -73,9 +73,9 @@ void Asserv_Loop(void)
         // - calcul de la vitesse du robot 
         //-----------------------------------
         if ((Timer_ms1 - Last_Timer_Asserv) > ODO_EVERY_MS) {
-            if((Timer_ms1 - Last_Timer_Asserv) > 2*ODO_EVERY_MS){
-                printf("ERROR ODO TIMEOUT");
-            }
+            // if((Timer_ms1 - Last_Timer_Asserv) > 2*ODO_EVERY_MS){
+            //     printf("ERROR ODO TIMEOUT");
+            // }
             Last_Timer_Asserv += ODO_EVERY_MS;
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);       
             Asserv_State = 1;
