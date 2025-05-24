@@ -23,12 +23,18 @@ void kalman_init(KalmanState* state) {
     memset(state->x, 0, sizeof(state->x));
     memset(state->P, 0, sizeof(state->P));
 
-    state->P[0][0] = 0.01f;                     // x: ±10 cm
-    state->P[1][1] = 0.01f;                     // y: ±10 cm
-    state->P[2][2] = 0.030f;                    // theta: ±10°
-    state->P[3][3] = 0.04f;                     // vx: ±0.2 m/s
-    state->P[4][4] = 0.04f;                     // vy: ±0.2 m/s
-    state->P[5][5] = 0.27f;                     // vtheta: ±30°/s
+    // state->P[0][0] = 0.01f;                     // x: ±10 cm
+    // state->P[1][1] = 0.01f;                     // y: ±10 cm
+    // state->P[2][2] = 0.030f;                    // theta: ±10°
+    // state->P[3][3] = 0.04f;                     // vx: ±0.2 m/s
+    // state->P[4][4] = 0.04f;                     // vy: ±0.2 m/s
+    // state->P[5][5] = 0.27f;                     // vtheta: ±30°/s
+    state->P[0][0] = 1.0f;                     
+    state->P[1][1] = 1.0f;
+    state->P[2][2] = 1.0f;                     // theta: ±10°
+    state->P[3][3] = 1.0f;                     // vx: ±0.2 m/s
+    state->P[4][4] = 1.0f;                     // vy: ±0.2 m/s
+    state->P[5][5] = 1.0f;                     // vtheta: ±30°/s
 }
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
