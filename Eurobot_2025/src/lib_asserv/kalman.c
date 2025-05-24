@@ -82,6 +82,9 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     for (int i = 0; i < STATE_SIZE; i++)
         for (int j = 0; j < STATE_SIZE; j++)
             state->P[i][j] = P_new[i][j] + Q[i][j];
+
+    // make the angle is in the range [-pi, pi]
+    state->x[2] = principal_angle(state->x[2]);
 }
 
 void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
@@ -203,6 +206,10 @@ void kalman_update(KalmanState* state, float z[STATE_SIZE]) {
                 return;
             }
         }
+
+    //make sure that the angle is in the range [-pi, pi]
+    state->x[2] = principal_angle(state->x[2]);
+
 
     memcpy(state->P, P_new, sizeof(P_new));
 }
