@@ -4,7 +4,7 @@
 #define STATE_SIZE 6  // x, y, theta
 #define HISTORY_LEN 200  // pour 200 ms à 1 kHz
 
-#define LIDAR_DELAY 100 // 100 ms
+#define LIDAR_DELAY 90 // 100 ms
 
 #define PROCESS_NOISE_ODOM_X 0.02f
 #define PROCESS_NOISE_ODOM_Y 0.02f

@@ -23,12 +23,6 @@ void kalman_init(KalmanState* state) {
     memset(state->x, 0, sizeof(state->x));
     memset(state->P, 0, sizeof(state->P));
 
-    // state->P[0][0] = 0.01f;                     // x: ±10 cm
-    // state->P[1][1] = 0.01f;                     // y: ±10 cm
-    // state->P[2][2] = 0.030f;                    // theta: ±10°
-    // state->P[3][3] = 0.04f;                     // vx: ±0.2 m/s
-    // state->P[4][4] = 0.04f;                     // vy: ±0.2 m/s
-    // state->P[5][5] = 0.27f;                     // vtheta: ±30°/s
     state->P[0][0] = 1.0f;                     
     state->P[1][1] = 1.0f;
     state->P[2][2] = 1.0f;                     // theta: ±10°
@@ -39,10 +33,12 @@ void kalman_init(KalmanState* state) {
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     float theta = principal_angle(state->x[2]);
+    float cos_theta = cosf(theta);
+    float sin_theta = sinf(theta);
 
     // Transformation des vitesses robot → monde
-    float v_dx = speed->vx * cosf(theta) - speed->vy * sinf(theta);
-    float v_dy = speed->vx * sinf(theta) + speed->vy * cosf(theta);
+    float v_dx = speed->vx * cos_theta - speed->vy * sin_theta;
+    float v_dy = speed->vx * sin_theta + speed->vy * cos_theta;
     float v_ang = speed->vt;
 
     // Mise à jour de la position estimée
@@ -57,8 +53,8 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
 
     // Jacobienne de la fonction de transition
     float F[STATE_SIZE][STATE_SIZE] = {
-        {1, 0, (-speed->vx * sinf(theta) - speed->vy * cosf(theta)) * dt, cosf(theta) * dt, -sinf(theta) * dt, 0},
-        {0, 1, ( speed->vx * cosf(theta) - speed->vy * sinf(theta)) * dt, sinf(theta) * dt,  cosf(theta) * dt, 0},
+        {1, 0, (-speed->vx * sin_theta - speed->vy * cos_theta) * dt, cos_theta * dt, -sin_theta * dt, 0},
+        {0, 1, ( speed->vx * cos_theta - speed->vy * sin_theta) * dt, sin_theta * dt,  cos_theta * dt, 0},
         {0, 0, 1, 0, 0, dt},
         {0, 0, 0, 1, 0, 0},
         {0, 0, 0, 0, 1, 0},
