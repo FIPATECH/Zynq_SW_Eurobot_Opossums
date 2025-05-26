@@ -216,10 +216,21 @@ uint8_t Set_Odo_Spacing_Cmd(void){
 uint8_t Set_Lidar_Cmd(void) {
     float z_x, z_y, z_theta;
 
+    float time;
+
     // Récupération des mesures LIDAR
     if (Get_Param_Float(&z_x)) return 1;
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
+    
+    if (Get_Param_Float(&time)) return 1;
+    lidar_delay = (int)(time);
+
+    // Vérification de la cohérence des données LIDAR
+    if(lidar_delay < 0 || lidar_delay > 200) {
+        // printf("ERROR: Lidar delay out of range\n");
+        return 0; // erreur
+    }
 
     if(!enable_kalman) {
         position_lidar.x = z_x;
@@ -262,14 +273,10 @@ uint8_t Synchro_Lidar_Cmd(void){
     if (Get_Param_Float(&z_x)) return 1;
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
-    float time;
-    if (Get_Param_Float(&time)) return 1;
-    lidar_delay = (int)(time);
     
     position_lidar.x = z_x;
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
-
     kalman_init_with_lidar(&kalman_fifo, &position_lidar);
     return 0;
 }
