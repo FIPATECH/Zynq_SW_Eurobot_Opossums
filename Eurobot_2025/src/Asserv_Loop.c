@@ -260,6 +260,8 @@ uint8_t Synchro_Lidar_Cmd(void){
     if (Get_Param_Float(&z_x)) return 1;
     if (Get_Param_Float(&z_y)) return 1;
     if (Get_Param_Float(&z_theta)) return 1;
+    float time;
+    if (Get_Param_Float(&time)) return 1;
     
     position_lidar.x = z_x;
     position_lidar.y = z_y;
