@@ -158,23 +158,17 @@ void asserv_free_step(void)
 
 void speed_asserv_break_step(void) {
     // break only if the robot is moving 
-    if (fabs(speed_robot.vx) > 0.1 || fabs(speed_robot.vy) > 0.1 || fabs(speed_robot.vt) > 0.1){
+    if (fabs(speed_robot.vx) > DEFAULT_SPEED_LIN_STOP || fabs(speed_robot.vy) > DEFAULT_SPEED_LIN_STOP || fabs(speed_robot.vt) > DEFAULT_SPEED_ROT_STOP){
         emergency_break_requested = 1;
-    }
-    speed_order.vx = 0;
-    speed_order.vy = 0;
-    speed_order.vt = 0;
-    Pid_Speed_En = 1;
-
-    // if the robot is almost not moving anymore, free the motion
-    if (fabs(speed_robot.vx) < DEFAULT_SPEED_LIN_STOP && 
-        fabs(speed_robot.vy) < DEFAULT_SPEED_LIN_STOP && 
-        fabs(speed_robot.vt) < DEFAULT_SPEED_ROT_STOP) {
-
-            emergency_break_requested = 0;
-            motion_free();
-            printf("Break,done\n");
-            motion_done = 1;
+        speed_order.vx = 0;
+        speed_order.vy = 0;
+        speed_order.vt = 0;
+        Pid_Speed_En = 1;
+    } else {
+        emergency_break_requested = 0;
+        motion_free();
+        printf("Break,done\n");
+        motion_done = 1;
     }
 }
 
