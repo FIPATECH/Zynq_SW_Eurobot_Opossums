@@ -45,6 +45,8 @@ int kalman_initialized = 0;
 
 float dx, dy, dt = 0;
 
+int lidar_delay = 0; // délai de la dernière mesure lidar
+
 void Init_Asserv(void) {
     Consigne.command1 = 0;
     Consigne.command2 = 0;
@@ -235,7 +237,7 @@ uint8_t Set_Lidar_Cmd(void) {
             kalman_initialized = 1;
         }else{
             // Récupération de l'index dans la FIFO correspondant au délai LiDAR
-            int delay_index = kalman_fifo_get_delay(&kalman_fifo, LIDAR_DELAY, 1);
+            int delay_index = kalman_fifo_get_delay(&kalman_fifo, lidar_delay, 1);
             if (delay_index < 0) {
                 return 0; // erreur
             }
@@ -262,6 +264,7 @@ uint8_t Synchro_Lidar_Cmd(void){
     if (Get_Param_Float(&z_theta)) return 1;
     float time;
     if (Get_Param_Float(&time)) return 1;
+    lidar_delay = (int)(time);
     
     position_lidar.x = z_x;
     position_lidar.y = z_y;
