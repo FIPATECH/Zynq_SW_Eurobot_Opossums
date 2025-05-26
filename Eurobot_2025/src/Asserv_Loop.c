@@ -78,17 +78,8 @@ void Asserv_Loop(void)
             // }
             Last_Timer_Asserv += ODO_EVERY_MS;
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);       
-            Asserv_State = 1;
+            Asserv_State = 2;
         }
-
-    } else if (Asserv_State == 1) {
-        // -----------------------------------
-        // ODO step 2:
-        // - calcul de la position du robot
-        // -----------------------------------
-
-        odo_position_step(ODO_EVERY_MS*0.001f);
-        Asserv_State = 2;
 
     } else if (Asserv_State == 2) {
         // -----------------------------------
