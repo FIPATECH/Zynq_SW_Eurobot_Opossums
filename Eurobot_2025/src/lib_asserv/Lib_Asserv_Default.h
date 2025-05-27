@@ -16,8 +16,8 @@
 #define DEFAULT_CONSTRAINT_V_MAX 1
 #define DEFAULT_CONSTRAINT_VT_MAX 1
 
-#define DEFAULT_CONSTRAINT_A_MAX 0.7
-#define DEFAULT_CONSTRAINT_AT_MAX 1
+#define DEFAULT_CONSTRAINT_A_MAX 0.5
+#define DEFAULT_CONSTRAINT_AT_MAX 0.7
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 
@@ -35,7 +35,7 @@
 /*                                   PID                                      */
 /*############################################################################*/
 // PID dre la vitesse de chaque roue
-#define DEFAULT_PID_V_LIN_KP 10000 // kp
+#define DEFAULT_PID_V_LIN_KP 9500 // kp
 #define DEFAULT_PID_V_LIN_KI 100   //ki
 #define DEFAULT_PID_V_LIN_KD 0   //kd   
 

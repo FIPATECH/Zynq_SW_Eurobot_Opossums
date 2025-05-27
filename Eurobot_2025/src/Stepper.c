@@ -154,7 +154,7 @@ void Stepper_Loop(void){
                     ///////////////////////////////////////////////////////////////////////////////
                     high_switch_elevator_state = XGpio_DiscreteRead(&high_switch_elevator, 1);
                     if (high_switch_elevator_state == 0){
-                        printf("STEPPERERROR 1 \n\r");
+                        printf("ERROR STEPPER 1 \n\r");
                         stepper_loop_state = 0;
                     } else{
                         stepper_1.en = STEPPER_ENABLE;
@@ -167,6 +167,36 @@ void Stepper_Loop(void){
                     }
                     break;              
                 case 21:
+                    stepper_done = XGpio_DiscreteRead(&stepper_1.DONE, 1);
+                    if(stepper_done == 1){
+                        stepper_1.en = STEPPER_DISABLE;
+                        stepper_1.step = 0;
+                        XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+                        XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
+                        printf("STEPPER DONE\n\r");
+                        stepper_loop_state = 0;
+                    }
+                    break;
+
+                case 30:
+                    ///////////////////////////////////////////////////////////////////////////////
+                    // check the state of the endstop switch
+                    ///////////////////////////////////////////////////////////////////////////////
+                    high_switch_elevator_state = XGpio_DiscreteRead(&high_switch_elevator, 1);
+                    if (high_switch_elevator_state == 0){
+                        printf("ERROR STEPPER 1 \n\r");
+                        stepper_loop_state = 0;
+                    } else{
+                        stepper_1.en = STEPPER_ENABLE;
+                        stepper_1.step = 500;
+                        stepper_1.dir = STEPPER_DIR_BACKWARD;
+                        XGpio_DiscreteWrite(&stepper_1.DIR, 1, stepper_1.dir);
+                        XGpio_DiscreteWrite(&stepper_1.STEP, 1, stepper_1.step);
+                        XGpio_DiscreteWrite(&stepper_1.EN, 1, stepper_1.en);
+                        stepper_loop_state ++;
+                    }
+                    break;              
+                case 31:
                     stepper_done = XGpio_DiscreteRead(&stepper_1.DONE, 1);
                     if(stepper_done == 1){
                         stepper_1.en = STEPPER_DISABLE;
@@ -298,6 +328,8 @@ uint8_t Stepper_1_cmd(void){
         stepper_loop_state = 10;
     } else if (mode == 2){
         stepper_loop_state = 20;
+    } else if (mode == 3){
+        stepper_loop_state = 30;
     } else {
         return PARAM_OUT_OF_RANGE_ERROR_CODE;
     }
