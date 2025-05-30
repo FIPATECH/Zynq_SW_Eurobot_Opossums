@@ -2,7 +2,7 @@
 
 float last_valid_mesure1 = 0, last_valid_mesure2 = 0, last_valid_mesure3 = 0;
 
-float seuil_rejet = 100.0f; // seuil de rejet des mesures
+float seuil_rejet = 50.0f; // seuil de rejet des mesures
 
 void Asserv_PWM_calculator(ESC_Command *commande) {
 	float measure1 = Speed_1;
