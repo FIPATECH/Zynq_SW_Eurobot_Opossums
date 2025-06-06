@@ -11,13 +11,11 @@ Position position_robot; // Position odometrique
 Position position_robot_odom; // Position odometrique pur
 Acceleration acceleration_robot;    // en repere relatif
 
-float Speed_1, Speed_2, Speed_3;
-float Cumulated_Speed_1, Cumulated_Speed_2, Cumulated_Speed_3;
+float Speed_1, Speed_2, Speed_3, Speed_4; // vitesse moyenne des roues en m/s
+float Cumulated_Speed_1, Cumulated_Speed_2, Cumulated_Speed_3, Cumulated_Speed_4; // vitesse cumulee des roues en m/s
 
 
 /******************************    Fonctions    *******************************/
-
-// initialiser l'odometrie
 void odo_init(void) {
     odo_set_spacing(DEFAULT_ODO_SPACING);
 
@@ -36,11 +34,8 @@ void odo_init(void) {
     acceleration_robot.ax = 0;
     acceleration_robot.ay = 0;
     acceleration_robot.at = 0;
-
-    // xil_printf("Odo init done\n");
 }
 
-// assigner une valeur e l'ecart entre les roues d'odometrie
 void odo_set_spacing(float param_spacing) {
     robot_wheel_distance = param_spacing;
 }
@@ -50,16 +45,19 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3, 
     float Odo_Speed_1 = (float)((Rotor_RPM1*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0)); //36 reducteur du moteur
     float Odo_Speed_2 = (float)((Rotor_RPM2*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
     float Odo_Speed_3 = (float)((Rotor_RPM3*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
+    float Odo_Speed_4 = (float)((Rotor_RPM4*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
 
     // vitesse cumulee roues
     Cumulated_Speed_1 += Odo_Speed_1;
     Cumulated_Speed_2 += Odo_Speed_2;
     Cumulated_Speed_3 += Odo_Speed_3;
+    Cumulated_Speed_4 += Odo_Speed_4;
     
     // maj des vitesses odometrique pur pour le calcul de la position
-    speed_robot_odom.vx = (2.0f/3.0f) * (Odo_Speed_1) - (1.0f/3.0f) * (Odo_Speed_2 + Odo_Speed_3);
-    speed_robot_odom.vy = (sqrtf(3.0f) / 3.0f) * (Odo_Speed_2 - Odo_Speed_3); // translation avant (X robot)
-    speed_robot_odom.vt = -(Odo_Speed_1 + Odo_Speed_2 + Odo_Speed_3) / (3.0f * robot_wheel_distance);
+    float inv_sqrt2 = 0.70710678f; // 1/sqrt(2)
+    speed_robot_odom.vx = inv_sqrt2 * (Odo_Speed_1 + Odo_Speed_4 - Odo_Speed_2 - Odo_Speed_3) / 4.0f;
+    speed_robot_odom.vy = inv_sqrt2 * (Odo_Speed_1 + Odo_Speed_2 - Odo_Speed_3 - Odo_Speed_4) / 4.0f;
+    speed_robot_odom.vt = -(Odo_Speed_1 - Odo_Speed_2 + Odo_Speed_3 - Odo_Speed_4) / (4.0f * robot_wheel_distance);
 
     // maj des vitesses odometrique cumulé pour le calcul de la vitesse
     cumulated_speed.vx += speed_robot_odom.vx;
@@ -87,10 +85,12 @@ void odo_speed_cumulate_step(float nbr_step) {
     Speed_1 = (Cumulated_Speed_1 / nbr_step);
     Speed_2 = (Cumulated_Speed_2 / nbr_step);
     Speed_3 = (Cumulated_Speed_3 / nbr_step);
+    Speed_4 = (Cumulated_Speed_4 / nbr_step);
 
     Cumulated_Speed_1 = 0;
     Cumulated_Speed_2 = 0;
     Cumulated_Speed_3 = 0;
+    Cumulated_Speed_4 = 0;
     
     speed_robot.vx = (cumulated_speed.vx / nbr_step);
     speed_robot.vy = (cumulated_speed.vy / nbr_step);
