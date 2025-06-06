@@ -12,10 +12,11 @@
 #define BLOCK_MAX_TIME  2000    // temps en ms au bout duquel il se verouille
 extern uint16_t Asserv_Full_Count;  // variable a remettre a 0 pour recuperer le droit de bouger en cas de pb..
 
-extern float Consigne1, Consigne2, Consigne3;
+extern float Consigne1, Consigne2, Consigne3, Consigne4;
 extern int16_t Rotor_RPM1;
 extern int16_t Rotor_RPM2;
 extern int16_t Rotor_RPM3;
+extern int16_t Rotor_RPM4;
 
 extern int enable_kalman;
 

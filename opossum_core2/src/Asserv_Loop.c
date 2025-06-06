@@ -13,18 +13,22 @@ uint16_t Asserv_Full_Count = 0;
 CAN_Message CAN_Motor1;
 CAN_Message CAN_Motor2;
 CAN_Message CAN_Motor3;
+CAN_Message CAN_Motor4;
 
 uint8_t Channel_Motor1 = 0;
 uint8_t Channel_Motor2 = 1;
 uint8_t Channel_Motor3 = 2;
+uint8_t Channel_Motor4 = 3;
 
 int16_t Rotor_RPM1 = 0;
 int16_t Rotor_RPM2 = 0;
 int16_t Rotor_RPM3 = 0;
+int16_t Rotor_RPM4 = 0;
 
 float wheel_speed1 = 0;
 float wheel_speed2 = 0;
 float wheel_speed3 = 0;
+float wheel_speed4 = 0;
 
 uint8_t stop = 0;
 
@@ -53,14 +57,17 @@ void Init_Asserv(void) {
     Consigne.command1 = 0;
     Consigne.command2 = 0;
     Consigne.command3 = 0;
+    Consigne.command4 = 0;
 
     Wanted_Forced_Consigne.command1 = 0;
     Wanted_Forced_Consigne.command2 = 0;
     Wanted_Forced_Consigne.command3 = 0;
+    Wanted_Forced_Consigne.command4 = 0;
 
     old_Consigne.command1 = 0;
     old_Consigne.command2 = 0;
     old_Consigne.command3 = 0;
+    old_Consigne.command4 = 0;
 
     enable_kalman = 1;
 
@@ -79,7 +86,7 @@ void Asserv_Loop(void)
                         tampon = Timer_us1;
                         #endif
             Last_Timer_Asserv += ODO_EVERY_MS;
-            odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);       
+            odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3, speed_motor_4);       
             Asserv_State = 2;
                         #ifdef DEBUG_TIMING
                         local_data.asserv_step_timing.odo_step_1 = Timer_us1 - tampon;
@@ -179,7 +186,8 @@ void Asserv_Loop(void)
     } else if (Asserv_State == 40) {
         if ((Wanted_Forced_Consigne.command1 != 0) || 
             (Wanted_Forced_Consigne.command2 != 0) || 
-            (Wanted_Forced_Consigne.command3 != 0)) {
+            (Wanted_Forced_Consigne.command3 != 0) ||
+            (Wanted_Forced_Consigne.command4 != 0)) {
 
             Consigne = Wanted_Forced_Consigne;
         }
@@ -187,14 +195,16 @@ void Asserv_Loop(void)
         float Abs_Consigne1 = Abs_Ternaire(Consigne.command1);
         float Abs_Consigne2 = Abs_Ternaire(Consigne.command2);
         float Abs_Consigne3 = Abs_Ternaire(Consigne.command3);
+        float Abs_Consigne4 = Abs_Ternaire(Consigne.command4);
         
-        float Consigne_Max = Max_Trois(Abs_Consigne1, Abs_Consigne2, Abs_Consigne3);
+        float Consigne_Max = Max_Quatre(Abs_Consigne1, Abs_Consigne2, Abs_Consigne3, Abs_Consigne4);
 
         if (Consigne_Max > 10000) {
             float Consigne_rapport = 10000.0/Consigne_Max;
             Consigne.command1 *= Consigne_rapport;
             Consigne.command2 *= Consigne_rapport;
             Consigne.command3 *= Consigne_rapport;
+            Consigne.command4 *= Consigne_rapport;
         }
 
         old_Consigne = Consigne;
@@ -208,8 +218,9 @@ void Asserv_Loop(void)
             motor1_current_order = Consigne.command1;
             motor2_current_order = Consigne.command2;
             motor3_current_order = Consigne.command3;
+            motor4_current_order = Consigne.command4;
         }
-        CAN_transmit_motor(motor1_current_order, motor2_current_order, motor3_current_order);
+        CAN_transmit_motor(motor1_current_order, motor2_current_order, motor3_current_order, motor4_current_order);
         Asserv_State = 60;
 
     } else if (Asserv_State == 60) {

@@ -2,7 +2,7 @@
 #define __ODO_H_
 
 
-extern float Speed_1, Speed_2, Speed_3;
+extern float Speed_1, Speed_2, Speed_3, Speed_4;
 
 extern float robot_wheel_distance;
 

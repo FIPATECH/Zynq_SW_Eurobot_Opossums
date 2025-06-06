@@ -30,18 +30,22 @@ extern XCanPs CanInstance;
 extern int motor1_current_order;
 extern int motor2_current_order;
 extern int motor3_current_order;
+extern int motor4_current_order;
 
 extern int angle_motor_1;
 extern int angle_motor_2;
 extern int angle_motor_3;
+extern int angle_motor_4;
  
 extern int torque_motor_1;
 extern int torque_motor_2;
 extern int torque_motor_3;
+extern int torque_motor_4;
  
 extern int speed_motor_1;
 extern int speed_motor_2;
 extern int speed_motor_3;
+extern int speed_motor_4;
 
 typedef struct {
     float motor1;   
@@ -53,12 +57,14 @@ typedef struct {
     float motor1;   
     float motor2;
     float motor3;
+    float motor4;
 } ESC_Speed;
 
 typedef struct {
     float motor1;   
     float motor2;
     float motor3;
+    float motor4;
 } ESC_Angle;
 
 typedef struct {
@@ -163,8 +169,9 @@ void EventHandler(void *CallBackRef, u32 IntrMask);
  * @param motor1 Current order for motor 1.
  * @param motor2 Current order for motor 2.
  * @param motor3 Current order for motor 3.
+ * @param motor4 Current order for motor 4.
  */
-void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3);
+void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4);
 
 /**
  * @brief Initializes the variables used for CAN motor control.

@@ -46,7 +46,7 @@ int motor3_current_order = 0;
 int motor4_current_order = 0;
 
 
-void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3){
+void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4){
 	TxFrame[2] = (u32)(motor2_current_order & 0xFF) << 24 | 
 						((motor2_current_order >> 8) & 0xFF) << 16 | 
 						((motor1_current_order & 0xFF) << 8) | 
