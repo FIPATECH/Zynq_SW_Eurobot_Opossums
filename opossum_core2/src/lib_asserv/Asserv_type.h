@@ -56,6 +56,7 @@ typedef struct {
     PID_err err1;
     PID_err err2;
     PID_err err3;
+    PID_err err4;
 } PID_speed;
 
 
@@ -63,6 +64,7 @@ typedef struct{
     float command1;
     float command2;
     float command3;
+    float command4;
 } ESC_Command;
 
 extern ESC_Command Consigne;
