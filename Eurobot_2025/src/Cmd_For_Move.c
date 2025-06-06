@@ -178,6 +178,7 @@ uint8_t PWM_Func(void)
     if (Get_Param_Float(&cmd_esc.command1))    return PARAM_ERROR_CODE;
     if (Get_Param_Float(&cmd_esc.command2))    return PARAM_ERROR_CODE;
     if (Get_Param_Float(&cmd_esc.command3))    return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&cmd_esc.command4))    return PARAM_ERROR_CODE;
     
     // ecriture dans la mémoire partagée
     SEND_FIELD(shared_mem, cmd_esc);

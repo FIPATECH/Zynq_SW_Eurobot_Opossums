@@ -49,6 +49,7 @@ typedef struct{
     float command1;
     float command2;
     float command3;
+    float command4;
 } ESC_Command;
 
 typedef struct {
