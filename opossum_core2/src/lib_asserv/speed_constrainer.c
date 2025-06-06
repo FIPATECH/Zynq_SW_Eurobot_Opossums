@@ -8,7 +8,7 @@ Speed speed_order;
 Speed speed_order_constrained;
 Speed speed_order_constrained_1;
 
-float Speed_Order_1, Speed_Order_2, Speed_Order_3;
+float Speed_Order_1, Speed_Order_2, Speed_Order_3, Speed_Order_4;
 
 float robot_v_max;
 float robot_vt_max;
@@ -75,13 +75,18 @@ void constrain_acceleration_order(float period) {
         speed_order_constrained.vx = speed_order_constrained_1.vx;
         speed_order_constrained.vy = speed_order_constrained_1.vy;
     }
-    speed_order_constrained.vt = limit_float(speed_order_constrained_1.vt, speed_order_constrained.vt - delta_vt_max, speed_order_constrained.vt + delta_vt_max);
+    speed_order_constrained.vt = limit_float(
+        speed_order_constrained_1.vt, 
+        speed_order_constrained.vt - delta_vt_max, 
+        speed_order_constrained.vt + delta_vt_max
+    );
 
-    // process wheel speed
-    float vt_component = -(speed_order_constrained.vt * robot_wheel_distance);
-    Speed_Order_1 = vt_component + speed_order_constrained.vx;
-    Speed_Order_2 = vt_component - (speed_order_constrained.vx * 0.5f) + (speed_order_constrained.vy * (sqrtf(3.0f) / 2.0f)); 
-    Speed_Order_3 = vt_component - (speed_order_constrained.vx * 0.5f) - (speed_order_constrained.vy * (sqrtf(3.0f) / 2.0f)); 
+    float inv_sqrt2 = 0.70710678f;  // 1 / sqrt(2)
+
+    Speed_Order_1 = inv_sqrt2 * (speed_order_constrained.vx + speed_order_constrained.vy) - robot_wheel_distance * speed_order_constrained.vt;  // avant-droite
+    Speed_Order_2 = inv_sqrt2 * (-speed_order_constrained.vx + speed_order_constrained.vy) - robot_wheel_distance * speed_order_constrained.vt; // arrière-droite
+    Speed_Order_3 = inv_sqrt2 * (-speed_order_constrained.vx - speed_order_constrained.vy) - robot_wheel_distance * speed_order_constrained.vt; // arrière-gauche
+    Speed_Order_4 = inv_sqrt2 * (speed_order_constrained.vx - speed_order_constrained.vy) - robot_wheel_distance * speed_order_constrained.vt;  // avant-gauche 
 }
 
 
