@@ -45,7 +45,7 @@ void odo_set_spacing(float param_spacing) {
     robot_wheel_distance = param_spacing;
 }
 
-void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3) {
+void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3, int16_t Rotor_RPM4) {
     // vitesse roues en m/s
     float Odo_Speed_1 = (float)((Rotor_RPM1*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0)); //36 reducteur du moteur
     float Odo_Speed_2 = (float)((Rotor_RPM2*PI*DEFAULT_SIZE_WHEEL)/(36.0*60.0));
