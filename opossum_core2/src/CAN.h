@@ -16,6 +16,7 @@
 #define CAN_MOTOR_1_ID 0x201
 #define CAN_MOTOR_2_ID 0x202
 #define CAN_MOTOR_3_ID 0x203
+#define CAN_MOTOR_4_ID 0x204
 
 /* Maximum CAN frame length in word */
 #define XCANPS_MAX_FRAME_SIZE_IN_WORDS (XCANPS_MAX_FRAME_SIZE / sizeof(u32))
@@ -73,21 +74,109 @@ typedef struct {
     uint8_t valid_bytes;     // the number of valid bytes in the payload
 } CAN_Message;
 
+/**
+ * @brief Initializes the CAN controller.
+ * 
+ * @return Returns XST_SUCCESS on success, or an error code on failure.
+ */
 int Init_CAN(void);
+
+/**
+ * @brief Configures the CAN acceptance filters.
+ * 
+ * @return Returns XST_SUCCESS on success, or an error code on failure.
+ */
 int CAN_configure_filters(void);
 
+/**
+ * @brief Creates a CAN message.
+ * 
+ * @param message Pointer to the CAN_Message structure to be filled.
+ * @param id The 11-bit message ID.
+ * @param buffer The buffer number for the message.
+ * @param payload Pointer to the data payload of the message.
+ * @param valid_bytes The number of valid bytes in the payload.
+ */
 void CAN_create_message(CAN_Message *message, uint16_t id, uint8_t buffer, uint8_t *payload, uint8_t valid_bytes);
+
+/**
+ * @brief Transmits a CAN frame.
+ * 
+ * @param InstancePtr Pointer to the XCanPs instance.
+ */
 void CAN_transmit(XCanPs *InstancePtr);
 
+/**
+ * This function configures the CAN controller with the following settings:
+ * - Baud Rate Prescalar
+ * - Bit Timing Register 0 (BTR0)
+ * - Bit Timing Register 1 (BTR1)
+ * 
+ * @param	InstancePtr is a pointer to the XCanPs instance.
+ * 
+ * @return	None.
+ * 
+ * @note		None.
+ */
 int Config(XCanPs *InstancePtr);
+
+/**
+ * @brief Sends a CAN frame.
+ * 
+ * @param InstancePtr Pointer to the XCanPs instance.
+ */
 void SendFrame(XCanPs *InstancePtr);
 
+/**
+ * @brief Handler for the CAN send interrupt.
+ * 
+ * @param CallBackRef Pointer to the callback reference (XCanPs instance).
+ */
 void SendHandler(void *CallBackRef);
+
+/**
+ * @brief Handler for the CAN receive interrupt.
+ * 
+ * @param CallBackRef Pointer to the callback reference (XCanPs instance).
+ */
 void RecvHandler(void *CallBackRef);
 
+/**
+ * @brief Handler for the CAN error interrupt.
+ * 
+ * @param CallBackRef Pointer to the callback reference (XCanPs instance).
+ * @param ErrorMask The error mask indicating the type of error.
+ */
 void ErrorHandler(void *CallBackRef, u32 ErrorMask);
+
+/**
+ * @brief Handler for the CAN event interrupt.
+ * 
+ * @param CallBackRef Pointer to the callback reference (XCanPs instance).
+ * @param IntrMask The interrupt mask indicating the type of event.
+ */
 void EventHandler(void *CallBackRef, u32 IntrMask);
 
+/**
+ * @brief Transmits motor control commands via CAN.
+ * 
+ * @param motor1 Current order for motor 1.
+ * @param motor2 Current order for motor 2.
+ * @param motor3 Current order for motor 3.
+ */
 void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3);
 
+/**
+ * @brief Initializes the variables used for CAN motor control.
+ */
 void Init_CAN_MOTOR_variables(void);
+
+/**
+ * @brief Command function for motor control via CAN.
+ * 
+ * This function retrieves parameters for motor control and sends the commands
+ * to the motors via CAN.
+ * 
+ * @return Returns 0 on success, or an error code on failure.
+ */
+uint8_t Motor_cmd(void);

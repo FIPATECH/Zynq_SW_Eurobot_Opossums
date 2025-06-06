@@ -12,14 +12,17 @@ static u32 RxFrame[XCANPS_MAX_FRAME_SIZE_IN_WORDS];
 int angle_motor_1 = 0;
 int angle_motor_2 = 0;
 int angle_motor_3 = 0;
+int angle_motor_4 = 0;
 
 int torque_motor_1 = 0;
 int torque_motor_2 = 0;
 int torque_motor_3 = 0;
+int torque_motor_4 = 0;
 
 int speed_motor_1 = 0;
 int speed_motor_2 = 0;
 int speed_motor_3 = 0;
+int speed_motor_4 = 0;
 
 /*
  * Shared variables used to test the callbacks.
@@ -40,6 +43,7 @@ int nbr_loop = 0;
 int motor1_current_order = 0;
 int motor2_current_order = 0;
 int motor3_current_order = 0;
+int motor4_current_order = 0;
 
 
 void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3){
@@ -47,7 +51,9 @@ void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3){
 						((motor2_current_order >> 8) & 0xFF) << 16 | 
 						((motor1_current_order & 0xFF) << 8) | 
 						((motor1_current_order >> 8) & 0xFF);
-	TxFrame[3] = (u32)(motor3_current_order & 0xFF) << 8 | 
+	TxFrame[3] = (u32)(motor4_current_order & 0xFF) << 24 | 
+						((motor4_current_order >> 8) & 0xFF) << 16 | 
+						((motor3_current_order & 0xFF) << 8) | 
 						((motor3_current_order >> 8) & 0xFF);
 	SendFrame(&CanInstance);
 }
@@ -56,14 +62,17 @@ void Init_CAN_MOTOR_variables(void){
 	angle_motor_1 = 0;
 	angle_motor_2 = 0;
 	angle_motor_3 = 0;
+	angle_motor_4 = 0;
 
 	torque_motor_1 = 0;
 	torque_motor_2 = 0;
 	torque_motor_3 = 0;
+	torque_motor_4 = 0;
 
 	speed_motor_1 = 0;
 	speed_motor_2 = 0;
 	speed_motor_3 = 0;
+	speed_motor_4 = 0;
 }
 
 /*****************************************************************************/
@@ -241,20 +250,6 @@ void CAN_transmit(XCanPs *InstancePtr){
 }
 
 
-/*******************************************************/
-/**
- * This function configures the CAN controller with the following settings:
- * - Baud Rate Prescalar
- * - Bit Timing Register 0 (BTR0)
- * - Bit Timing Register 1 (BTR1)
- * 
- * @param	InstancePtr is a pointer to the XCanPs instance.
- * 
- * @return	None.
- * 
- * @note		None.
- */
-/*******************************************************/
 int Config(XCanPs *InstancePtr){
 	/*
 	 * Enter configuration mode
@@ -414,6 +409,19 @@ void RecvHandler(void *CallBackRef)
 		byte2 = RxFrame[3] & 0xFF;
 
 		torque_motor_3 = (int16_t)((byte2 << 8) | byte1);
+	}else if(RxFrame[0] == (u32)XCanPs_CreateIdValue((u32)CAN_MOTOR_4_ID, 0, 0, 0, 0)){
+		byte1 = (RxFrame[2] >> 24) & 0xFF;
+		byte2 = (RxFrame[2] >> 16) & 0xFF;
+		byte3 = (RxFrame[2] >> 8) & 0xFF;
+		byte4 = RxFrame[2] & 0xFF;
+
+		angle_motor_4 = (int16_t)((byte4 << 8) | byte3);
+		speed_motor_4 = (int16_t)((byte2 << 8) | byte1);
+
+		byte1 = (RxFrame[3] >> 8) & 0xFF;
+		byte2 = RxFrame[3] & 0xFF;
+
+		torque_motor_4 = (int16_t)((byte2 << 8) | byte1);
 	}
 	RecvDone = TRUE;
 }
