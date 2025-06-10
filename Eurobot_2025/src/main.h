@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <sleep.h>
 #include <xil_io.h>
 #include <xparameters.h>
 #include <math.h>
 
+#include "xpseudo_asm.h"
+#include "xil_mmu.h"
 #include "platform.h"
 #include "xil_printf.h"
 #include "xgpio.h"

@@ -20,3 +20,10 @@ Eurobot_2025/src/.vscode/settings.json
 Zynq_block_design_wrapper/
 /Eurobot_2025/.vscode/
 .vscode/
+
+
+**/opossum_core2/.cproject
+**/opossum_core2/.project
+**/opossum_core2/opossum_core2.project
+**/opossum_core2/.gitignore
+**/opossum_core2/opossum_core2.prj

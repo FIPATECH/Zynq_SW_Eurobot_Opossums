@@ -2,106 +2,138 @@
 #include "lib_asserv/Lib_Asserv.h"
 
 
+#define sev() __asm__("sev")
+#define ARM1_STARTADR 0xFFFFFFF0
+#define ARM1_BASEADDR 0x10080000
+#define COMM_VAL (*(volatile unsigned long *)(0xFFFF0000))
+
 int old_timer_ms1 = 0;
 int Status = 0;
 
-int main()
-{
-    u8 c;
-    init_platform();
+// int main()
+// {
+//     u8 c;
+//     init_platform();
 
-    Status = SetupInterruptSystem(&InterruptController);
+//     Status = SetupInterruptSystem(&InterruptController);
 
-    if (Status != XST_SUCCESS) {
-        xil_printf("Interrupt Setup Failed\r\n");
-    } else {
-        xil_printf("Interrupt Setup Done\r\n");
-    }
+//     if (Status != XST_SUCCESS) {
+//         xil_printf("Interrupt Setup Failed\r\n");
+//     } else {
+//         xil_printf("Interrupt Setup Done\r\n");
+//     }
 
-    Status = UART_Init();
-    if (Status != XST_SUCCESS) {
-        xil_printf("UART init failed\n\r");
-        Status = 0;
-    } else {
-        xil_printf("UART init done\n\r");
-        Status = 0;
-    }
+//     Status = UART_Init();
+//     if (Status != XST_SUCCESS) {
+//         xil_printf("UART init failed\n\r");
+//         Status = 0;
+//     } else {
+//         xil_printf("UART init done\n\r");
+//         Status = 0;
+//     }
 
-    Status = Init_Timer_ms1();
-    if (Status != XST_SUCCESS) {
-        xil_printf("Timer init failed\n\r");
-        Status = 0;
-    } else {
-        xil_printf("Timer init done\n\r");
-        Status = 0;
-    }
+//     Status = Init_Timer_ms1();
+//     if (Status != XST_SUCCESS) {
+//         xil_printf("Timer init failed\n\r");
+//         Status = 0;
+//     } else {
+//         xil_printf("Timer init done\n\r");
+//         Status = 0;
+//     }
 
-   Status = init_CAN();
-   if (Status != XST_SUCCESS) {
-       xil_printf("CAN init failed\n\r");
-       Status = 0;
-   } else {
-       xil_printf("CAN init done\n\r");
-       Status = 0;
-   }
+//    Status = init_CAN();
+//    if (Status != XST_SUCCESS) {
+//        xil_printf("CAN init failed\n\r");
+//        Status = 0;
+//    } else {
+//        xil_printf("CAN init done\n\r");
+//        Status = 0;
+//    }
 
-    // init_QEI();
-    init_CAN_MOTOR_variables();
-    PWM_Init();
-    Std_Com_Init();
-    init_AU();
-    ws2812b_init();
-    init_switch();
-    Init_Pump();
-    Init_Valve();
-    Init_Asserv();
-    Init_Stepper();
-    xil_printf("Init done\n\r");
+//     // init_QEI();
+//     init_CAN_MOTOR_variables();
+//     PWM_Init();
+//     Std_Com_Init();
+//     init_AU();
+//     ws2812b_init();
+//     init_switch();
+//     Init_Pump();
+//     Init_Valve();
+//     Init_Asserv();
+//     Init_Stepper();
+//     xil_printf("Init done\n\r");
 
-    while(1){
-        if (Timer_ms1 - old_timer_ms1 >= 100) {
-            old_timer_ms1 = Timer_ms1;
-            if (AU_state == 1){
-                // xil_printf("AU 2\n\r");            
-            }
-        }
+//     while(1){
+//         if (Timer_ms1 - old_timer_ms1 >= 100) {
+//             old_timer_ms1 = Timer_ms1;
+//             if (AU_state == 1){
+//                 // xil_printf("AU 2\n\r");            
+//             }
+//         }
 
-        if (Get_Std_In(&c)) {
-            Interp(c);
-        }
+//         if (Get_Std_In(&c)) {
+//             Interp(c);
+//         }
 
         
 
-        AU_Loop();
-        LED_loop();
-        Std_Com_Loop();
+//         AU_Loop();
+//         LED_loop();
+//         Std_Com_Loop();
 
-        if(AU_state == 1){
-            LED_AU();
-            motion_free();
-            init_CAN_MOTOR_variables();
-            Init_Pump();
-            PWM_Init();
-            Init_Asserv();
-        }else{
-            // stepper functions
-            Init_Stepper_Loop();
-            Stepper_Loop();
+//         if(AU_state == 1){
+//             LED_AU();
+//             motion_free();
+//             init_CAN_MOTOR_variables();
+//             Init_Pump();
+//             PWM_Init();
+//             Init_Asserv();
+//         }else{
+//             // stepper functions
+//             Init_Stepper_Loop();
+//             Stepper_Loop();
 
-            LED_CLASSIC_MODE();
-            MaP_Asserv_Loop();
-            Asserv_Loop();
-            PWM_Loop();
+//             LED_CLASSIC_MODE();
+//             MaP_Asserv_Loop();
+//             Asserv_Loop();
+//             PWM_Loop();
 
-            Pump_Loop();
-            Valve_Loop();
+//             Pump_Loop();
+//             Valve_Loop();
+//         }
+//         IHM_loop();
+
+//         // Asserv_test_loop();
+//     }
+//     cleanup_platform();
+//     return 0;
+// }
+
+
+int main()
+{
+    init_platform();
+    COMM_VAL = 0;
+
+    //Disable cache on OCM    
+    // S=b1 TEX=b100 AP=b11, Domain=b1111, C=b0, B=b0
+    Xil_SetTlbAttributes(0xFFFF0000,0x14de2); 
+
+    print("ARM0: writing startaddress for ARM1\n\r");
+    Xil_Out32(ARM1_STARTADR, ARM1_BASEADDR);
+    dmb(); //waits until write has finished
+
+    print("ARM0: sending the SEV to wake up ARM1\n\r");
+    sev();
+
+    while(1){
+        print("Hello World - ARM0\n\r");
+        sleep(1);
+        COMM_VAL = 1;
+        while(COMM_VAL == 1){
         }
-        IHM_loop();
-
-        // Asserv_test_loop();
     }
+
     cleanup_platform();
     return 0;
 }
-
-
