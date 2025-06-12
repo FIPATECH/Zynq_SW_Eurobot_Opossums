@@ -82,11 +82,12 @@ int main()
     // Init_Asserv();
     // Init_Stepper();
     xil_printf("Init done\n\r");
-
+    int counter = 0;
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            printf("ARM0: Timer value: %d ms\n\r", Timer_ms1);
+            counter++;
+            printf("ARM0: counter: %d\n\r", counter);
         }
 
         // Check if the timer has been updated

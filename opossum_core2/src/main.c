@@ -42,7 +42,6 @@ int main()
     while(1){
         if(Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            xil_printf("ARM1: Timer value: %d ms\n\r", Timer_ms1);
         }
 
 
