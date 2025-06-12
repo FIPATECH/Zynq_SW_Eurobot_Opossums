@@ -7,17 +7,17 @@ XScuTimer *TimerInstancePtr = &TimerInstance;
 XScuGic IntcInstance;
 XScuGic_Config *IntcConfig;
 
-int Timer_ms1 = 0;
+int Timer_us1 = 0;
 
 int old_Timer = 0;
 
 
 
-int Init_Timer_ms1(void){
+int Init_Timer_us1(void){
 	int Status = 0;
 
 	xil_printf("========================================\n");
-	xil_printf("=           Init Timer_ms1             =\n");
+	xil_printf("=           Init Timer_us1             =\n");
 	xil_printf("========================================\n");
 	ConfigPtr = XScuTimer_LookupConfig(TIMER_DEVICE_ID);
 
@@ -46,7 +46,7 @@ int Init_Timer_ms1(void){
 	/*
 	 * Steup prescaler
 	*/
-	XScuTimer_SetPrescaler(TimerInstancePtr, TIMER_1ms_PRESCALER);
+	XScuTimer_SetPrescaler(TimerInstancePtr, TIMER_1us_PRESCALER);
 
 	/*
 	 * Enable Auto reload mode.
@@ -56,7 +56,7 @@ int Init_Timer_ms1(void){
 	/*
 	 * Load the timer counter register.
 	 */
-	XScuTimer_LoadTimer(TimerInstancePtr, TIMER_1ms_LOAD_VALUE);
+	XScuTimer_LoadTimer(TimerInstancePtr, TIMER_1us_LOAD_VALUE);
 
 	/*
 	 * Start the timer counter and then wait for it to timeout
@@ -93,12 +93,12 @@ void TimerIntrHandler(void *CallBackRef)
 	 */
 	if (XScuTimer_IsExpired(TimerInstancePtr)) {
 		XScuTimer_ClearInterruptStatus(TimerInstancePtr);
-		Timer_ms1 += 1;
+		Timer_us1 += 1;
 	}
 }
 
 void Delay_ms(int ms) {
-	u32 old_Timer = Timer_ms1;
-	while (Timer_ms1 - old_Timer < ms);
+	u32 old_Timer = Timer_us1;
+	while (Timer_us1 - old_Timer < ms);
 }
 
