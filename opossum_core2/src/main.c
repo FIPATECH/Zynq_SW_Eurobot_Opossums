@@ -14,6 +14,7 @@ typedef struct {
 sharedCommand *shared_mem = (sharedCommand *)SHARED_MEMORY_BASEADDR;
 
 int old_timer_us1 = 0;
+int old_timer_ms1 = 0;
 
 int main()
 {
@@ -43,9 +44,9 @@ int main()
     shared_mem->flag_position_ack = 0;
     int counter = 0;
     while(1){
-        if(Timer_us1 - old_timer_us1 >= 1000000) {
+        if(Timer_ms1 - old_timer_ms1 >= 1000) {
             counter++;
-            old_timer_us1 = Timer_us1;
+            old_timer_ms1 = Timer_ms1;
             // Update the shared memory with the new timer value
             __asm__ volatile("dmb sy");
             shared_mem->Timer = counter;
@@ -56,11 +57,6 @@ int main()
             // Print the timer value for debugging
             // xil_printf("CPU1: Timer value updated: %d ms\n\r", Timer_us1);
         }
-
-        // while (shared_mem->flag_position_ack == 0) {
-        //     // Wait for the acknowledgment from CORE0
-        //     // This loop will block until CORE0 acknowledges the new position
-        // }
     }
 
     cleanup_platform();
