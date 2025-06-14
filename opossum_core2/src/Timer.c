@@ -8,10 +8,9 @@ XScuGic IntcInstance;
 XScuGic_Config *IntcConfig;
 
 int Timer_us1 = 0;
+int Timer_ms1 = 0;
 
 int old_Timer = 0;
-
-
 
 int Init_Timer_us1(void){
 	int Status = 0;
@@ -93,12 +92,25 @@ void TimerIntrHandler(void *CallBackRef)
 	 */
 	if (XScuTimer_IsExpired(TimerInstancePtr)) {
 		XScuTimer_ClearInterruptStatus(TimerInstancePtr);
-		Timer_us1 += 1;
+		if (Timer_us1 < 0xFFFFFFFF) {
+			Timer_us1++;
+		} else {
+			Timer_us1 = 0; // Reset to zero if overflow occurs
+		}
+
+		// Increment the millisecond timer based on the microsecond timer
+		if (Timer_us1 % 1000 == 0) {
+			if (Timer_ms1 < 0xFFFFFFFF) {
+				Timer_ms1++;
+			} else {
+				Timer_ms1 = 0; // Reset to zero if overflow occurs
+			}		
+		}
 	}
 }
 
 void Delay_ms(int ms) {
-	u32 old_Timer = Timer_us1;
-	while (Timer_us1 - old_Timer < ms);
+	u32 old_Timer = Timer_ms1;
+	while (Timer_ms1 - old_Timer < ms);
 }
 

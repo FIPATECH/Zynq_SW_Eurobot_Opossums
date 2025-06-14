@@ -8,6 +8,7 @@
 extern XScuTimer TimerInstance;
 
 extern int Timer_us1;
+extern int Timer_ms1;
 
 int Init_Timer_us1(void);
 void TimerIntrHandler(void *CallBackRef);
