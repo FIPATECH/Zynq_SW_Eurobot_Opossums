@@ -25,24 +25,41 @@ void init_shared_memory() {
     shared_mem->flag_pos_done_valid = 0;
     shared_mem->flag_pos_done_ack = 0;
 
-    shared_mem->flag_timer_valid = 0;
-    shared_mem->flag_timer_ack = 0;
+    shared_mem->flag_Timer_ms1_valid = 0;
+    shared_mem->flag_Timer_ms1_ack = 0;
     
     // Ensure writes are complete
     __asm__ volatile("dsb sy");
 }
 
+void send_to_other_core(const void *data, size_t size,
+                        volatile void *dest,
+                        volatile uint32_t *flag_valid,
+                        volatile uint32_t *flag_ack) {
+    // Ne pas écraser si pas encore lu
+    if (*flag_valid && !(*flag_ack)) return;
 
-void send_timer_to_core0(int timer_ms) {
-    // Attendre que l'ancien timer ait été pris en compte
-    if (shared_mem->flag_timer_valid && !shared_mem->flag_timer_ack) {
-        return; // CORE0 n'a pas encore lu l'ancien timer
+    // Copier les données dans la mémoire partagée
+    memcpy((void *)dest, data, size);
+
+    __asm__ volatile("dsb sy");
+
+    *flag_valid = 1;
+    *flag_ack = 0;
+}
+
+int check_from_other_core(void *data_out, size_t size,
+                          volatile void *src,
+                          volatile uint32_t *flag_valid,
+                          volatile uint32_t *flag_ack) {
+    if (*flag_valid) {
+        memcpy(data_out, (const void *)src, size);
+
+        __asm__ volatile("dsb sy");
+
+        *flag_ack = 1;
+        *flag_valid = 0;
+        return 1; // Data received
     }
-
-    shared_mem->Timer = timer_ms;
-
-    __asm__ volatile("dsb sy"); // S'assurer que Timer est bien écrit avant le flag
-
-    shared_mem->flag_timer_valid = 1;
-    shared_mem->flag_timer_ack = 0;
+    return 0; // Nothing to read
 }

@@ -84,7 +84,11 @@ int main()
             old_timer_ms1 = Timer_ms1;
             
             printf("ARM0: Timer_ms1: %d\n\r", Timer_ms1);
-            check_timer_from_core1();
+            if(CHECK_FIELD(shared_mem, Timer_ms1)) {
+                printf("ARM0: Timer_ms1 ARM1: %d\n\r", Timer_ms1);
+            } else {
+                printf("ARM0: No Timer_ms1 received from ARM1\n\r");
+            }
         }
 
 

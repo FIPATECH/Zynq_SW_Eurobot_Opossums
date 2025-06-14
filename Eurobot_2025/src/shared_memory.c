@@ -8,18 +8,35 @@ void init_shared_memory() {
     // Xil_SetTlbAttributes(SHARED_MEMORY_BASEADDR,0x14de2);
 }
 
-void check_timer_from_core1(){
-    if (shared_mem->flag_timer_valid) {
-        int received_timer = shared_mem->Timer;
 
-        // Utiliser la valeur reçue
-        printf("Reçu Timer = %d ms\n", received_timer);
+void send_to_other_core(const void *data, size_t size,
+                        volatile void *dest,
+                        volatile uint32_t *flag_valid,
+                        volatile uint32_t *flag_ack) {
+    // Ne pas écraser si pas encore lu
+    if (*flag_valid && !(*flag_ack)) return;
 
-        __asm__ volatile("dsb sy"); // S'assurer que la lecture est bien finie avant ack
+    // Copier les données dans la mémoire partagée
+    memcpy((void *)dest, data, size);
 
-        // Envoyer l'ack
-        shared_mem->flag_timer_ack = 1;
-        shared_mem->flag_timer_valid = 0;
+    __asm__ volatile("dsb sy");
+
+    *flag_valid = 1;
+    *flag_ack = 0;
+}
+
+int check_from_other_core(void *data_out, size_t size,
+                          volatile void *src,
+                          volatile uint32_t *flag_valid,
+                          volatile uint32_t *flag_ack) {
+    if (*flag_valid) {
+        memcpy(data_out, (const void *)src, size);
+
+        __asm__ volatile("dsb sy");
+
+        *flag_ack = 1;
+        *flag_valid = 0;
+        return 1; // Data received
     }
-
+    return 0; // Nothing to read
 }

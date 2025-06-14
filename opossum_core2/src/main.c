@@ -36,8 +36,11 @@ int main()
     while(1){
         if(Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-
-            send_timer_to_core0(Timer_ms1);            
+            // send_to_other_core(&Timer_ms1, sizeof(Timer_ms1),
+            //                 &shared_mem->Timer,
+            //                 &shared_mem->flag_timer_valid,
+            //                 &shared_mem->flag_timer_ack);
+            SEND_FIELD(shared_mem, Timer_ms1);            
         }
     }
 
