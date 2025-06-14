@@ -10,15 +10,6 @@
 int old_timer_ms1 = 0;
 int Status = 0;
 
-typedef struct {
-    u32 flag_position_valid; // CORE0 -> CORE1: 1 if position is valid, 0 otherwise
-    u32 flag_position_ack;   // CORE1 -> CORE0: 1 new position taken into account, 0 otherwise
-    int Timer; // Timer value in ms
-} sharedCommand; 
-
-#define SHARED_MEMORY_BASEADDR 0xFFFF0000 // Base address for shared memory
-sharedCommand *shared_mem = (sharedCommand *)SHARED_MEMORY_BASEADDR;
-
 int main()
 {
     //Disable cache on OCM    
@@ -84,30 +75,18 @@ int main()
     // Init_Valve();
     // Init_Asserv();
     // Init_Stepper();
+
+    init_shared_memory();
+
     xil_printf("Init done\n\r");
-    int counter = 0;
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            counter++;
-            printf("ARM0: counter: %d\n\r", counter);
+            
+            printf("ARM0: Timer_ms1: %d\n\r", Timer_ms1);
+            check_timer_from_core1();
         }
 
-        // Check if the timer has been updated
-        if (shared_mem->flag_position_valid == 1) {
-            // Read the timer value from shared memory
-            __asm__ volatile("dmb sy");
-            int timer_value = shared_mem->Timer;
-
-            // Print the timer value for debugging
-            xil_printf("ARM1: counter: %d\n\r", timer_value);
-
-            // Reset the flag after reading
-            shared_mem->flag_position_valid = 0;
-
-            // Set the acknowledgment flag to indicate that the position has been processed
-            shared_mem->flag_position_ack = 1;
-        }
 
         // if (Get_Std_In(&c)) {
         //     Interp(c);

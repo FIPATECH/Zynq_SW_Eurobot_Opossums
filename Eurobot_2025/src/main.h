@@ -48,5 +48,7 @@
 #include "Std_Com.h"
 #include "interpreteur.h"
 
-
+// shared memory part
+#include "shared_memory.h"
+#include "shared_memory_structure.h"
 //#define DEBUG
