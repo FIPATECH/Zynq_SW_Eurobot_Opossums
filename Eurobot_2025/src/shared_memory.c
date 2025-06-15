@@ -29,18 +29,17 @@ void send_to_other_core(const void *data, size_t size,
                         volatile void *dest,
                         volatile uint32_t *flag_valid,
                         volatile uint32_t *flag_ack) {
+
     // Copier les données dans la mémoire partagée
     memcpy((void *)dest, data, size);
 
-    // Barrière mémoire : assure que le memcpy est terminé avant de lever le flag
     __asm__ volatile("dsb sy" ::: "memory");
 
-    // Signaler que la donnée est disponible
     *flag_valid = 1;
     *flag_ack = 0;
 }
 
-int check_from_other_core(volatile void *data_out, size_t size,
+int check_from_other_core(void *data_out, size_t size,
                           volatile void *src,
                           volatile uint32_t *flag_valid,
                           volatile uint32_t *flag_ack) {

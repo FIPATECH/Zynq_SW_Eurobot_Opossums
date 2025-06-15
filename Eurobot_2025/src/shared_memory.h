@@ -2,29 +2,30 @@
 #define SHARED_MEMORY_H
 
 #include "shared_memory_structure.h"
-
 #define SHARED_MEMORY_BASEADDR 0xFFFF0000 // Base address for shared memory
 
+extern volatile sharedCommand *shared_mem;
+
 #define SEND_FIELD(data_ptr, field_name) \
-    send_to_other_core((const void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                       (volatile void *)&shared_mem->field_name, \
+    send_to_other_core(&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
+                       &shared_mem->field_name, \
                        &shared_mem->flag_##field_name##_valid, \
                        &shared_mem->flag_##field_name##_ack)
 
+// Envoi bloquant d'un champ de structure
 #define SEND_FIELD_BLOCKING(data_ptr, field_name) \
-    send_to_other_core_blocking((const void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                       (volatile void *)&shared_mem->field_name, \
+    send_to_other_core_blocking(&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
+                       &shared_mem->field_name, \
                        &shared_mem->flag_##field_name##_valid, \
                        &shared_mem->flag_##field_name##_ack)
 
-
+// Réception d’un champ de structure
 #define CHECK_FIELD(data_ptr, field_name) \
-    check_from_other_core((void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                          (volatile void *)&shared_mem->field_name, \
+    check_from_other_core((data_ptr), sizeof(shared_mem->field_name), \
+                          &shared_mem->field_name, \
                           &shared_mem->flag_##field_name##_valid, \
                           &shared_mem->flag_##field_name##_ack)
 
-extern volatile sharedCommand *shared_mem;
 /**
  * @brief Initialize the shared memory area
  * 
@@ -69,7 +70,7 @@ void send_to_other_core_blocking(const void *data, size_t size,
  * @param flag_ack pointer to the flag indicating if the data has been acknowledged
  * @return int 1 if data received, 0 if nothing to read
  */
-int check_from_other_core(volatile void *data_out, size_t size,
+int check_from_other_core(void *data_out, size_t size,
                           volatile void *src,
                           volatile uint32_t *flag_valid,
                           volatile uint32_t *flag_ack);

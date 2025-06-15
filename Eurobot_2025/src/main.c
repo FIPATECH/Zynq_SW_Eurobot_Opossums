@@ -70,12 +70,13 @@ int main()
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
             
-            // printf("ARM0: Timer_ms1: %d\n\r", Timer_ms1);
-            // if(CHECK_FIELD(shared_mem, Timer_ms1)) {
-            //     printf("ARM0: Timer_ms1 ARM1: %d\n\r", Timer_ms1);
-            // } else {
-            //     printf("ARM0: No Timer_ms1 received from ARM1\n\r");
-            // }
+            printf("ARM0: Timer_ms1: %d\n\r", Timer_ms1);
+            int Timer_ms;
+            if(CHECK_FIELD(shared_mem, Timer_ms)) {
+                printf("ARM0: Timer_ms1 ARM1: %d\n\r", Timer_ms);
+            } else {
+                printf("ARM0: No Timer_ms1 received from ARM1\n\r");
+            }
         }
 
 
