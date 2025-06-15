@@ -98,6 +98,70 @@ void check_for_cmd_loop(void){
                         motion_block();
                     }
                 }
+                check_for_cmd_state++;
+                break;
+            }
+            case 4: {
+                // Position lidar_position;
+                // int lidar_delay;
+                // if(CHECK_FIELD(&lidar_position, lidar_position) && 
+                //    CHECK_FIELD(&lidar_delay, lidar_delay)){
+                //     Set_Lidar_Cmd(lidar_position, lidar_delay);
+                // }
+                check_for_cmd_state++;
+                break;
+            }
+            case 5: {
+                Position set_pos;
+                if(CHECK_FIELD(&set_pos, set_pos)){
+                    set_position(set_pos);
+                }
+                check_for_cmd_state++;
+                break;
+            }
+            case 6: {
+                float vmax;
+                if(CHECK_FIELD(&vmax, vmax)){
+                    set_Constraint_vitesse_xy_max(vmax);
+                }
+                check_for_cmd_state++;
+                break;
+            }
+            case 7: {
+                float vtmax;
+                if(CHECK_FIELD(&vtmax, vtmax)){
+                    set_Constraint_vt_max(vtmax);
+                }
+                check_for_cmd_state++;
+                break;
+            }
+            case 8: {
+                float amax;
+                if(CHECK_FIELD(&amax, amax)){
+                    set_Constraint_a_xy_max(amax);
+                }
+                check_for_cmd_state++;
+                break;
+            }
+            case 9: {
+                ESC_Command cmd_esc;
+                if(CHECK_FIELD(&cmd_esc, cmd_esc)){
+                    Asserv_PWM_calculator(&cmd_esc);
+                }
+                check_for_cmd_state++;
+                break;
+            }
+            case 10: {
+                CHECK_FIELD(&enable_kalman, enable_kalman);
+                check_for_cmd_state++;
+                break;
+            }
+            case 11: {
+                int odo_spacing;
+                if(CHECK_FIELD(&odo_spacing, odo_spacing)){
+                    odo_set_spacing(odo_spacing);
+                }
+                check_for_cmd_state = 0; // Reset to start over
                 break;
             }
         }

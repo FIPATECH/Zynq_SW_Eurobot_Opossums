@@ -16,6 +16,8 @@ extern int16_t Rotor_RPM1;
 extern int16_t Rotor_RPM2;
 extern int16_t Rotor_RPM3;
 
+extern int enable_kalman;
+
 
 void Init_Asserv(void);
 

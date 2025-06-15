@@ -41,6 +41,7 @@ int main()
 
     while(1){
         AU_Loop();
+        check_for_cmd_loop();
         if(AU_state == 1){
             motion_free();
             Init_CAN_MOTOR_variables();
