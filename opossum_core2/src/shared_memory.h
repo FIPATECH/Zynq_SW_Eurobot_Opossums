@@ -6,12 +6,18 @@
 #define SHARED_MEMORY_BASEADDR 0xFFFF0000 // Base address for shared memory
 
 #define SEND_FIELD(data_ptr, field_name) \
-    send_to_other_core(&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                       &shared_mem->field_name, \
+    send_to_other_core((const void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
+                       (volatile void *)&shared_mem->field_name, \
                        &shared_mem->flag_##field_name##_valid, \
                        &shared_mem->flag_##field_name##_ack)
 
-                       
+#define SEND_FIELD_BLOCKING(data_ptr, field_name) \
+    send_to_other_core_blocking((const void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
+                       (volatile void *)&shared_mem->field_name, \
+                       &shared_mem->flag_##field_name##_valid, \
+                       &shared_mem->flag_##field_name##_ack)
+
+
 #define CHECK_FIELD(data_ptr, field_name) \
     check_from_other_core((data_ptr), sizeof(shared_mem->field_name), \
                           &shared_mem->field_name, \
@@ -24,7 +30,6 @@ extern volatile sharedCommand *shared_mem;
  * 
  */
 void init_shared_memory(void); 
-
 
 /**
  * @brief This function write data to the shared memory area
@@ -41,6 +46,20 @@ void send_to_other_core(const void *data, size_t size,
                          volatile uint32_t *flag_ack);
 
 /**
+ * @brief This function write data to the shared memory area only if ha been readby the other core
+ * 
+ * @param data pointer to the data to send 
+ * @param size size of the data to send
+ * @param dest pointer to the destination in shared memory
+ * @param flag_valid pointer to the flag indicating if the data is valid
+ * @param flag_ack pointer to the flag indicating if the data has been acknowledged
+ */
+void send_to_other_core_blocking(const void *data, size_t size,
+                         volatile void *dest,
+                         volatile uint32_t *flag_valid,
+                         volatile uint32_t *flag_ack);
+
+/**
  * @brief This function checks if there is data from the other core
  * 
  * @param data_out pointer to the data to receive
@@ -50,10 +69,13 @@ void send_to_other_core(const void *data, size_t size,
  * @param flag_ack pointer to the flag indicating if the data has been acknowledged
  * @return int 1 if data received, 0 if nothing to read
  */
-int check_from_other_core(void *data_out, size_t size,
+int check_from_other_core(volatile void *data_out, size_t size,
                           volatile void *src,
                           volatile uint32_t *flag_valid,
                           volatile uint32_t *flag_ack);
+
+
+
 
 
 #endif // SHARED_MEMORY_H
