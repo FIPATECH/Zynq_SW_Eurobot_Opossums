@@ -10,7 +10,8 @@
 #include "xil_exception.h"
 #include "xscutimer.h"
 #include "xscugic.h"
-
+#include "xcanps.h"
+#include "xgpio.h"
 
 #include "shared_memory.h"
 #include "shared_memory_structure.h"
@@ -19,3 +20,6 @@
 
 #include "interrupt.h"
 
+#include "Asserv_Loop.h"
+#include "CAN.h"
+#include "AU.h"

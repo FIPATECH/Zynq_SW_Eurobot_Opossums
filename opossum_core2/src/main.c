@@ -32,15 +32,18 @@ int main()
     // initialise shared memory
     init_shared_memory();
 
+    Init_AU();
+    Init_Asserv();
+    init_CAN();
 
     while(1){
-        if(Timer_ms1 - old_timer_ms1 >= 1000) {
-            old_timer_ms1 = Timer_ms1;
-            // send_to_other_core(&Timer_ms1, sizeof(Timer_ms1),
-            //                 &shared_mem->Timer,
-            //                 &shared_mem->flag_timer_valid,
-            //                 &shared_mem->flag_timer_ack);
-            SEND_FIELD(shared_mem, Timer_ms1);            
+        AU_Loop();
+        if(AU_state == 1){
+            motion_free();
+            init_CAN_MOTOR_variables();
+            Init_Asserv();
+        }else{
+            Asserv_Loop();
         }
     }
 
