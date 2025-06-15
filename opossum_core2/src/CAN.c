@@ -52,7 +52,7 @@ void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3){
 	SendFrame(&CanInstance);
 }
 
-void init_CAN_MOTOR_variables(void){
+void Init_CAN_MOTOR_variables(void){
 	angle_motor_1 = 0;
 	angle_motor_2 = 0;
 	angle_motor_3 = 0;
@@ -77,7 +77,7 @@ void init_CAN_MOTOR_variables(void){
 * - Acceptance Filter
 *
 ******************************************************************************/
-int init_CAN(void){
+int Init_CAN(void){
 	XCanPs_Config *ConfigPtr;
 	XCanPs *CanInstPtr = &CanInstance;
 

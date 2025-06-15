@@ -189,28 +189,6 @@ void Asserv_Loop(void)
     }
 }
 
-uint8_t Activate_Position_Sending_Func (void) {
-    uint32_t state;
-    if (Get_Param_u32(&state)) return PARAM_ERROR_CODE;
-    auto_printpos_en = (state != 0);
-    Last_Timer_print_pos = Timer_ms1;
-    
-    uint32_t Delay;
-    if (!Get_Param_u32(&Delay)) {   // s'il y a un 2eme param, on s'en sert comme delai entre les prints (en ms, of course)
-        auto_printpos_delay = Delay;
-    }
-    return 0;
-}
-
-
-uint8_t Set_Odo_Spacing_Cmd(void){
-    float valf;
-    if (Get_Param_Float(&valf))
-        return 1;
-    odo_set_spacing(valf);
-    return 0;
-}
-
 uint8_t Set_Lidar_Cmd(void) {
     float z_x, z_y, z_theta;
 
@@ -276,12 +254,5 @@ uint8_t Synchro_Lidar_Cmd(void){
     position_lidar.y = z_y;
     position_lidar.t = principal_angle(z_theta);
     kalman_init_with_lidar(&kalman_fifo, &position_lidar);
-    return 0;
-}
-
-uint8_t Enable_Kalman_Cmd(void){
-    uint32_t state;
-    if (Get_Param_u32(&state)) return PARAM_ERROR_CODE;
-    enable_kalman = state;
     return 0;
 }

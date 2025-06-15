@@ -73,7 +73,7 @@ typedef struct {
     uint8_t valid_bytes;     // the number of valid bytes in the payload
 } CAN_Message;
 
-int init_CAN(void);
+int Init_CAN(void);
 int CAN_configure_filters(void);
 
 void CAN_create_message(CAN_Message *message, uint16_t id, uint8_t buffer, uint8_t *payload, uint8_t valid_bytes);
@@ -90,4 +90,4 @@ void EventHandler(void *CallBackRef, u32 IntrMask);
 
 void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3);
 
-void init_CAN_MOTOR_variables(void);
+void Init_CAN_MOTOR_variables(void);

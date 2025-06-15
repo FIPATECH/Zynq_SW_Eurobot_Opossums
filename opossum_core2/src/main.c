@@ -32,15 +32,17 @@ int main()
     // initialise shared memory
     init_shared_memory();
 
+
+    Init_CAN();
     Init_AU();
     Init_Asserv();
-    init_CAN();
+    
 
     while(1){
         AU_Loop();
         if(AU_state == 1){
             motion_free();
-            init_CAN_MOTOR_variables();
+            Init_CAN_MOTOR_variables();
             Init_Asserv();
         }else{
             Asserv_Loop();
