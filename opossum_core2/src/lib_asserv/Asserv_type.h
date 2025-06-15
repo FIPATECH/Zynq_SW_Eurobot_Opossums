@@ -70,4 +70,19 @@ extern ESC_Command Wanted_Forced_Consigne;
 extern ESC_Command old_Consigne;
 
 
+
+typedef struct {
+    int odo_step_1; // step 1: calcul de la vitesse du robot
+    int odo_step_2; // step 2: calcul du kalman + history
+    int odo_step_3; // step 3: calcul de la vitesse du robot
+    int motion_step; // step 4: calcul de la position du robot
+    int speed_constrain_step; // step 5: contrainte de vitesse
+    int acceleration_constrain_step; // step 6: contrainte d'acceleration
+    int consigne_step; // step 7: calcul de la consigne
+    int pwm_step; // step 8: calcul du PWM
+    int transmit_step; // step 9: transmission des ordres aux moteurs
+} Asserv_Step_Timing;
+
+Asserv_Step_Timing asserv_step_timing;
+
 #endif

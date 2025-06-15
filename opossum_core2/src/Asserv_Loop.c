@@ -47,6 +47,9 @@ float dx, dy, dt = 0;
 
 int lidar_delay = 0; // délai de la dernière mesure lidar
 
+
+Asserv_Step_Timing asserv_step_timing = {0};
+
 void Init_Asserv(void) {
     Consigne.command1 = 0;
     Consigne.command2 = 0;
@@ -73,12 +76,15 @@ void Asserv_Loop(void)
         // - calcul de la vitesse du robot 
         //-----------------------------------
         if ((Timer_ms1 - Last_Timer_Asserv) > ODO_EVERY_MS) {
-            // if((Timer_ms1 - Last_Timer_Asserv) > 2*ODO_EVERY_MS){
-            //     printf("ERROR ODO TIMEOUT");
-            // }
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.odo_step_1 = Timer_us1;
+                        #endif
             Last_Timer_Asserv += ODO_EVERY_MS;
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3);       
             Asserv_State = 2;
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.odo_step_1 = Timer_us1 - asserv_step_timing.odo_step_1;
+                        #endif
         }
 
     } else if (Asserv_State == 2) {
@@ -86,9 +92,15 @@ void Asserv_Loop(void)
         // ODO step 2:
         // - calcul du kalman + history
         // -----------------------------------
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.odo_step_2 = Timer_us1;
+                        #endif
         kalman_predict(&kalman_current_state, &speed_robot_odom, ODO_EVERY_MS*0.001f);
         kalman_fifo_push(&kalman_fifo, &kalman_current_state, &speed_robot_odom);
         Asserv_Odo_Count ++;
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.odo_step_2 = Timer_us1 - asserv_step_timing.odo_step_2;
+                        #endif
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
             Asserv_Odo_Count = 0;
@@ -102,35 +114,65 @@ void Asserv_Loop(void)
         // ODO step 3:
         // - calcul de la vitesse du robot
         // -----------------------------------
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.odo_step_3 = Timer_us1;
+                        #endif
         odo_speed_cumulate_step(ASSERV_EVERY);
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.odo_step_3 = Timer_us1 - asserv_step_timing.odo_step_3;
+                        #endif
         Asserv_State = 10;
     
     } else if (Asserv_State == 10) {
         //-----------------------------------
         // motion step
         //-----------------------------------
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.motion_step = Timer_us1;
+                        #endif
         motion_step();
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.motion_step = Timer_us1 - asserv_step_timing.motion_step;
+                        #endif
         Asserv_State = 20;
 
     } else if (Asserv_State == 20) {
         //-----------------------------------
         // spped constrain
         //-----------------------------------
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.speed_constrain_step = Timer_us1;
+                        #endif
         constrain_speed_order();
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.speed_constrain_step = Timer_us1 - asserv_step_timing.speed_constrain_step;
+                        #endif
         Asserv_State = 21;
 
     } else if (Asserv_State == 21) {
         //-----------------------------------
         // acceleration constrain
         //-----------------------------------
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.acceleration_constrain_step = Timer_us1;
+                        #endif
         constrain_acceleration_order(ASSERV_EVERY*ODO_EVERY_MS*0.001f);
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.acceleration_constrain_step = Timer_us1 - asserv_step_timing.acceleration_constrain_step;
+                        #endif
         Asserv_State = 30;
 
     } else if (Asserv_State == 30) {
         //-----------------------------------
         // consigne
         //-----------------------------------
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.consigne_step = Timer_us1;
+                        #endif
         Asserv_PWM_calculator(&Consigne);
+                        #ifdef DEBUG_TIMING
+                        asserv_step_timing.consigne_step = Timer_us1 - asserv_step_timing.consigne_step;
+                        #endif
         Asserv_State = 40;
 
 
@@ -179,6 +221,10 @@ void Asserv_Loop(void)
         SEND_FIELD(shared_mem, speed_robot);
         Asserv_State = 0;
         
+        #ifdef DEBUG_TIMING
+        SEND_FIELD(shared_mem, asserv_step_timing);
+        #endif
+
     } else {
         Asserv_State = 0;
     }

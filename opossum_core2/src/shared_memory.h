@@ -77,7 +77,10 @@ int check_from_other_core(volatile void *data_out, size_t size,
                           volatile uint32_t *flag_ack);
 
 
-
-
+/**
+ * @brief This function checks for new commands in the shared memory and executes them
+ * 
+ */
+void check_for_cmd_loop(void);
 
 #endif // SHARED_MEMORY_H

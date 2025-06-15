@@ -1,6 +1,7 @@
 #ifndef __ASSERV_MASTER_H
 #define __ASSERV_MASTER_H
 
+#define DEBUG_TIMING 1
 
 // calcul d'un step d'odometrie toutes les 2 ms
 #define ODO_EVERY_MS 1
@@ -19,12 +20,11 @@ extern int16_t Rotor_RPM3;
 extern int enable_kalman;
 
 
+
 void Init_Asserv(void);
 
 void Asserv_Loop(void);
 
 void Set_Lidar_Cmd(Position position_lidar, int lidar_delay);
 
-#endif
-
-
+#endif // __ASSERV_MASTER_H
