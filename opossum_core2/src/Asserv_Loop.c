@@ -189,35 +189,14 @@ void Asserv_Loop(void)
     }
 }
 
-uint8_t Set_Lidar_Cmd(void) {
-    float z_x, z_y, z_theta;
-
-    float time;
-
-    // Récupération des mesures LIDAR
-    if (Get_Param_Float(&z_x)) return 1;
-    if (Get_Param_Float(&z_y)) return 1;
-    if (Get_Param_Float(&z_theta)) return 1;
-    
-    if (Get_Param_Float(&time)) return 1;
-    lidar_delay = (int)(time);
-
+void Set_Lidar_Cmd(Position position_lidar, int lidar_delay) {
     // Vérification de la cohérence des données LIDAR
     if(lidar_delay < 0 || lidar_delay > 200) {
-        // printf("ERROR: Lidar delay out of range\n");
-        return 0; // erreur
+        printf("ERROR: Lidar delay out of range\n");
+        return; // erreur
     }
 
-    if(!enable_kalman) {
-        position_lidar.x = z_x;
-        position_lidar.y = z_y;
-        position_lidar.t = principal_angle(z_theta);
-    }else{
-        // Mise à jour des données LIDAR (avec angle normalisé)
-        position_lidar.x = z_x;
-        position_lidar.y = z_y;
-        position_lidar.t = principal_angle(z_theta);
-
+    if(enable_kalman) {
         if(!kalman_initialized){
             // Initialisation du filtre de Kalman avec les données LIDAR
             kalman_init_with_lidar(&kalman_fifo, &position_lidar);
@@ -226,7 +205,7 @@ uint8_t Set_Lidar_Cmd(void) {
             // Récupération de l'index dans la FIFO correspondant au délai LiDAR
             int delay_index = kalman_fifo_get_delay(&kalman_fifo, lidar_delay, 1);
             if (delay_index < 0) {
-                return 0; // erreur
+                return; // erreur
             }
             
             // Correction de l’état dans la FIFO
@@ -240,19 +219,5 @@ uint8_t Set_Lidar_Cmd(void) {
             kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
         }
     }
-    return 0;
 }
 
-
-uint8_t Synchro_Lidar_Cmd(void){
-    float z_x, z_y, z_theta;
-    if (Get_Param_Float(&z_x)) return 1;
-    if (Get_Param_Float(&z_y)) return 1;
-    if (Get_Param_Float(&z_theta)) return 1;
-    
-    position_lidar.x = z_x;
-    position_lidar.y = z_y;
-    position_lidar.t = principal_angle(z_theta);
-    kalman_init_with_lidar(&kalman_fifo, &position_lidar);
-    return 0;
-}

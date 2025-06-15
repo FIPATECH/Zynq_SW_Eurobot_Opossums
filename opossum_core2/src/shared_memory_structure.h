@@ -2,7 +2,6 @@
 #define SHARED_MEMORY_STRUCTURE_H
 
 #include <stdint.h>
-#include "main.h"
 #include "lib_asserv/Asserv_type.h"
 
 /**
@@ -38,8 +37,8 @@ typedef struct {
         int delay; // calculation delay in ms 
     } lidar_position;
 
-    volatile uint32_t flag_assser_mode_valid; // CORE0 -> CORE1: 1 if asserv mode is valid, 0 otherwise
-    volatile uint32_t flag_assser_mode_ack;   // CORE1 -> CORE0: 1 new asserv mode taken into account, 0 otherwise
+    volatile uint32_t flag_asserv_mode_valid; // CORE0 -> CORE1: 1 if asserv mode is valid, 0 otherwise
+    volatile uint32_t flag_asserv_mode_ack;   // CORE1 -> CORE0: 1 new asserv mode taken into account, 0 otherwise
     int asserv_mode; // asserv mode (0: free, 1: position, 2: speed, 3: absolute speed, 4: break)
 
     volatile uint32_t flag_asserv_done_valid; // CORE0 -> CORE1: 1 if asserv done is valid, 0 otherwise

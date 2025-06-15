@@ -1,4 +1,5 @@
 #include "main.h"
+#include "lib_asserv/Lib_Asserv.h"
 
 // #define COMM_VAL (*(volatile unsigned long *)(0xFFFF0000))
 extern u32 MMUTable;

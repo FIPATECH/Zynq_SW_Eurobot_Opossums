@@ -12,6 +12,8 @@
 #include "xscugic.h"
 #include "xcanps.h"
 #include "xgpio.h"
+#include <math.h>
+
 
 #include "shared_memory.h"
 #include "shared_memory_structure.h"
@@ -23,3 +25,5 @@
 #include "Asserv_Loop.h"
 #include "CAN.h"
 #include "AU.h"
+
+#include "User.h"

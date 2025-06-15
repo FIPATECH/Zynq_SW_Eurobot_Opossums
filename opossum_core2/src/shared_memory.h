@@ -5,6 +5,8 @@
 
 #define SHARED_MEMORY_BASEADDR 0xFFFF0000 // Base address for shared memory
 
+#define CHECK_FOR_NEW_COMMANDS_EVERY 1 // Check for new commands every 1ms
+
 #define SEND_FIELD(data_ptr, field_name) \
     send_to_other_core((const void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
                        (volatile void *)&shared_mem->field_name, \

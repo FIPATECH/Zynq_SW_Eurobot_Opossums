@@ -50,4 +50,6 @@
 #include "shared_memory_structure.h"
 //#define DEBUG
 
+#include "lib_asserv/Lib_Asserv.h"
+
 #endif // MAIN_H

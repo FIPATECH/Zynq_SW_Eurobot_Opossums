@@ -57,7 +57,7 @@ uint8_t FREE_Cmd(void) {
     //ecriture dans la mémoire partagée
     shared_mem->asserv_mode = 0; // Mode libre
     __asm__ volatile("dsb sy");
-    shared_mem->flag_assser_mode_valid = 1; // Indique que le mode asservissement est valide
+    shared_mem->flag_asserv_mode_valid = 1; // Indique que le mode asservissement est valide
     __asm__ volatile("dsb sy");
     return 0;
 }
@@ -71,7 +71,7 @@ uint8_t BLOCK_Cmd(void) {
         // ecriture dans la mémoire partagée
         shared_mem->asserv_mode = 4; // Mode blocage
         __asm__ volatile("dsb sy");
-        shared_mem->flag_assser_mode_valid = 1; // Indique que le mode asservissement est valide
+        shared_mem->flag_asserv_mode_valid = 1; // Indique que le mode asservissement est valide
         __asm__ volatile("dsb sy");
         return 0;
     }
