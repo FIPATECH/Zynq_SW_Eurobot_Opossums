@@ -65,6 +65,14 @@ typedef struct {
     volatile uint32_t flag_cmd_esc_valid; 
     volatile uint32_t flag_cmd_esc_ack; 
     ESC_Command cmd_esc; // command to send to the ESCs  
+
+    volatile uint32_t flag_enable_kalman_valid; // CORE0 -> CORE1: 1 if kalman is enabled, 0 otherwise
+    volatile uint32_t flag_enable_kalman_ack;   // CORE1 -> CORE0: 1 new kalman enable taken into account, 0 otherwise
+    int enable_kalman; // 1 if kalman is enabled, 0 otherwise
+
+    volatile uint32_t flag_odo_spacing_valid; // CORE0 -> CORE1: 1 if odo spacing is valid, 0 otherwise
+    volatile uint32_t flag_odo_spacing_ack;   // CORE1 -> CORE0: 1 new odo spacing taken into account, 0 otherwise
+    float odo_spacing; // spacing between the wheels in meters
     
     // ******************************* CORE1 -> CORE0 *******************************
     //

@@ -19,7 +19,6 @@ const Command Command_List[] = {
 
     // Asserv print
     { "SETLIDAR", Set_Lidar_Cmd},
-    { "SYNCHROLIDAR", Synchro_Lidar_Cmd},
     { "ENKALMAN", Enable_Kalman_Cmd},
 
     { "SERVO", Servo_cmd},
@@ -47,9 +46,7 @@ const Command Command_List[] = {
     { "BLOCK", BLOCK_Cmd},
     { "PWM", PWM_Func},
 
-    { "GETPOS", Get_Pos_Cmd},
-
-    { "MOTOR", Motor_cmd}
+    { "GETPOS", Get_Pos_Cmd}
 };
 
 const uint16_t Command_List_Length = sizeof (Command_List) / sizeof (Command_List[0]);

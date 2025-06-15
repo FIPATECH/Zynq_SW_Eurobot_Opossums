@@ -93,7 +93,7 @@ uint8_t Get_Pos_Cmd(void) {
         __asm__ volatile("dsb sy");
         pos.x = shared_mem->kalman_out.x;
         pos.y = shared_mem->kalman_out.y;
-        pos.t = shared_mem->kalman_out.theta;
+        pos.t = shared_mem->kalman_out.t;
         __asm__ volatile("dsb sy");
 
         shared_mem->flag_kalman_out_ack = 1; // Indique que la position a été lue
@@ -196,3 +196,38 @@ uint8_t PWM_Func(void)
     return 0;
 }
 
+uint8_t Enable_Kalman_Cmd(void) {
+    uint32_t enable_kalman;
+    if (Get_Param_u32(&enable_kalman)) return PARAM_ERROR_CODE;
+    
+    // ecriture dans la mémoire partagée
+    SEND_FIELD(shared_mem, enable_kalman);
+    return 0;
+}
+
+uint8_t Set_Odo_Spacing_Cmd(void) {
+    float odo_spacing;
+    if (Get_Param_Float(&odo_spacing)) return PARAM_ERROR_CODE;
+
+    // ecriture dans la mémoire partagée
+    SEND_FIELD(shared_mem, odo_spacing);
+    return 0;
+}
+
+
+int auto_printpos_en = 0; // si on active l'envoi de la position
+uint32_t auto_printpos_delay = 100; // en ms
+uint32_t Last_Timer_print_pos = 0; // dernier envoi de la position
+
+uint8_t Activate_Position_Sending_Func (void) {
+    uint32_t state;
+    if (Get_Param_u32(&state)) return PARAM_ERROR_CODE;
+    auto_printpos_en = (state != 0);
+    Last_Timer_print_pos = Timer_ms1;
+    
+    uint32_t Delay;
+    if (!Get_Param_u32(&Delay)) {   // s'il y a un 2eme param, on s'en sert comme delai entre les prints (en ms, of course)
+        auto_printpos_delay = Delay;
+    }
+    return 0;
+}
