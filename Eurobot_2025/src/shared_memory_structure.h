@@ -89,6 +89,11 @@ typedef struct {
     volatile uint32_t flag_Timer_ms1_valid; // CORE1 -> CORE0: 1 if timer is valid, 0 otherwise
     volatile uint32_t flag_Timer_ms1_ack;   // CORE0 -> CORE1: 1 new timer taken into account, 0 otherwise
     int Timer_ms1; // Timer value in ms
+
+    volatile uint32_t flag_asserv_step_timing_valid; // CORE1 -> CORE0: 1 if timing is valid, 0 otherwise
+    volatile uint32_t flag_asserv_step_timing_ack;   // CORE0 -> CORE1: 1 new timing taken into account, 0 otherwise
+    Asserv_Step_Timing asserv_step_timing; // timing of the asserv steps 
+
 } sharedCommand;
 
 #endif // SHARED_MEMORY_STRUCTURE_H

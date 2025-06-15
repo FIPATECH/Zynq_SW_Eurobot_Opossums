@@ -14,6 +14,8 @@ uint8_t Move_Cmd(void) {
 
         // ecriture dans la mémoire partagée
         SEND_FIELD(shared_mem, cmd_position);
+        printf("CMD_POS: %.4f, %.4f, %.4f\n", cmd_position.x, cmd_position.y, cmd_position.t);
+
         return 0;
     }
 }

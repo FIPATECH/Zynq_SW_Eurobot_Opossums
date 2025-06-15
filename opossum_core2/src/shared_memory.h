@@ -4,29 +4,33 @@
 #include "shared_memory_structure.h"
 
 #define SHARED_MEMORY_BASEADDR 0xFFFF0000 // Base address for shared memory
-
 #define CHECK_FOR_NEW_COMMANDS_EVERY 1 // Check for new commands every 1ms
+
+extern volatile sharedCommand *shared_mem;
+
+
 
 #define SEND_FIELD(data_ptr, field_name) \
     send_to_other_core((const void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                       (volatile void *)&shared_mem->field_name, \
+                       (void *)&shared_mem->field_name, \
                        &shared_mem->flag_##field_name##_valid, \
                        &shared_mem->flag_##field_name##_ack)
 
+// Envoi bloquant d'un champ de structure
 #define SEND_FIELD_BLOCKING(data_ptr, field_name) \
     send_to_other_core_blocking((const void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                       (volatile void *)&shared_mem->field_name, \
+                       (void *)&shared_mem->field_name, \
                        &shared_mem->flag_##field_name##_valid, \
                        &shared_mem->flag_##field_name##_ack)
 
-
+// Réception d’un champ de structure
 #define CHECK_FIELD(data_ptr, field_name) \
-    check_from_other_core((void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                          (volatile void *)&shared_mem->field_name, \
+    check_from_other_core((void *)(data_ptr), sizeof(shared_mem->field_name), \
+                          (const void *)&shared_mem->field_name, \
                           &shared_mem->flag_##field_name##_valid, \
                           &shared_mem->flag_##field_name##_ack)
 
-extern volatile sharedCommand *shared_mem;
+
 /**
  * @brief Initialize the shared memory area
  * 

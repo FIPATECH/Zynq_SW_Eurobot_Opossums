@@ -20,7 +20,7 @@ void send_to_other_core_blocking(const void *data, size_t size,
     // Copier les données dans la mémoire partagée
     memcpy((void *)dest, data, size);
 
-    __asm__ volatile("dsb sy");
+    __asm__ volatile("dsb sy" ::: "memory");
 
     *flag_valid = 1;
     *flag_ack = 0;
@@ -34,7 +34,7 @@ void send_to_other_core(const void *data, size_t size,
     memcpy((void *)dest, data, size);
 
     // Barrière mémoire : assure que le memcpy est terminé avant de lever le flag
-    __asm__ volatile("dsb sy");
+    __asm__ volatile("dsb sy" ::: "memory");
 
     // Signaler que la donnée est disponible
     *flag_valid = 1;
@@ -48,7 +48,7 @@ int check_from_other_core(volatile void *data_out, size_t size,
     if (*flag_valid) {
         memcpy(data_out, (const void *)src, size);
 
-        __asm__ volatile("dsb sy");
+        __asm__ volatile("dsb sy" ::: "memory");
 
         *flag_ack = 1;
         *flag_valid = 0;
@@ -67,15 +67,16 @@ void check_for_cmd_loop(void){
         switch(check_for_cmd_state){
             case 0: {
                 Position cmd_position;
-                if(CHECK_FIELD(shared_mem, cmd_position)){
-                    motion_pos(cmd_position);                    
+                if(CHECK_FIELD(&cmd_position, cmd_position)){
+                    motion_pos(cmd_position);
+                    printf("CMD_POS: %.4f, %.4f, %.4f\n", cmd_position.x, cmd_position.y, cmd_position.t);                    
                 }
                 check_for_cmd_state++;
                 break;
             }
             case 1: {
                 Speed cmd_speed;
-                if(CHECK_FIELD(shared_mem, cmd_speed)){
+                if(CHECK_FIELD(&cmd_speed, cmd_speed)){
                     motion_speed(cmd_speed);
                 }
                 check_for_cmd_state++;
@@ -83,7 +84,7 @@ void check_for_cmd_loop(void){
             }
             case 2: {
                 Speed cmd_abs_speed;
-                if(CHECK_FIELD(shared_mem, cmd_abs_speed)){
+                if(CHECK_FIELD(&cmd_abs_speed, cmd_abs_speed)){
                     motion_absolute_speed(cmd_abs_speed);
                 }
                 check_for_cmd_state++;
@@ -91,7 +92,7 @@ void check_for_cmd_loop(void){
             }
             case 3: {
                 int asserv_mode;
-                if(CHECK_FIELD(shared_mem, asserv_mode)){
+                if(CHECK_FIELD(&asserv_mode, asserv_mode)){
                     if(asserv_mode == 0){
                         motion_free();
                     } else if(asserv_mode == 4){

@@ -34,14 +34,14 @@ int main()
         xil_printf("Interrupt Setup Done\r\n");
     }
 
-    // Status = UART_Init();
-    // if (Status != XST_SUCCESS) {
-    //     xil_printf("UART init failed\n\r");
-    //     Status = 0;
-    // } else {
-    //     xil_printf("UART init done\n\r");
-    //     Status = 0;
-    // }
+    Status = UART_Init();
+    if (Status != XST_SUCCESS) {
+        xil_printf("UART init failed\n\r");
+        Status = 0;
+    } else {
+        xil_printf("UART init done\n\r");
+        Status = 0;
+    }
 
     Status = Init_Timer_ms1();
     if (Status != XST_SUCCESS) {
@@ -53,10 +53,9 @@ int main()
     }
 
     // init_QEI();
-    // init_CAN_MOTOR_variables();
     // PWM_Init();
     // Std_Com_Init();
-    // init_AU();
+    init_AU();
     // ws2812b_init();
     // init_switch();
     // Init_Pump();
@@ -71,24 +70,24 @@ int main()
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
             
-            printf("ARM0: Timer_ms1: %d\n\r", Timer_ms1);
-            if(CHECK_FIELD(shared_mem, Timer_ms1)) {
-                printf("ARM0: Timer_ms1 ARM1: %d\n\r", Timer_ms1);
-            } else {
-                printf("ARM0: No Timer_ms1 received from ARM1\n\r");
-            }
+            // printf("ARM0: Timer_ms1: %d\n\r", Timer_ms1);
+            // if(CHECK_FIELD(shared_mem, Timer_ms1)) {
+            //     printf("ARM0: Timer_ms1 ARM1: %d\n\r", Timer_ms1);
+            // } else {
+            //     printf("ARM0: No Timer_ms1 received from ARM1\n\r");
+            // }
         }
 
 
-        // if (Get_Std_In(&c)) {
-        //     Interp(c);
-        // }
+        if (Get_Std_In(&c)) {
+            Interp(c);
+        }
 
         
 
-        // AU_Loop();
+        AU_Loop();
         // LED_loop();
-        // Std_Com_Loop();
+        Std_Com_Loop();
 
         // if(AU_state == 1){
         //     LED_AU();
