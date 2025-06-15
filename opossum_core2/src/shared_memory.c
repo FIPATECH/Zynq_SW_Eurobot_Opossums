@@ -67,7 +67,7 @@ void check_for_cmd_loop(void){
         switch(check_for_cmd_state){
             case 0: {
                 Position cmd_position;
-                if(CHECK_FIELD(&cmd_position, cmd_position)){
+                if(CHECK_FIELD(shared_mem, cmd_position)){
                     motion_pos(cmd_position);                    
                 }
                 check_for_cmd_state++;
@@ -75,7 +75,7 @@ void check_for_cmd_loop(void){
             }
             case 1: {
                 Speed cmd_speed;
-                if(CHECK_FIELD(&cmd_speed, cmd_speed)){
+                if(CHECK_FIELD(shared_mem, cmd_speed)){
                     motion_speed(cmd_speed);
                 }
                 check_for_cmd_state++;
@@ -83,7 +83,7 @@ void check_for_cmd_loop(void){
             }
             case 2: {
                 Speed cmd_abs_speed;
-                if(CHECK_FIELD(&cmd_abs_speed, cmd_abs_speed)){
+                if(CHECK_FIELD(shared_mem, cmd_abs_speed)){
                     motion_absolute_speed(cmd_abs_speed);
                 }
                 check_for_cmd_state++;
@@ -91,7 +91,7 @@ void check_for_cmd_loop(void){
             }
             case 3: {
                 int asserv_mode;
-                if(CHECK_FIELD(&asserv_mode, asserv_mode)){
+                if(CHECK_FIELD(shared_mem, asserv_mode)){
                     if(asserv_mode == 0){
                         motion_free();
                     } else if(asserv_mode == 4){
@@ -113,7 +113,7 @@ void check_for_cmd_loop(void){
             }
             case 5: {
                 Position set_pos;
-                if(CHECK_FIELD(&set_pos, set_pos)){
+                if(CHECK_FIELD(shared_mem, set_pos)){
                     set_position(set_pos);
                 }
                 check_for_cmd_state++;
@@ -121,7 +121,7 @@ void check_for_cmd_loop(void){
             }
             case 6: {
                 float vmax;
-                if(CHECK_FIELD(&vmax, vmax)){
+                if(CHECK_FIELD(shared_mem, vmax)){
                     set_Constraint_vitesse_xy_max(vmax);
                 }
                 check_for_cmd_state++;
@@ -129,7 +129,7 @@ void check_for_cmd_loop(void){
             }
             case 7: {
                 float vtmax;
-                if(CHECK_FIELD(&vtmax, vtmax)){
+                if(CHECK_FIELD(shared_mem, vtmax)){
                     set_Constraint_vt_max(vtmax);
                 }
                 check_for_cmd_state++;
@@ -137,7 +137,7 @@ void check_for_cmd_loop(void){
             }
             case 8: {
                 float amax;
-                if(CHECK_FIELD(&amax, amax)){
+                if(CHECK_FIELD(shared_mem, amax)){
                     set_Constraint_a_xy_max(amax);
                 }
                 check_for_cmd_state++;
@@ -145,20 +145,20 @@ void check_for_cmd_loop(void){
             }
             case 9: {
                 ESC_Command cmd_esc;
-                if(CHECK_FIELD(&cmd_esc, cmd_esc)){
+                if(CHECK_FIELD(shared_mem, cmd_esc)){
                     Asserv_PWM_calculator(&cmd_esc);
                 }
                 check_for_cmd_state++;
                 break;
             }
             case 10: {
-                CHECK_FIELD(&enable_kalman, enable_kalman);
+                CHECK_FIELD(shared_mem, enable_kalman);
                 check_for_cmd_state++;
                 break;
             }
             case 11: {
                 int odo_spacing;
-                if(CHECK_FIELD(&odo_spacing, odo_spacing)){
+                if(CHECK_FIELD(shared_mem, odo_spacing)){
                     odo_set_spacing(odo_spacing);
                 }
                 check_for_cmd_state = 0; // Reset to start over

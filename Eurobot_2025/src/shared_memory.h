@@ -19,8 +19,8 @@
 
 
 #define CHECK_FIELD(data_ptr, field_name) \
-    check_from_other_core((data_ptr), sizeof(shared_mem->field_name), \
-                          &shared_mem->field_name, \
+    check_from_other_core((void *)&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
+                          (volatile void *)&shared_mem->field_name, \
                           &shared_mem->flag_##field_name##_valid, \
                           &shared_mem->flag_##field_name##_ack)
 
