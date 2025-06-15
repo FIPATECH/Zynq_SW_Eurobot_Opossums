@@ -40,7 +40,7 @@ void send_to_other_core(const void *data, size_t size,
     *flag_ack = 0;
 }
 
-int check_from_other_core(void *data_out, size_t size,
+int check_from_other_core(volatile void *data_out, size_t size,
                           volatile void *src,
                           volatile uint32_t *flag_valid,
                           volatile uint32_t *flag_ack) {

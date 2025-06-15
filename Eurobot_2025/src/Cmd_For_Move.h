@@ -2,9 +2,9 @@
 #ifndef __CMD_FOR_MOVE_H
 #define __CMD_FOR_MOVE_H
 
-extern int auto_printpos_en = 0; // si on active l'envoi de la position
-extern uint32_t auto_printpos_delay = 100; // en ms
-extern uint32_t Last_Timer_print_pos = 0; // dernier envoi de la position
+extern int auto_printpos_en; // si on active l'envoi de la position
+extern uint32_t auto_printpos_delay; // en ms
+extern uint32_t Last_Timer_print_pos; // dernier envoi de la position
 
 uint8_t Move_Cmd(void);
 uint8_t Speed_Cmd(void);
@@ -27,4 +27,5 @@ uint8_t PWM_Func(void);
 uint8_t Enable_Kalman_Cmd(void);
 uint8_t Set_Odo_Spacing_Cmd(void);
 uint8_t Activate_Position_Sending_Func(void);
+
 #endif

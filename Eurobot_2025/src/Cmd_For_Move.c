@@ -113,17 +113,24 @@ uint8_t Get_Odo_Cmd(void) {
     Position kalman_out;
     Speed speed_robot;
     // lecture de la mémoire partagée
-    CHECK_FIELD(shared_mem, kalman_out);
-    CHECK_FIELD(shared_mem, speed_robot);
+    int status1;
+    int status2;
+    status1 = CHECK_FIELD(shared_mem, kalman_out);
+    status2 = CHECK_FIELD(shared_mem, speed_robot);
 
-    printf("ODO ");
-    printf("%.4f ", (double)(kalman_out.x));
-    printf("%.4f ", (double)(kalman_out.y));
-    printf("%.4f ", (double)(kalman_out.t));
-    printf("%.4f ", (double)(speed_robot.vx));
-    printf("%.4f ", (double)(speed_robot.vy));
-    printf("%.4f\n", (double)(speed_robot.vt));
-    return 0;
+    if(!status1 || !status2) {
+        printf("GETODO ERROR: Position or speed not valid\n");
+        return 0;
+    }else{
+        printf("ODO ");
+        printf("%.4f ", (double)(kalman_out.x));
+        printf("%.4f ", (double)(kalman_out.y));
+        printf("%.4f ", (double)(kalman_out.t));
+        printf("%.4f ", (double)(speed_robot.vx));
+        printf("%.4f ", (double)(speed_robot.vy));
+        printf("%.4f\n", (double)(speed_robot.vt));
+        return 0;
+    }
 }
 
 uint8_t SET_Cmd(void) {
@@ -139,7 +146,7 @@ uint8_t SET_Cmd(void) {
 
 uint8_t Set_Lidar_Cmd(void) {
     Position lidar_position;
-    int time;
+    uint32_t time;
 
     // Récupération des mesures LIDAR
     if (Get_Param_Float(&lidar_position.x))     return PARAM_ERROR_CODE;
@@ -149,7 +156,7 @@ uint8_t Set_Lidar_Cmd(void) {
 
     // ecriture dans la mémoire partagée
     shared_mem->lidar_position.lidar_position = lidar_position;
-    shared_mem->lidar_position.delay = time;
+    shared_mem->lidar_position.delay = (int)time;
 
     __asm__ volatile("dsb sy");
     shared_mem->flag_lidar_data_valid = 1; // Indique que les données LIDAR sont valides

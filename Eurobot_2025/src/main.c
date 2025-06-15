@@ -1,11 +1,8 @@
 #include "main.h"
-#include "lib_asserv/Lib_Asserv.h"
-
 
 #define sev() __asm__("sev")
 #define ARM1_STARTADR 0xFFFFFFF0
 #define ARM1_BASEADDR 0x10080000
-// #define COMM_VAL (*(volatile unsigned long *)(0xFFFF0000))
 
 int old_timer_ms1 = 0;
 int Status = 0;
@@ -55,15 +52,6 @@ int main()
         Status = 0;
     }
 
-//    Status = init_CAN();
-//    if (Status != XST_SUCCESS) {
-//        xil_printf("CAN init failed\n\r");
-//        Status = 0;
-//    } else {
-//        xil_printf("CAN init done\n\r");
-//        Status = 0;
-//    }
-
     // init_QEI();
     // init_CAN_MOTOR_variables();
     // PWM_Init();
@@ -104,19 +92,14 @@ int main()
 
         // if(AU_state == 1){
         //     LED_AU();
-        //     motion_free();
-        //     init_CAN_MOTOR_variables();
         //     Init_Pump();
         //     PWM_Init();
-        //     Init_Asserv();
         // }else{
         //     // stepper functions
         //     Init_Stepper_Loop();
         //     Stepper_Loop();
 
         //     LED_CLASSIC_MODE();
-        //     MaP_Asserv_Loop();
-        //     Asserv_Loop();
         //     PWM_Loop();
 
         //     Pump_Loop();
@@ -124,7 +107,6 @@ int main()
         // }
         // IHM_loop();
 
-        // Asserv_test_loop();
     }
     cleanup_platform();
     return 0;

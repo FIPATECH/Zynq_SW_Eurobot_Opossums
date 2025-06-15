@@ -1,3 +1,6 @@
+#ifndef WS2812B_H
+#define WS2812B_H
+
 // #define AXI_LED_ADDR XPAR_AXI_GPIO_24_BASEADDR
 #define AXI_LED_DATA XPAR_AXI_GPIO_25_BASEADDR
 
@@ -29,3 +32,4 @@ void LED_CLASSIC_MODE(void);
 
 uint8_t LED_cmd(void);
 
+#endif // WS2812B_H

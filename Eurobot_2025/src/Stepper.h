@@ -28,7 +28,6 @@
 #define STEPPER_DIR_FORWARD 1 // elevator up
 #define STEPPER_DIR_BACKWARD 0 // elevator down
 
-
 typedef struct {
     XGpio STEP;
     XGpio SPEED;

@@ -1,3 +1,6 @@
+#ifndef MAIN_H
+#define MAIN_H
+
 #include <stdio.h>
 #include <sleep.h>
 #include <xil_io.h>
@@ -13,7 +16,6 @@
 #include "xil_exception.h"
 #include "xparameters_ps.h"
 #include "xscugic.h"
-#include "xcanps.h"
 #include "xuartps.h"
 #include "xplatform_info.h"
 
@@ -47,3 +49,5 @@
 #include "shared_memory.h"
 #include "shared_memory_structure.h"
 //#define DEBUG
+
+#endif // MAIN_H

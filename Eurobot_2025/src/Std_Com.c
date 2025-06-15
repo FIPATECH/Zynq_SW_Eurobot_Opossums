@@ -1,7 +1,5 @@
 #include "main.h"
 
-
-
 uint8_t Std_Com_Out_Buff[STD_COM_SIZE_BUFF];
 uint16_t i_Std_Com_Out_Buff_TODO = 0;
 uint16_t i_Std_Com_Out_Buff_DONE = 0;
