@@ -19,7 +19,6 @@
 
 // driver part 
 #include "Timer.h"
-#include "CAN.h"
 #include "UART.h"
 #include "Interrupt.h"
 
@@ -37,12 +36,8 @@
 #include "User.h"
 #include "IHM.h"
 
-
 //asserv part 
-#include "Asserv_Loop.h"
 #include "Cmd_For_Move.h"
-
-
 
 //com part
 #include "Std_Com.h"

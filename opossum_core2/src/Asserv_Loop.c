@@ -63,8 +63,6 @@ void Init_Asserv(void) {
     enable_kalman = 1;
 
     asserv_init();
-
-    // xil_printf("Asserv Init done\n");
 }
 
 void Asserv_Loop(void)

@@ -9,7 +9,7 @@ void init_shared_memory() {
 }
 
 
-void send_to_other_core(const void *data, size_t size,
+void send_to_other_core_blocking(const void *data, size_t size,
                         volatile void *dest,
                         volatile uint32_t *flag_valid,
                         volatile uint32_t *flag_ack) {
@@ -21,6 +21,21 @@ void send_to_other_core(const void *data, size_t size,
 
     __asm__ volatile("dsb sy");
 
+    *flag_valid = 1;
+    *flag_ack = 0;
+}
+
+void send_to_other_core(const void *data, size_t size,
+                        volatile void *dest,
+                        volatile uint32_t *flag_valid,
+                        volatile uint32_t *flag_ack) {
+    // Copier les données dans la mémoire partagée
+    memcpy((void *)dest, data, size);
+
+    // Barrière mémoire : assure que le memcpy est terminé avant de lever le flag
+    __asm__ volatile("dsb sy");
+
+    // Signaler que la donnée est disponible
     *flag_valid = 1;
     *flag_ack = 0;
 }
