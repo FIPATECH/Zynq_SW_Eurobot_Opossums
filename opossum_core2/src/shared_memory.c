@@ -3,6 +3,7 @@
 
 volatile sharedCommand *shared_mem = (volatile sharedCommand *)SHARED_MEMORY_BASEADDR;
 
+
 void init_shared_memory() {
     //Disable cache on OCM
     // S=b1 TEX=b100 AP=b11, Domain=b1111, C=b0, B=b0
@@ -65,15 +66,35 @@ void init_shared_memory() {
 }
 
 
-void send_to_other_core_blocking(const void *data, size_t size,
+void send_to_other_core(const volatile void *data, size_t size,
                         volatile void *dest,
                         volatile uint32_t *flag_valid,
                         volatile uint32_t *flag_ack) {
-    // Ne pas écraser si pas encore lu
+    const volatile uint8_t *src_bytes = (const volatile uint8_t *)data;
+    volatile uint8_t *dst_bytes = (volatile uint8_t *)dest;
+
+    for (size_t i = 0; i < size; i++) {
+        dst_bytes[i] = src_bytes[i];
+    }
+
+    __asm__ volatile("dsb sy" ::: "memory");
+
+    *flag_valid = 1;
+    *flag_ack = 0;
+}
+
+void send_to_other_core_blocking(const volatile void *data, size_t size,
+                                 volatile void *dest,
+                                 volatile uint32_t *flag_valid,
+                                 volatile uint32_t *flag_ack) {
     if (*flag_valid && !(*flag_ack)) return;
 
-    // Copier les données dans la mémoire partagée
-    memcpy((void *)dest, data, size);
+    const volatile uint8_t *src_bytes = (const volatile uint8_t *)data;
+    volatile uint8_t *dst_bytes = (volatile uint8_t *)dest;
+
+    for (size_t i = 0; i < size; i++) {
+        dst_bytes[i] = src_bytes[i];
+    }
 
     __asm__ volatile("dsb sy" ::: "memory");
 
@@ -81,52 +102,44 @@ void send_to_other_core_blocking(const void *data, size_t size,
     *flag_ack = 0;
 }
 
-void send_to_other_core(const void *data, size_t size,
-                        volatile void *dest,
-                        volatile uint32_t *flag_valid,
-                        volatile uint32_t *flag_ack) {
-
-    // Copier les données dans la mémoire partagée
-    memcpy((void *)dest, data, size);
-
-    __asm__ volatile("dsb sy" ::: "memory");
-
-    *flag_valid = 1;
-    *flag_ack = 0;
-}
-
-int check_from_other_core(void *data_out, size_t size,
-                          volatile void *src,
+int check_from_other_core(volatile void *data_out, size_t size,
+                          const volatile void *src,
                           volatile uint32_t *flag_valid,
                           volatile uint32_t *flag_ack) {
     if (*flag_valid) {
-        memcpy(data_out, (const void *)src, size);
+        uint8_t *dst_bytes = (uint8_t *)data_out;
+        const volatile uint8_t *src_bytes = (const volatile uint8_t *)src;
+        for (size_t i = 0; i < size; i++) {
+            dst_bytes[i] = src_bytes[i];
+        }
 
         __asm__ volatile("dsb sy" ::: "memory");
 
         *flag_ack = 1;
         *flag_valid = 0;
-        return 1; // Data received
+        return 1;
     }
-    return 0; // Nothing to read
+    return 0;
 }
-
 
 int check_for_cmd_state = 0;
 int old_check_timer_ms1 = 0;
+Position cmd_position;
+
+int previous_timer = 0;
 
 void check_for_cmd_loop(void){
     if(Timer_ms1 - old_check_timer_ms1 > CHECK_FOR_NEW_COMMANDS_EVERY){
+        old_check_timer_ms1 = Timer_ms1;
         switch(check_for_cmd_state){
-            case 0: {
-                Position cmd_position;
+            case 0: 
                 if(CHECK_FIELD(&shared_mem, cmd_position)){
                     motion_pos(cmd_position);
                     printf("CMD_POS: %.4f, %.4f, %.4f\n", cmd_position.x, cmd_position.y, cmd_position.t);                    
                 }
                 // check_for_cmd_state++;
                 break;
-            }
+            
             // case 1: {
             //     Speed cmd_speed;
             //     if(CHECK_FIELD(&cmd_speed, cmd_speed)){

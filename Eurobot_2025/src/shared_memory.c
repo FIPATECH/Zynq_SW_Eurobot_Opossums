@@ -9,15 +9,35 @@ void init_shared_memory() {
 }
 
 
-void send_to_other_core_blocking(const void *data, size_t size,
+void send_to_other_core(const volatile void *data, size_t size,
                         volatile void *dest,
                         volatile uint32_t *flag_valid,
                         volatile uint32_t *flag_ack) {
-    // Ne pas écraser si pas encore lu
+    const volatile uint8_t *src_bytes = (const volatile uint8_t *)data;
+    volatile uint8_t *dst_bytes = (volatile uint8_t *)dest;
+
+    for (size_t i = 0; i < size; i++) {
+        dst_bytes[i] = src_bytes[i];
+    }
+
+    __asm__ volatile("dsb sy" ::: "memory");
+
+    *flag_valid = 1;
+    *flag_ack = 0;
+}
+
+void send_to_other_core_blocking(const volatile void *data, size_t size,
+                                 volatile void *dest,
+                                 volatile uint32_t *flag_valid,
+                                 volatile uint32_t *flag_ack) {
     if (*flag_valid && !(*flag_ack)) return;
 
-    // Copier les données dans la mémoire partagée
-    memcpy((void *)dest, data, size);
+    const volatile uint8_t *src_bytes = (const volatile uint8_t *)data;
+    volatile uint8_t *dst_bytes = (volatile uint8_t *)dest;
+
+    for (size_t i = 0; i < size; i++) {
+        dst_bytes[i] = src_bytes[i];
+    }
 
     __asm__ volatile("dsb sy" ::: "memory");
 
@@ -25,32 +45,22 @@ void send_to_other_core_blocking(const void *data, size_t size,
     *flag_ack = 0;
 }
 
-void send_to_other_core(const void *data, size_t size,
-                        volatile void *dest,
-                        volatile uint32_t *flag_valid,
-                        volatile uint32_t *flag_ack) {
-
-    // Copier les données dans la mémoire partagée
-    memcpy((void *)dest, data, size);
-
-    __asm__ volatile("dsb sy" ::: "memory");
-
-    *flag_valid = 1;
-    *flag_ack = 0;
-}
-
-int check_from_other_core(void *data_out, size_t size,
-                          volatile void *src,
+int check_from_other_core(volatile void *data_out, size_t size,
+                          const volatile void *src,
                           volatile uint32_t *flag_valid,
                           volatile uint32_t *flag_ack) {
     if (*flag_valid) {
-        memcpy(data_out, (const void *)src, size);
+        uint8_t *dst_bytes = (uint8_t *)data_out;
+        const volatile uint8_t *src_bytes = (const volatile uint8_t *)src;
+        for (size_t i = 0; i < size; i++) {
+            dst_bytes[i] = src_bytes[i];
+        }
 
         __asm__ volatile("dsb sy" ::: "memory");
 
         *flag_ack = 1;
         *flag_valid = 0;
-        return 1; // Data received
+        return 1;
     }
-    return 0; // Nothing to read
+    return 0;
 }

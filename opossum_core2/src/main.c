@@ -34,7 +34,7 @@ int main()
     init_shared_memory();
 
 
-    Init_CAN();
+    // Init_CAN();
     Init_AU();
     Init_Asserv();
     
@@ -42,12 +42,11 @@ int main()
     while(1){
         if(Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            int Timer_ms = Timer_ms1;
-            // send_to_other_core(&Timer_ms1, sizeof(Timer_ms1),
-            //                 &shared_mem->Timer,
-            //                 &shared_mem->flag_timer_valid,
-            //                 &shared_mem->flag_timer_ack);
-            SEND_FIELD(shared_mem, Timer_ms);            
+            printf("CPU1: Timer_ms1: %d\n\r", Timer_ms1);
+            shared_mem->Timer_ms = Timer_ms1;
+            __asm__ volatile("dsb sy" ::: "memory");
+            shared_mem->flag_Timer_ms_valid = 1;
+            shared_mem->flag_Timer_ms_ack = 0;
         }
 
         AU_Loop();
@@ -57,7 +56,7 @@ int main()
             Init_CAN_MOTOR_variables();
             Init_Asserv();
         }else{
-            Asserv_Loop();
+            // Asserv_Loop();
         }
     }
 

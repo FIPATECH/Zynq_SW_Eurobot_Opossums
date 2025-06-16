@@ -36,12 +36,12 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
 
     // ---------------------- CAN ----------------------
     // Connect and enable CAN interrupt
-    Status = XScuGic_Connect(GicInstancePtr, CAN_IRPT_INTR,
-                    (Xil_InterruptHandler)XCanPs_IntrHandler, &CanInstance);
-    if (Status != XST_SUCCESS) {
-        return XST_FAILURE;
-    }
-    XScuGic_Enable(GicInstancePtr, CAN_IRPT_INTR);
+    // Status = XScuGic_Connect(GicInstancePtr, CAN_IRPT_INTR,
+    //                 (Xil_InterruptHandler)XCanPs_IntrHandler, &CanInstance);
+    // if (Status != XST_SUCCESS) {
+    //     return XST_FAILURE;
+    // }
+    // XScuGic_Enable(GicInstancePtr, CAN_IRPT_INTR);
 
     /*
      * Connect the interrupt controller interrupt handler to the hardware

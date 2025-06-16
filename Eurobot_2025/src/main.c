@@ -70,13 +70,22 @@ int main()
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
             
-            printf("ARM0: Timer_ms1: %d\n\r", Timer_ms1);
-            int Timer_ms;
-            if(CHECK_FIELD(shared_mem, Timer_ms)) {
-                printf("ARM0: Timer_ms1 ARM1: %d\n\r", Timer_ms);
-            } else {
-                printf("ARM0: No Timer_ms1 received from ARM1\n\r");
+            if (shared_mem->flag_Timer_ms_valid && !shared_mem->flag_Timer_ms_ack) {
+                int out_timer = shared_mem->Timer_ms;
+
+                // Assure que la lecture est bien complétée
+                __asm__ volatile("dmb sy" ::: "memory");
+
+                // Accusé de réception
+                shared_mem->flag_Timer_ms_ack = 1;
+                shared_mem->flag_Timer_ms_valid = 0;
+
+                // Envoi de la valeur du timer
+                xil_printf("ARM0: ARM1 Timer: %d\n\r", out_timer);
+            }else{
+                xil_printf("ARM0: ARM1 Timer not valid\n\r");
             }
+    
         }
 
 

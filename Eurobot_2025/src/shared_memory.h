@@ -7,22 +7,20 @@
 extern volatile sharedCommand *shared_mem;
 
 #define SEND_FIELD(data_ptr, field_name) \
-    send_to_other_core(&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                       &shared_mem->field_name, \
+    send_to_other_core(&(data_ptr)->field_name, sizeof((data_ptr)->field_name), \
+                       (volatile void *)&shared_mem->field_name, \
                        &shared_mem->flag_##field_name##_valid, \
                        &shared_mem->flag_##field_name##_ack)
 
-// Envoi bloquant d'un champ de structure
 #define SEND_FIELD_BLOCKING(data_ptr, field_name) \
-    send_to_other_core_blocking(&((data_ptr)->field_name), sizeof((data_ptr)->field_name), \
-                       &shared_mem->field_name, \
-                       &shared_mem->flag_##field_name##_valid, \
-                       &shared_mem->flag_##field_name##_ack)
+    send_to_other_core_blocking(&(data_ptr)->field_name, sizeof((data_ptr)->field_name), \
+                                (volatile void *)&shared_mem->field_name, \
+                                &shared_mem->flag_##field_name##_valid, \
+                                &shared_mem->flag_##field_name##_ack)
 
-// Réception d’un champ de structure
 #define CHECK_FIELD(data_ptr, field_name) \
-    check_from_other_core((data_ptr), sizeof(shared_mem->field_name), \
-                          &shared_mem->field_name, \
+    check_from_other_core((volatile void *)(data_ptr), sizeof((shared_mem)->field_name), \
+                          (const volatile void *)&shared_mem->field_name, \
                           &shared_mem->flag_##field_name##_valid, \
                           &shared_mem->flag_##field_name##_ack)
 
@@ -41,10 +39,10 @@ void init_shared_memory(void);
  * @param flag_valid pointer to the flag indicating if the data is valid
  * @param flag_ack pointer to the flag indicating if the data has been acknowledged
  */
-void send_to_other_core(const void *data, size_t size,
-                         volatile void *dest,
-                         volatile uint32_t *flag_valid,
-                         volatile uint32_t *flag_ack);
+void send_to_other_core(const volatile void *data, size_t size,
+                        volatile void *dest,
+                        volatile uint32_t *flag_valid,
+                        volatile uint32_t *flag_ack);
 
 /**
  * @brief This function write data to the shared memory area only if ha been readby the other core
@@ -55,10 +53,10 @@ void send_to_other_core(const void *data, size_t size,
  * @param flag_valid pointer to the flag indicating if the data is valid
  * @param flag_ack pointer to the flag indicating if the data has been acknowledged
  */
-void send_to_other_core_blocking(const void *data, size_t size,
-                         volatile void *dest,
-                         volatile uint32_t *flag_valid,
-                         volatile uint32_t *flag_ack);
+void send_to_other_core_blocking(const volatile void *data, size_t size,
+                                 volatile void *dest,
+                                 volatile uint32_t *flag_valid,
+                                 volatile uint32_t *flag_ack);
 
 /**
  * @brief This function checks if there is data from the other core
@@ -70,8 +68,8 @@ void send_to_other_core_blocking(const void *data, size_t size,
  * @param flag_ack pointer to the flag indicating if the data has been acknowledged
  * @return int 1 if data received, 0 if nothing to read
  */
-int check_from_other_core(void *data_out, size_t size,
-                          volatile void *src,
+int check_from_other_core(volatile void *data_out, size_t size,
+                          const volatile void *src,
                           volatile uint32_t *flag_valid,
                           volatile uint32_t *flag_ack);
 
