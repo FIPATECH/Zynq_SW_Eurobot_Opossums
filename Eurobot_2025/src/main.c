@@ -82,12 +82,12 @@ int main()
 
             //     // Envoi de la valeur du timer
             //     xil_printf("ARM0: ARM1 Timer: %d\n\r", out_timer);
-            sharedCommand received_data;
-            if (CHECK_FIELD(&received_data, Timer_ms)) {
-                printf("Reçu Timer_ms = %d\n", received_data.Timer_ms);
-            }else{
-                xil_printf("ARM0: ARM1 Timer not valid\n\r");
-            }
+            // sharedCommand received_data;
+            // if (CHECK_FIELD(&received_data, Timer_ms)) {
+            //     printf("Reçu Timer_ms = %d\n", received_data.Timer_ms);
+            // }else{
+            //     xil_printf("ARM0: ARM1 Timer not valid\n\r");
+            // }
     
         }
 

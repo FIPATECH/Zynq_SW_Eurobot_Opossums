@@ -1,6 +1,7 @@
 #include "main.h"
 
 volatile sharedCommand *shared_mem = (volatile sharedCommand *)SHARED_MEMORY_BASEADDR;
+sharedCommand local_data;
 
 void init_shared_memory() {
     //Disable cache on OCM
@@ -19,11 +20,8 @@ int send_to_other_core(const void *data, size_t size,
     }
 
     // Copie mémoire
-    const uint8_t *src_bytes = (const uint8_t *)data;
-    volatile uint8_t *dst_bytes = (volatile uint8_t *)dest;
-    for (size_t i = 0; i < size; ++i) {
-        dst_bytes[i] = src_bytes[i];
-    }
+    void *non_volatile_dst = (void *)(uintptr_t)dest;
+    memcpy(non_volatile_dst, data, size);
 
     __asm__ volatile("dsb sy" ::: "memory");
 
@@ -43,12 +41,8 @@ void send_to_other_core_blocking(const void *data, size_t size,
         // Attente active : peut être optimisée par __WFE() ou sleep
     }
 
-    // Copie mémoire champ par champ (byte-wise)
-    const uint8_t *src_bytes = (const uint8_t *)data;
-    volatile uint8_t *dst_bytes = (volatile uint8_t *)dest;
-    for (size_t i = 0; i < size; ++i) {
-        dst_bytes[i] = src_bytes[i];
-    }
+    void *non_volatile_dst = (void *)(uintptr_t)dest;
+    memcpy(non_volatile_dst, data, size);
 
     // Barrière de synchronisation
     __asm__ volatile("dsb sy" ::: "memory");
@@ -67,9 +61,8 @@ int check_from_other_core(void *data_out, size_t size,
         const volatile uint8_t *src_bytes = (const volatile uint8_t *)src;
         uint8_t *dst_bytes = (uint8_t *)data_out;
 
-        for (size_t i = 0; i < size; ++i) {
-            dst_bytes[i] = src_bytes[i];
-        }
+        // Copie mémoire
+        memcpy(dst_bytes, src_bytes, size);
 
         __asm__ volatile("dmb sy" ::: "memory");
 

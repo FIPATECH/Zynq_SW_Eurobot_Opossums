@@ -2,7 +2,7 @@
 #include "lib_asserv/Lib_Asserv.h"
 
 volatile sharedCommand *shared_mem = (volatile sharedCommand *)SHARED_MEMORY_BASEADDR;
-
+sharedCommand local_data;
 
 void init_shared_memory() {
     //Disable cache on OCM
@@ -140,7 +140,6 @@ int check_from_other_core(void *data_out, size_t size,
 
 int check_for_cmd_state = 0;
 int old_check_timer_ms1 = 0;
-Position cmd_position;
 
 int previous_timer = 0;
 
@@ -149,10 +148,12 @@ void check_for_cmd_loop(void){
         old_check_timer_ms1 = Timer_ms1;
         switch(check_for_cmd_state){
             case 0: 
-                // if(CHECK_FIELD(&shared_mem, cmd_position)){
-                //     motion_pos(cmd_position);
-                //     printf("CMD_POS: %.4f, %.4f, %.4f\n", cmd_position.x, cmd_position.y, cmd_position.t);                    
-                // }
+                if(CHECK_FIELD(&local_data, cmd_position)){
+                    motion_pos(local_data.cmd_position);
+                    printf("CMD_POS CORE1: %.4f, %.4f, %.4f\n", local_data.cmd_position.x, 
+                                                            local_data.cmd_position.y, 
+                                                            local_data.cmd_position.t);                    
+                }
                 // check_for_cmd_state++;
                 break;
             

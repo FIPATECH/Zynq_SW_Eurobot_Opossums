@@ -7,13 +7,15 @@
 #define CHECK_FOR_NEW_COMMANDS_EVERY 1 // Check for new commands every 1ms
 
 extern volatile sharedCommand *shared_mem;
-
+extern sharedCommand local_data;
 
 #define SEND_FIELD(data_ptr, field_name) \
-    send_to_other_core(&(data_ptr)->field_name, sizeof((data_ptr)->field_name), \
-                       (volatile void *)&shared_mem->field_name, \
-                       &shared_mem->flag_##field_name##_valid, \
-                       &shared_mem->flag_##field_name##_ack)
+    send_to_other_core( \
+        &(data_ptr)->field_name, \
+        sizeof((data_ptr)->field_name), \
+        &(shared_mem)->field_name, \
+        &(shared_mem)->flag_##field_name##_valid, \
+        &(shared_mem)->flag_##field_name##_ack)
 
 #define SEND_FIELD_BLOCKING(data_ptr, field_name) \
     send_to_other_core_blocking( \

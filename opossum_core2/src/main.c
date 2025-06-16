@@ -34,7 +34,7 @@ int main()
     init_shared_memory();
 
 
-    // Init_CAN();
+    Init_CAN();
     Init_AU();
     Init_Asserv();
     
@@ -47,9 +47,9 @@ int main()
             // __asm__ volatile("dsb sy" ::: "memory");
             // shared_mem->flag_Timer_ms_valid = 1;
             // shared_mem->flag_Timer_ms_ack = 0;
-            sharedCommand local_data;
-            local_data.Timer_ms = Timer_ms1;
-            SEND_FIELD_BLOCKING(&local_data, Timer_ms);
+            // sharedCommand local_data;
+            // local_data.Timer_ms = Timer_ms1;
+            // SEND_FIELD_BLOCKING(&local_data, Timer_ms);
         }
 
         AU_Loop();
@@ -59,7 +59,7 @@ int main()
             Init_CAN_MOTOR_variables();
             Init_Asserv();
         }else{
-            // Asserv_Loop();
+            Asserv_Loop();
         }
     }
 

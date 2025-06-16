@@ -7,14 +7,12 @@ uint8_t Move_Cmd(void) {
         xil_printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
-        Position cmd_position;
-        if (Get_Param_Float(&cmd_position.x))     return PARAM_ERROR_CODE;
-        if (Get_Param_Float(&cmd_position.y))     return PARAM_ERROR_CODE;
-        if (Get_Param_Float(&cmd_position.t))     return PARAM_ERROR_CODE;
-
+        if (Get_Param_Float(&local_data.cmd_position.x))     return PARAM_ERROR_CODE;
+        if (Get_Param_Float(&local_data.cmd_position.y))     return PARAM_ERROR_CODE;
+        if (Get_Param_Float(&local_data.cmd_position.t))     return PARAM_ERROR_CODE;
         // ecriture dans la mémoire partagée
-        SEND_FIELD(shared_mem, cmd_position);
-        printf("CMD_POS: %.4f, %.4f, %.4f\n", cmd_position.x, cmd_position.y, cmd_position.t);
+        SEND_FIELD_BLOCKING(&local_data, cmd_position);
+        printf("CMD_POS CORE0: %.4f, %.4f, %.4f\n", local_data.cmd_position.x, local_data.cmd_position.y, local_data.cmd_position.t);
 
         return 0;
     }
