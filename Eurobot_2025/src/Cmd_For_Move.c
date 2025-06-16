@@ -11,9 +11,7 @@ uint8_t Move_Cmd(void) {
         if (Get_Param_Float(&local_data.cmd_position.y))     return PARAM_ERROR_CODE;
         if (Get_Param_Float(&local_data.cmd_position.t))     return PARAM_ERROR_CODE;
         // ecriture dans la mémoire partagée
-        SEND_FIELD_BLOCKING(&local_data, cmd_position);
-        printf("CMD_POS CORE0: %.4f, %.4f, %.4f\n", local_data.cmd_position.x, local_data.cmd_position.y, local_data.cmd_position.t);
-
+        SEND_FIELD(&local_data, cmd_position);
         return 0;
     }
 }
@@ -24,13 +22,12 @@ uint8_t Speed_Cmd(void) {
         printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
-        Speed cmd_speed;
-        if (Get_Param_Float(&cmd_speed.vx)) return PARAM_ERROR_CODE;
-        if (Get_Param_Float(&cmd_speed.vy)) return PARAM_ERROR_CODE;
-        if (Get_Param_Float(&cmd_speed.vt)) return PARAM_ERROR_CODE;
+        if (Get_Param_Float(&local_data.cmd_speed.vx)) return PARAM_ERROR_CODE;
+        if (Get_Param_Float(&local_data.cmd_speed.vy)) return PARAM_ERROR_CODE;
+        if (Get_Param_Float(&local_data.cmd_speed.vt)) return PARAM_ERROR_CODE;
 
         // ecriture dans la mémoire partagée
-        SEND_FIELD(shared_mem, cmd_speed);
+        SEND_FIELD(&local_data, cmd_speed);
         return 0;
     }
 }
@@ -41,13 +38,12 @@ uint8_t Absolute_Speed_Cmd(void) {
         printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
-        Speed cmd_abs_speed;
-        if (Get_Param_Float(&cmd_abs_speed.vx)) return PARAM_ERROR_CODE;
-        if (Get_Param_Float(&cmd_abs_speed.vy)) return PARAM_ERROR_CODE;
-        if (Get_Param_Float(&cmd_abs_speed.vt)) return PARAM_ERROR_CODE;
+        if (Get_Param_Float(&local_data.cmd_abs_speed.vx)) return PARAM_ERROR_CODE;
+        if (Get_Param_Float(&local_data.cmd_abs_speed.vy)) return PARAM_ERROR_CODE;
+        if (Get_Param_Float(&local_data.cmd_abs_speed.vt)) return PARAM_ERROR_CODE;
         
         // ecriture dans la mémoire partagée
-        SEND_FIELD(shared_mem, cmd_abs_speed);
+        SEND_FIELD(&local_data, cmd_abs_speed);
         return 0;
     }
 }
@@ -55,10 +51,8 @@ uint8_t Absolute_Speed_Cmd(void) {
 // FREE
 uint8_t FREE_Cmd(void) {
     //ecriture dans la mémoire partagée
-    shared_mem->asserv_mode = 0; // Mode libre
-    __asm__ volatile("dsb sy");
-    shared_mem->flag_asserv_mode_valid = 1; // Indique que le mode asservissement est valide
-    __asm__ volatile("dsb sy");
+    local_data.asserv_mode = 0; // Mode libre
+    SEND_FIELD(&local_data, asserv_mode);
     return 0;
 }
 
@@ -68,21 +62,16 @@ uint8_t BLOCK_Cmd(void) {
         printf("INVALID COMMAND : AU\n");
         return 0;
     }else{
-        // ecriture dans la mémoire partagée
-        shared_mem->asserv_mode = 4; // Mode blocage
-        __asm__ volatile("dsb sy");
-        shared_mem->flag_asserv_mode_valid = 1; // Indique que le mode asservissement est valide
-        __asm__ volatile("dsb sy");
+        local_data.asserv_mode = 4; // Mode blocage
+        SEND_FIELD(&local_data, asserv_mode);
         return 0;
     }
 }
 
 uint8_t Asserv_Done_Cmd(void) {
     // lecture de la mémoire partagée
-    __asm__ volatile("dsb sy");
-    int asserv_done = shared_mem->asserv_done;
-    __asm__ volatile("dsb sy");
-    printf("%d\n", asserv_done);
+    CHECK_FIELD(&local_data, asserv_done);
+    printf("%d\n", local_data.asserv_done);
     return 0;
 }
 
