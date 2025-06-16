@@ -42,8 +42,10 @@ void init_shared_memory(void);
  * @param dest pointer to the destination in shared memory
  * @param flag_valid pointer to the flag indicating if the data is valid
  * @param flag_ack pointer to the flag indicating if the data has been acknowledged
+ * 
+ * @return int 1 if data sent, 0 if not sent (previous data not acknowledged)
  */
-void send_to_other_core(const volatile void *data, size_t size,
+int send_to_other_core(const void *data, size_t size,
                         volatile void *dest,
                         volatile uint32_t *flag_valid,
                         volatile uint32_t *flag_ack);

@@ -9,14 +9,19 @@ void init_shared_memory() {
 }
 
 
-void send_to_other_core(const volatile void *data, size_t size,
+int send_to_other_core(const void *data, size_t size,
                         volatile void *dest,
                         volatile uint32_t *flag_valid,
                         volatile uint32_t *flag_ack) {
-    const volatile uint8_t *src_bytes = (const volatile uint8_t *)data;
-    volatile uint8_t *dst_bytes = (volatile uint8_t *)dest;
+    // Si la donnée précédente n'a pas encore été lue, on refuse d'envoyer
+    if (*flag_valid && !(*flag_ack)) {
+        return 0; // Pas encore consommé
+    }
 
-    for (size_t i = 0; i < size; i++) {
+    // Copie mémoire
+    const uint8_t *src_bytes = (const uint8_t *)data;
+    volatile uint8_t *dst_bytes = (volatile uint8_t *)dest;
+    for (size_t i = 0; i < size; ++i) {
         dst_bytes[i] = src_bytes[i];
     }
 
@@ -24,7 +29,10 @@ void send_to_other_core(const volatile void *data, size_t size,
 
     *flag_valid = 1;
     *flag_ack = 0;
+
+    return 1; // Succès
 }
+
 
 void send_to_other_core_blocking(const void *data, size_t size,
                                  volatile void *dest,
