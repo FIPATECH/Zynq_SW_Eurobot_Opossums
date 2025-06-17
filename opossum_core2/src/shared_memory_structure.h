@@ -30,12 +30,9 @@ typedef struct {
     volatile uint32_t flag_cmd_abs_speed_ack;   // CORE1 -> CORE0: 1 new absolute speed taken into account, 0 otherwise
     Speed cmd_abs_speed;
 
-    volatile uint32_t flag_lidar_data_valid; // CORE0 -> CORE1: 1 if lidar data is valid, 0 otherwise
-    volatile uint32_t flag_lidar_data_ack;   // CORE1 -> CORE0: 1 new lidar data taken into account, 0 otherwise
-    struct {
-        Position lidar_position; // position of the robot according to the lidar
-        int delay; // calculation delay in ms 
-    } lidar_position;
+    volatile uint32_t flag_set_lidar_valid; // CORE0 -> CORE1: 1 if lidar data is valid, 0 otherwise
+    volatile uint32_t flag_set_lidar_ack;   // CORE1 -> CORE0: 1 new lidar data taken into account, 0 otherwise
+    Set_lidar set_lidar;
 
     volatile uint32_t flag_asserv_mode_valid; // CORE0 -> CORE1: 1 if asserv mode is valid, 0 otherwise
     volatile uint32_t flag_asserv_mode_ack;   // CORE1 -> CORE0: 1 new asserv mode taken into account, 0 otherwise

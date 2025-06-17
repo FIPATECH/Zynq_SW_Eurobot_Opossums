@@ -22,8 +22,8 @@ void init_shared_memory() {
     shared_mem->flag_cmd_abs_speed_valid = 0;
     shared_mem->flag_cmd_abs_speed_ack = 0;
 
-    shared_mem->flag_lidar_data_valid = 0;
-    shared_mem->flag_lidar_data_ack = 0;
+    shared_mem->flag_set_lidar_valid = 0;
+    shared_mem->flag_set_lidar_ack = 0;
 
     shared_mem->flag_asserv_mode_valid = 0;
     shared_mem->flag_asserv_mode_ack = 0;
@@ -149,13 +149,17 @@ void check_for_cmd_loop(void){
         switch(check_for_cmd_state){
             case 0: 
                 if(CHECK_FIELD(&local_data, cmd_position)){
-                    motion_pos(local_data.cmd_position);
-                    printf("CMD_POS CORE1: %.4f, %.4f, %.4f\n", local_data.cmd_position.x, 
-                                                            local_data.cmd_position.y, 
-                                                            local_data.cmd_position.t);                    
+                    motion_pos(local_data.cmd_position);                   
+                }
+                check_for_cmd_state++;
+                break;
+            case 1: {
+                if(CHECK_FIELD(&local_data, set_lidar)){
+                    Set_Lidar_Cmd(local_data.set_lidar);                        
                 }
                 // check_for_cmd_state++;
                 break;
+            }
             
             // case 1: {
             //     Speed cmd_speed;

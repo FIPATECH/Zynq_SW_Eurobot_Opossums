@@ -63,6 +63,11 @@ typedef struct {
     int transmit_step; // step 9: transmission des ordres aux moteurs
 } Asserv_Step_Timing;
 
-Asserv_Step_Timing asserv_step_timing;
+typedef struct {
+    int lidar_position_x; // position of the robot according to the lidar
+    int lidar_position_y; // position of the robot according to the lidar
+    int lidar_position_t; // position of the robot according to the lidar
+    int delay; // calculation delay in ms 
+} Set_lidar;
 
 #endif

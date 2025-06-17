@@ -25,6 +25,6 @@ void Init_Asserv(void);
 
 void Asserv_Loop(void);
 
-void Set_Lidar_Cmd(Position position_lidar, int lidar_delay);
+void Set_Lidar_Cmd(Set_lidar set_lidar);
 
 #endif // __ASSERV_MASTER_H

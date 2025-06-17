@@ -134,22 +134,14 @@ uint8_t SET_Cmd(void) {
 }
 
 uint8_t Set_Lidar_Cmd(void) {
-    Position lidar_position;
-    uint32_t time;
-
     // Récupération des mesures LIDAR
-    if (Get_Param_Float(&lidar_position.x))     return PARAM_ERROR_CODE;
-    if (Get_Param_Float(&lidar_position.y))     return PARAM_ERROR_CODE;
-    if (Get_Param_Float(&lidar_position.t))     return PARAM_ERROR_CODE; 
-    if (Get_Param_u32(&time))                   return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.set_lidar.lidar_position_x))     return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.set_lidar.lidar_position_y))     return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.set_lidar.lidar_position_t))     return PARAM_ERROR_CODE; 
+    if (Get_Param_u32(&local_data.set_lidar.delay))                   return PARAM_ERROR_CODE;
 
     // ecriture dans la mémoire partagée
-    shared_mem->lidar_position.lidar_position = lidar_position;
-    shared_mem->lidar_position.delay = (int)time;
-
-    __asm__ volatile("dsb sy");
-    shared_mem->flag_lidar_data_valid = 1; // Indique que les données LIDAR sont valides
-    __asm__ volatile("dsb sy");
+    SEND_FIELD(&local_data, set_lidar);
     return 0;
 }
 
