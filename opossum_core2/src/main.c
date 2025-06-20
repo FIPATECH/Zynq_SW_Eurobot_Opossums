@@ -40,16 +40,12 @@ int main()
     
 
     while(1){
-        if(Timer_ms1 - old_timer_ms1 >= 1000) {
+        if(Timer_ms1 - old_timer_ms1 >= 100) {
+            printf("Position: %.4f, %.4f, %.4f\n", 
+                     (double)kalman_current_state.x[0], 
+                     (double)kalman_current_state.x[1], 
+                     (double)kalman_current_state.x[2]);
             old_timer_ms1 = Timer_ms1;
-            // printf("CPU1: Timer_ms1: %d\n\r", Timer_ms1);
-            // shared_mem->Timer_ms = Timer_ms1;
-            // __asm__ volatile("dsb sy" ::: "memory");
-            // shared_mem->flag_Timer_ms_valid = 1;
-            // shared_mem->flag_Timer_ms_ack = 0;
-            // sharedCommand local_data;
-            // local_data.Timer_ms = Timer_ms1;
-            // SEND_FIELD_BLOCKING(&local_data, Timer_ms);
         }
 
         AU_Loop();

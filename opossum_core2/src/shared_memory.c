@@ -149,14 +149,18 @@ void check_for_cmd_loop(void){
         switch(check_for_cmd_state){
             case 0: 
                 if(CHECK_FIELD(&local_data, cmd_position)){
-                    motion_pos(local_data.cmd_position);                   
+                    motion_pos(local_data.cmd_position); 
+                    printf("CMD_POS: %.4f, %.4f, %.4f\n", 
+                           (double)local_data.cmd_position.x, 
+                           (double)local_data.cmd_position.y, 
+                           (double)local_data.cmd_position.t);
                 }
-                check_for_cmd_state++;
+                // check_for_cmd_state++;
                 break;
             case 1: {
-                if(CHECK_FIELD(&local_data, set_lidar)){
-                    Set_Lidar_Cmd(local_data.set_lidar);                        
-                }
+                // if(CHECK_FIELD(&local_data, set_lidar)){
+                //     Set_Lidar_Cmd(local_data.set_lidar);                        
+                // }
                 // check_for_cmd_state++;
                 break;
             }
