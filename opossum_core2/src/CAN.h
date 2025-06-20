@@ -171,12 +171,3 @@ void CAN_transmit_motor(int16_t motor1, int16_t motor2, int16_t motor3);
  */
 void Init_CAN_MOTOR_variables(void);
 
-/**
- * @brief Command function for motor control via CAN.
- * 
- * This function retrieves parameters for motor control and sends the commands
- * to the motors via CAN.
- * 
- * @return Returns 0 on success, or an error code on failure.
- */
-uint8_t Motor_cmd(void);
