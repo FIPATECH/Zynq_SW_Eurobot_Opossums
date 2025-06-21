@@ -41,10 +41,10 @@ int main()
 
     while(1){
         if(Timer_ms1 - old_timer_ms1 >= 100) {
-            printf("Position: %.4f, %.4f, %.4f\n", 
-                     (double)kalman_current_state.x[0], 
-                     (double)kalman_current_state.x[1], 
-                     (double)kalman_current_state.x[2]);
+            // printf("Position: %.4f, %.4f, %.4f\n", 
+            //          (double)kalman_current_state.x[0], 
+            //          (double)kalman_current_state.x[1], 
+            //          (double)kalman_current_state.x[2]);
             old_timer_ms1 = Timer_ms1;
         }
 

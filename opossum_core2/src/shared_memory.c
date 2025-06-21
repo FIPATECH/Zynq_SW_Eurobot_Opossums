@@ -150,112 +150,79 @@ void check_for_cmd_loop(void){
             case 0: 
                 if(CHECK_FIELD(&local_data, cmd_position)){
                     motion_pos(local_data.cmd_position); 
-                    printf("CMD_POS: %.4f, %.4f, %.4f\n", 
-                           (double)local_data.cmd_position.x, 
-                           (double)local_data.cmd_position.y, 
-                           (double)local_data.cmd_position.t);
                 }
-                // check_for_cmd_state++;
+                check_for_cmd_state++;
                 break;
-            case 1: {
-                // if(CHECK_FIELD(&local_data, set_lidar)){
-                //     Set_Lidar_Cmd(local_data.set_lidar);                        
-                // }
-                // check_for_cmd_state++;
+            case 1: 
+                if(CHECK_FIELD(&local_data, cmd_speed)){
+                    motion_speed(local_data.cmd_speed);
+                }
+                check_for_cmd_state++;
                 break;
-            }
-            
-            // case 1: {
-            //     Speed cmd_speed;
-            //     if(CHECK_FIELD(&cmd_speed, cmd_speed)){
-            //         motion_speed(cmd_speed);
-            //     }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 2: {
-            //     Speed cmd_abs_speed;
-            //     if(CHECK_FIELD(&cmd_abs_speed, cmd_abs_speed)){
-            //         motion_absolute_speed(cmd_abs_speed);
-            //     }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 3: {
-            //     int asserv_mode;
-            //     if(CHECK_FIELD(&asserv_mode, asserv_mode)){
-            //         if(asserv_mode == 0){
-            //             motion_free();
-            //         } else if(asserv_mode == 4){
-            //             motion_block();
-            //         }
-            //     }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 4: {
-            //     // Position lidar_position;
-            //     // int lidar_delay;
-            //     // if(CHECK_FIELD(&lidar_position, lidar_position) && 
-            //     //    CHECK_FIELD(&lidar_delay, lidar_delay)){
-            //     //     Set_Lidar_Cmd(lidar_position, lidar_delay);
-            //     // }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 5: {
-            //     Position set_pos;
-            //     if(CHECK_FIELD(shared_mem, set_pos)){
-            //         set_position(set_pos);
-            //     }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 6: {
-            //     float vmax;
-            //     if(CHECK_FIELD(shared_mem, vmax)){
-            //         set_Constraint_vitesse_xy_max(vmax);
-            //     }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 7: {
-            //     float vtmax;
-            //     if(CHECK_FIELD(shared_mem, vtmax)){
-            //         set_Constraint_vt_max(vtmax);
-            //     }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 8: {
-            //     float amax;
-            //     if(CHECK_FIELD(shared_mem, amax)){
-            //         set_Constraint_a_xy_max(amax);
-            //     }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 9: {
-            //     ESC_Command cmd_esc;
-            //     if(CHECK_FIELD(shared_mem, cmd_esc)){
-            //         Asserv_PWM_calculator(&cmd_esc);
-            //     }
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 10: {
-            //     CHECK_FIELD(shared_mem, enable_kalman);
-            //     check_for_cmd_state++;
-            //     break;
-            // }
-            // case 11: {
-            //     int odo_spacing;
-            //     if(CHECK_FIELD(shared_mem, odo_spacing)){
-            //         odo_set_spacing(odo_spacing);
-            //     }
-            //     check_for_cmd_state = 0; // Reset to start over
-            //     break;
-            // }
+            case 2: 
+                if(CHECK_FIELD(&local_data, cmd_abs_speed)){
+                    motion_absolute_speed(local_data.cmd_abs_speed);
+                }
+                check_for_cmd_state++;
+                break;
+            case 3: 
+                if(CHECK_FIELD(&local_data, asserv_mode)){
+                    if(local_data.asserv_mode == 0){
+                        motion_free();
+                    } else if(local_data.asserv_mode == 4){
+                        motion_block();
+                    }
+                }
+                check_for_cmd_state++;
+                break;
+            case 4: 
+                if(CHECK_FIELD(&local_data, set_lidar)){
+                    Set_Lidar_Cmd(local_data.set_lidar);                        
+                }
+                check_for_cmd_state++;
+                break;
+            case 5: 
+                if(CHECK_FIELD(&local_data, set_pos)){
+                    set_position(local_data.set_pos);
+                }
+                check_for_cmd_state++;
+                break;
+            case 6: 
+                if(CHECK_FIELD(&local_data, vmax)){
+                    set_Constraint_vitesse_xy_max(local_data.vmax);
+                }
+                check_for_cmd_state++;
+                break;
+            case 7: 
+                if(CHECK_FIELD(&local_data, vtmax)){
+                    set_Constraint_vt_max(local_data.vtmax);
+                }
+                check_for_cmd_state++;
+                break;
+            case 8: 
+                if(CHECK_FIELD(&local_data, amax)){
+                    set_Constraint_a_xy_max(local_data.amax);
+                }
+                check_for_cmd_state++;
+                break;
+            case 9: 
+                if(CHECK_FIELD(&local_data, cmd_esc)){
+                    Asserv_PWM_calculator(&local_data.cmd_esc);
+                }
+                check_for_cmd_state++;
+                break;
+            case 10: 
+                if(CHECK_FIELD(&local_data, enable_kalman)){
+                    en_kalman = local_data.enable_kalman;
+                }
+                check_for_cmd_state++;
+                break;
+            case 11: 
+                if(CHECK_FIELD(&local_data, odo_spacing)){
+                    odo_set_spacing(local_data.odo_spacing);
+                }
+                check_for_cmd_state = 0; // Reset to start over
+                break;
         }
     }
 }

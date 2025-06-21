@@ -44,7 +44,7 @@ ESC_Command old_Consigne;
 
 int Lidar_inconsistency_count = 0;
 
-int enable_kalman = 1;
+int en_kalman = 1;
 int kalman_initialized = 0;
 
 float dx, dy, dt = 0;
@@ -69,7 +69,7 @@ void Init_Asserv(void) {
     old_Consigne.command3 = 0;
     old_Consigne.command4 = 0;
 
-    enable_kalman = 1;
+    en_kalman = 1;
 
     asserv_init();
 }
@@ -257,7 +257,7 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
     position_lidar.y = set_lidar.lidar_position_y;
     position_lidar.t = set_lidar.lidar_position_t;
 
-    if(enable_kalman) {
+    if(en_kalman) {
         if(!kalman_initialized){
             // Initialisation du filtre de Kalman avec les données LIDAR
             kalman_init_with_lidar(&kalman_fifo, &position_lidar);

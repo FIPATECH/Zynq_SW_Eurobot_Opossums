@@ -76,22 +76,12 @@ uint8_t Asserv_Done_Cmd(void) {
 }
 
 uint8_t Get_Pos_Cmd(void) {
-    Position pos;
     // lecture de la mémoire partagée
-    if (shared_mem->flag_kalman_out_valid) {
-        __asm__ volatile("dsb sy");
-        pos.x = shared_mem->kalman_out.x;
-        pos.y = shared_mem->kalman_out.y;
-        pos.t = shared_mem->kalman_out.t;
-        __asm__ volatile("dsb sy");
-
-        shared_mem->flag_kalman_out_ack = 1; // Indique que la position a été lue
-        shared_mem->flag_kalman_out_valid = 0; // Réinitialise le flag
-
+    if (CHECK_FIELD(&local_data, kalman_out)) {
         printf("GETPOS ");
-        printf("%.4f ", (double) (pos.x));
-        printf("%.4f ", (double) (pos.y));
-        printf("%.4f\n", (double) (pos.t));
+        printf("%.4f ", (double)  (local_data.kalman_out.x));
+        printf("%.4f ", (double)  (local_data.kalman_out.y));
+        printf("%.4f\n", (double) (local_data.kalman_out.t));
     } else {
         printf("GETPOS ERRROR: Position not valid\n");
     }
@@ -99,37 +89,34 @@ uint8_t Get_Pos_Cmd(void) {
 }
 
 uint8_t Get_Odo_Cmd(void) {
-    Position kalman_out;
-    Speed speed_robot;
     // lecture de la mémoire partagée
     int status1;
     int status2;
-    status1 = CHECK_FIELD(shared_mem, kalman_out);
-    status2 = CHECK_FIELD(shared_mem, speed_robot);
+    status1 = CHECK_FIELD(&local_data, kalman_out);
+    status2 = CHECK_FIELD(&local_data, speed_robot);
 
     if(!status1 || !status2) {
         printf("GETODO ERROR: Position or speed not valid\n");
         return 0;
     }else{
         printf("ODO ");
-        printf("%.4f ", (double)(kalman_out.x));
-        printf("%.4f ", (double)(kalman_out.y));
-        printf("%.4f ", (double)(kalman_out.t));
-        printf("%.4f ", (double)(speed_robot.vx));
-        printf("%.4f ", (double)(speed_robot.vy));
-        printf("%.4f\n", (double)(speed_robot.vt));
+        printf("%.4f ", (double)(local_data.kalman_out.x));
+        printf("%.4f ", (double)(local_data.kalman_out.y));
+        printf("%.4f ", (double)(local_data.kalman_out.t));
+        printf("%.4f ", (double)(local_data.speed_robot.vx));
+        printf("%.4f ", (double)(local_data.speed_robot.vy));
+        printf("%.4f\n", (double)(local_data.speed_robot.vt));
         return 0;
     }
 }
 
 uint8_t SET_Cmd(void) {
-    Position set_pos;
     // Récupération de la position à définir
-    if (Get_Param_Float(&set_pos.x)) return 1;
-    if (Get_Param_Float(&set_pos.y)) return 1;
-    if (Get_Param_Float(&set_pos.t)) return 1;
+    if (Get_Param_Float(&local_data.set_pos.x)) return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.set_pos.y)) return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.set_pos.t)) return PARAM_ERROR_CODE;
     // ecriture de la mémoire partagée
-    SEND_FIELD(shared_mem, set_pos);
+    SEND_FIELD(&local_data, set_pos);
     return 0;
 }
 
@@ -138,7 +125,7 @@ uint8_t Set_Lidar_Cmd(void) {
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_x))     return PARAM_ERROR_CODE;
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_y))     return PARAM_ERROR_CODE;
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_t))     return PARAM_ERROR_CODE; 
-    if (Get_Param_u32(&local_data.set_lidar.delay))                   return PARAM_ERROR_CODE;
+    if (Get_Param_u32(&local_data.set_lidar.delay))                  return PARAM_ERROR_CODE;
 
     // ecriture dans la mémoire partagée
     SEND_FIELD(&local_data, set_lidar);
@@ -147,59 +134,53 @@ uint8_t Set_Lidar_Cmd(void) {
 
 // VMAX
 uint8_t VMAX_Cmd(void) {
-    float vmax;
-    if (Get_Param_Float(&vmax))     return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.vmax))     return PARAM_ERROR_CODE;
     // ecriture dans la mémoire partagée
-    SEND_FIELD(shared_mem, vmax);
+    SEND_FIELD(&local_data, vmax);
     return 0;
 }
 
 // VTMAX
 uint8_t VTMAX_Cmd(void) {
-    float vtmax;
-    if (Get_Param_Float(&vtmax))    return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.vtmax))    return PARAM_ERROR_CODE;
     // ecriture dans la mémoire partagée
-    SEND_FIELD(shared_mem, vtmax);
+    SEND_FIELD(&local_data, vtmax);
     return 0;
 }
 
 // AMAX
 uint8_t AMAX_Cmd(void) {
-    float amax;
-    if (Get_Param_Float(&amax))    return PARAM_ERROR_CODE;  //almax
+    if (Get_Param_Float(&local_data.amax))    return PARAM_ERROR_CODE;  //almax
     // ecriture dans la mémoire partagée
-    SEND_FIELD(shared_mem, amax);
+    SEND_FIELD(&local_data, amax);
     return 0;
 }
 
 uint8_t PWM_Func(void)
 {
-    ESC_Command cmd_esc;
-    if (Get_Param_Float(&cmd_esc.command1))    return PARAM_ERROR_CODE;
-    if (Get_Param_Float(&cmd_esc.command2))    return PARAM_ERROR_CODE;
-    if (Get_Param_Float(&cmd_esc.command3))    return PARAM_ERROR_CODE;
-    if (Get_Param_Float(&cmd_esc.command4))    return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.cmd_esc.command1))    return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.cmd_esc.command2))    return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.cmd_esc.command3))    return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.cmd_esc.command4))    return PARAM_ERROR_CODE;
     
     // ecriture dans la mémoire partagée
-    SEND_FIELD(shared_mem, cmd_esc);
+    SEND_FIELD(&local_data, cmd_esc);
     return 0;
 }
 
 uint8_t Enable_Kalman_Cmd(void) {
-    uint32_t enable_kalman;
-    if (Get_Param_u32(&enable_kalman)) return PARAM_ERROR_CODE;
+    if (Get_Param_u32(&local_data.enable_kalman))         return PARAM_ERROR_CODE;
     
     // ecriture dans la mémoire partagée
-    SEND_FIELD(shared_mem, enable_kalman);
+    SEND_FIELD(&local_data, enable_kalman);
     return 0;
 }
 
 uint8_t Set_Odo_Spacing_Cmd(void) {
-    float odo_spacing;
-    if (Get_Param_Float(&odo_spacing)) return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&local_data.odo_spacing)) return PARAM_ERROR_CODE;
 
     // ecriture dans la mémoire partagée
-    SEND_FIELD(shared_mem, odo_spacing);
+    SEND_FIELD(&local_data, odo_spacing);
     return 0;
 }
 
