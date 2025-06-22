@@ -120,6 +120,15 @@ uint8_t SET_Cmd(void) {
     return 0;
 }
 
+uint8_t SET0_Cmd(void) {
+    local_data.set_pos.x = 0.0f; // position x
+    local_data.set_pos.y = 0.0f; // position y
+    local_data.set_pos.t = 0.0f; // position t
+    // ecriture de la mémoire partagée
+    SEND_FIELD(&local_data, set_pos);
+    return 0;
+}
+
 uint8_t Set_Lidar_Cmd(void) {
     // Récupération des mesures LIDAR
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_x))     return PARAM_ERROR_CODE;

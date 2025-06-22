@@ -34,7 +34,8 @@ const Command Command_List[] = {
     { "HELP_STEPPER", Stepper_help_cmd},
 
     //odometry command
-    { "SETX", SET_Cmd},
+    { "SET", SET_Cmd},
+    { "SET0", SET0_Cmd},
 
     //asserv command
     { "VMAX", VMAX_Cmd},
