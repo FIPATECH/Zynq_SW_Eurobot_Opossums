@@ -52,5 +52,6 @@
 
 //feetech part
 #include "FEETECH/feetech_UART.h"
+#include "FEETECH/feetech.h"
 
 #endif // MAIN_H
