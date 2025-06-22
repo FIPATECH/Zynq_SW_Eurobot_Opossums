@@ -109,22 +109,53 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     // F^T est la transposée de F,
     // donc F^T[j][k] = F[k][j]
 
-    for (int i = 0; i < 6; i++) {
-        for (int j = 0; j < 6; j++) {
-            // Initialisation avec Q[i][j]
-            float val = Q[i][j];
+    // Ligne 0
+    state->P[0][0] = Q[0][0] + P_temp[0][0]*F[0][0] + P_temp[0][1]*F[1][0] + P_temp[0][2]*F[2][0] + P_temp[0][3]*F[3][0] + P_temp[0][4]*F[4][0] + P_temp[0][5]*F[5][0];
+    state->P[0][1] = Q[0][1] + P_temp[0][0]*F[0][1] + P_temp[0][1]*F[1][1] + P_temp[0][2]*F[2][1] + P_temp[0][3]*F[3][1] + P_temp[0][4]*F[4][1] + P_temp[0][5]*F[5][1];
+    state->P[0][2] = Q[0][2] + P_temp[0][0]*F[0][2] + P_temp[0][1]*F[1][2] + P_temp[0][2]*F[2][2] + P_temp[0][3]*F[3][2] + P_temp[0][4]*F[4][2] + P_temp[0][5]*F[5][2];
+    state->P[0][3] = Q[0][3] + P_temp[0][0]*F[0][3] + P_temp[0][1]*F[1][3] + P_temp[0][2]*F[2][3] + P_temp[0][3]*F[3][3] + P_temp[0][4]*F[4][3] + P_temp[0][5]*F[5][3];
+    state->P[0][4] = Q[0][4] + P_temp[0][0]*F[0][4] + P_temp[0][1]*F[1][4] + P_temp[0][2]*F[2][4] + P_temp[0][3]*F[3][4] + P_temp[0][4]*F[4][4] + P_temp[0][5]*F[5][4];
+    state->P[0][5] = Q[0][5] + P_temp[0][0]*F[0][5] + P_temp[0][1]*F[1][5] + P_temp[0][2]*F[2][5] + P_temp[0][3]*F[3][5] + P_temp[0][4]*F[4][5] + P_temp[0][5]*F[5][5];
 
-            // somme sur k
-            val += P_temp[i][0] * F[j][0];
-            val += P_temp[i][1] * F[j][1];
-            val += P_temp[i][2] * F[j][2];
-            val += P_temp[i][3] * F[j][3];
-            val += P_temp[i][4] * F[j][4];
-            val += P_temp[i][5] * F[j][5];
+    // Ligne 1
+    state->P[1][0] = Q[1][0] + P_temp[1][0]*F[0][0] + P_temp[1][1]*F[1][0] + P_temp[1][2]*F[2][0] + P_temp[1][3]*F[3][0] + P_temp[1][4]*F[4][0] + P_temp[1][5]*F[5][0];
+    state->P[1][1] = Q[1][1] + P_temp[1][0]*F[0][1] + P_temp[1][1]*F[1][1] + P_temp[1][2]*F[2][1] + P_temp[1][3]*F[3][1] + P_temp[1][4]*F[4][1] + P_temp[1][5]*F[5][1];
+    state->P[1][2] = Q[1][2] + P_temp[1][0]*F[0][2] + P_temp[1][1]*F[1][2] + P_temp[1][2]*F[2][2] + P_temp[1][3]*F[3][2] + P_temp[1][4]*F[4][2] + P_temp[1][5]*F[5][2];
+    state->P[1][3] = Q[1][3] + P_temp[1][0]*F[0][3] + P_temp[1][1]*F[1][3] + P_temp[1][2]*F[2][3] + P_temp[1][3]*F[3][3] + P_temp[1][4]*F[4][3] + P_temp[1][5]*F[5][3];
+    state->P[1][4] = Q[1][4] + P_temp[1][0]*F[0][4] + P_temp[1][1]*F[1][4] + P_temp[1][2]*F[2][4] + P_temp[1][3]*F[3][4] + P_temp[1][4]*F[4][4] + P_temp[1][5]*F[5][4];
+    state->P[1][5] = Q[1][5] + P_temp[1][0]*F[0][5] + P_temp[1][1]*F[1][5] + P_temp[1][2]*F[2][5] + P_temp[1][3]*F[3][5] + P_temp[1][4]*F[4][5] + P_temp[1][5]*F[5][5];
 
-            state->P[i][j] = val;
-        }
-    }
+    // Ligne 2
+    state->P[2][0] = Q[2][0] + P_temp[2][0]*F[0][0] + P_temp[2][1]*F[1][0] + P_temp[2][2]*F[2][0] + P_temp[2][3]*F[3][0] + P_temp[2][4]*F[4][0] + P_temp[2][5]*F[5][0];
+    state->P[2][1] = Q[2][1] + P_temp[2][0]*F[0][1] + P_temp[2][1]*F[1][1] + P_temp[2][2]*F[2][1] + P_temp[2][3]*F[3][1] + P_temp[2][4]*F[4][1] + P_temp[2][5]*F[5][1];
+    state->P[2][2] = Q[2][2] + P_temp[2][0]*F[0][2] + P_temp[2][1]*F[1][2] + P_temp[2][2]*F[2][2] + P_temp[2][3]*F[3][2] + P_temp[2][4]*F[4][2] + P_temp[2][5]*F[5][2];
+    state->P[2][3] = Q[2][3] + P_temp[2][0]*F[0][3] + P_temp[2][1]*F[1][3] + P_temp[2][2]*F[2][3] + P_temp[2][3]*F[3][3] + P_temp[2][4]*F[4][3] + P_temp[2][5]*F[5][3];
+    state->P[2][4] = Q[2][4] + P_temp[2][0]*F[0][4] + P_temp[2][1]*F[1][4] + P_temp[2][2]*F[2][4] + P_temp[2][3]*F[3][4] + P_temp[2][4]*F[4][4] + P_temp[2][5]*F[5][4];
+    state->P[2][5] = Q[2][5] + P_temp[2][0]*F[0][5] + P_temp[2][1]*F[1][5] + P_temp[2][2]*F[2][5] + P_temp[2][3]*F[3][5] + P_temp[2][4]*F[4][5] + P_temp[2][5]*F[5][5];
+
+    // Ligne 3
+    state->P[3][0] = Q[3][0] + P_temp[3][0]*F[0][0] + P_temp[3][1]*F[1][0] + P_temp[3][2]*F[2][0] + P_temp[3][3]*F[3][0] + P_temp[3][4]*F[4][0] + P_temp[3][5]*F[5][0];
+    state->P[3][1] = Q[3][1] + P_temp[3][0]*F[0][1] + P_temp[3][1]*F[1][1] + P_temp[3][2]*F[2][1] + P_temp[3][3]*F[3][1] + P_temp[3][4]*F[4][1] + P_temp[3][5]*F[5][1];
+    state->P[3][2] = Q[3][2] + P_temp[3][0]*F[0][2] + P_temp[3][1]*F[1][2] + P_temp[3][2]*F[2][2] + P_temp[3][3]*F[3][2] + P_temp[3][4]*F[4][2] + P_temp[3][5]*F[5][2];
+    state->P[3][3] = Q[3][3] + P_temp[3][0]*F[0][3] + P_temp[3][1]*F[1][3] + P_temp[3][2]*F[2][3] + P_temp[3][3]*F[3][3] + P_temp[3][4]*F[4][3] + P_temp[3][5]*F[5][3];
+    state->P[3][4] = Q[3][4] + P_temp[3][0]*F[0][4] + P_temp[3][1]*F[1][4] + P_temp[3][2]*F[2][4] + P_temp[3][3]*F[3][4] + P_temp[3][4]*F[4][4] + P_temp[3][5]*F[5][4];
+    state->P[3][5] = Q[3][5] + P_temp[3][0]*F[0][5] + P_temp[3][1]*F[1][5] + P_temp[3][2]*F[2][5] + P_temp[3][3]*F[3][5] + P_temp[3][4]*F[4][5] + P_temp[3][5]*F[5][5];
+
+    // Ligne 4
+    state->P[4][0] = Q[4][0] + P_temp[4][0]*F[0][0] + P_temp[4][1]*F[1][0] + P_temp[4][2]*F[2][0] + P_temp[4][3]*F[3][0] + P_temp[4][4]*F[4][0] + P_temp[4][5]*F[5][0];
+    state->P[4][1] = Q[4][1] + P_temp[4][0]*F[0][1] + P_temp[4][1]*F[1][1] + P_temp[4][2]*F[2][1] + P_temp[4][3]*F[3][1] + P_temp[4][4]*F[4][1] + P_temp[4][5]*F[5][1];
+    state->P[4][2] = Q[4][2] + P_temp[4][0]*F[0][2] + P_temp[4][1]*F[1][2] + P_temp[4][2]*F[2][2] + P_temp[4][3]*F[3][2] + P_temp[4][4]*F[4][2] + P_temp[4][5]*F[5][2];
+    state->P[4][3] = Q[4][3] + P_temp[4][0]*F[0][3] + P_temp[4][1]*F[1][3] + P_temp[4][2]*F[2][3] + P_temp[4][3]*F[3][3] + P_temp[4][4]*F[4][3] + P_temp[4][5]*F[5][3];
+    state->P[4][4] = Q[4][4] + P_temp[4][0]*F[0][4] + P_temp[4][1]*F[1][4] + P_temp[4][2]*F[2][4] + P_temp[4][3]*F[3][4] + P_temp[4][4]*F[4][4] + P_temp[4][5]*F[5][4];
+    state->P[4][5] = Q[4][5] + P_temp[4][0]*F[0][5] + P_temp[4][1]*F[1][5] + P_temp[4][2]*F[2][5] + P_temp[4][3]*F[3][5] + P_temp[4][4]*F[4][5] + P_temp[4][5]*F[5][5];
+
+    // Ligne 5
+    state->P[5][0] = Q[5][0] + P_temp[5][0]*F[0][0] + P_temp[5][1]*F[1][0] + P_temp[5][2]*F[2][0] + P_temp[5][3]*F[3][0] + P_temp[5][4]*F[4][0] + P_temp[5][5]*F[5][0];
+    state->P[5][1] = Q[5][1] + P_temp[5][0]*F[0][1] + P_temp[5][1]*F[1][1] + P_temp[5][2]*F[2][1] + P_temp[5][3]*F[3][1] + P_temp[5][4]*F[4][1] + P_temp[5][5]*F[5][1];
+    state->P[5][2] = Q[5][2] + P_temp[5][0]*F[0][2] + P_temp[5][1]*F[1][2] + P_temp[5][2]*F[2][2] + P_temp[5][3]*F[3][2] + P_temp[5][4]*F[4][2] + P_temp[5][5]*F[5][2];
+    state->P[5][3] = Q[5][3] + P_temp[5][0]*F[0][3] + P_temp[5][1]*F[1][3] + P_temp[5][2]*F[2][3] + P_temp[5][3]*F[3][3] + P_temp[5][4]*F[4][3] + P_temp[5][5]*F[5][3];
+    state->P[5][4] = Q[5][4] + P_temp[5][0]*F[0][4] + P_temp[5][1]*F[1][4] + P_temp[5][2]*F[2][4] + P_temp[5][3]*F[3][4] + P_temp[5][4]*F[4][4] + P_temp[5][5]*F[5][4];
+    state->P[5][5] = Q[5][5] + P_temp[5][0]*F[0][5] + P_temp[5][1]*F[1][5] + P_temp[5][2]*F[2][5] + P_temp[5][3]*F[3][5] + P_temp[5][4]*F[4][5] + P_temp[5][5]*F[5][5];
 }
 
 void kalman_update(KalmanState* state, float z[3]) {
