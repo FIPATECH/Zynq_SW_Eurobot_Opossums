@@ -36,6 +36,9 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     float cos_theta = cosf(theta);
     float sin_theta = sinf(theta);
 
+    float cos_theta_dt = cosf(theta + speed->vt * dt);
+    float sin_theta_dt = sinf(theta + speed->vt * dt);
+
     // Transformation des vitesses robot → monde
     float v_dx = speed->vx * cos_theta - speed->vy * sin_theta;
     float v_dy = speed->vx * sin_theta + speed->vy * cos_theta;
@@ -61,22 +64,67 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
         {0, 0, 0, 0, 0, 1}
     };
 
-    // Mise à jour de la covariance : P = F * P * F^T + Q
-    float P_temp[STATE_SIZE][STATE_SIZE] = {0};
+    float P_temp[6][6];
+    
+    // i=0
+    P_temp[0][0] = state->P[0][0] + (-v_dy*dt)*state->P[2][0] + (cos_theta_dt)*state->P[3][0] + (-sin_theta_dt)*state->P[4][0];
+    P_temp[0][1] = state->P[0][1] + (-v_dy*dt)*state->P[2][1] + (cos_theta_dt)*state->P[3][1] + (-sin_theta_dt)*state->P[4][1];
+    P_temp[0][2] = state->P[0][2] + (-v_dy*dt)*state->P[2][2] + (cos_theta_dt)*state->P[3][2] + (-sin_theta_dt)*state->P[4][2];
+    P_temp[0][3] = state->P[0][3] + (-v_dy*dt)*state->P[2][3] + (cos_theta_dt)*state->P[3][3] + (-sin_theta_dt)*state->P[4][3];
+    P_temp[0][4] = state->P[0][4] + (-v_dy*dt)*state->P[2][4] + (cos_theta_dt)*state->P[3][4] + (-sin_theta_dt)*state->P[4][4];
+    P_temp[0][5] = state->P[0][5] + (-v_dy*dt)*state->P[2][5] + (cos_theta_dt)*state->P[3][5] + (-sin_theta_dt)*state->P[4][5];
+    
+    // i=1
+    P_temp[1][0] = state->P[1][0] + (v_dx*dt)*state->P[2][0] + (sin_theta_dt)*state->P[3][0] + (cos_theta_dt)*state->P[4][0];
+    P_temp[1][1] = state->P[1][1] + (v_dx*dt)*state->P[2][1] + (sin_theta_dt)*state->P[3][1] + (cos_theta_dt)*state->P[4][1];
+    P_temp[1][2] = state->P[1][2] + (v_dx*dt)*state->P[2][2] + (sin_theta_dt)*state->P[3][2] + (cos_theta_dt)*state->P[4][2];
+    P_temp[1][3] = state->P[1][3] + (v_dx*dt)*state->P[2][3] + (sin_theta_dt)*state->P[3][3] + (cos_theta_dt)*state->P[4][3];
+    P_temp[1][4] = state->P[1][4] + (v_dx*dt)*state->P[2][4] + (sin_theta_dt)*state->P[3][4] + (cos_theta_dt)*state->P[4][4];
+    P_temp[1][5] = state->P[1][5] + (v_dx*dt)*state->P[2][5] + (sin_theta_dt)*state->P[3][5] + (cos_theta_dt)*state->P[4][5];
 
-    for (int i = 0; i < STATE_SIZE; i++)
-        for (int k = 0; k < STATE_SIZE; k++)
-            if (F[i][k] != 0.0f)
-                for (int j = 0; j < STATE_SIZE; j++)
-                    P_temp[i][j] += F[i][k] * state->P[k][j];
+    // i=2
+    P_temp[2][0] = state->P[2][0] + dt*state->P[5][0];
+    P_temp[2][1] = state->P[2][1] + dt*state->P[5][1];
+    P_temp[2][2] = state->P[2][2] + dt*state->P[5][2];
+    P_temp[2][3] = state->P[2][3] + dt*state->P[5][3];
+    P_temp[2][4] = state->P[2][4] + dt*state->P[5][4];
+    P_temp[2][5] = state->P[2][5] + dt*state->P[5][5];
 
-    for (int i = 0; i < STATE_SIZE; i++)
-        for (int j = 0; j < STATE_SIZE; j++) {
-            state->P[i][j] = Q[i][j];
-            for (int k = 0; k < STATE_SIZE; k++)
-                if (P_temp[i][k] != 0.0f)
-                    state->P[i][j] += P_temp[i][k] * F[j][k];
+    // i=3
+    for (int j = 0; j < 6; j++) {
+        P_temp[3][j] = state->P[3][j]; // F[3][3]=1
+    }
+
+    // i=4
+    for (int j = 0; j < 6; j++) {
+        P_temp[4][j] = state->P[4][j]; // F[4][4]=1
+    }
+
+    // i=5
+    for (int j = 0; j < 6; j++) {
+        P_temp[5][j] = state->P[5][j]; // F[5][5]=1
+    }
+
+    // Maintenant multiplication finale : P = P_temp * F^T + Q
+    // F^T est la transposée de F,
+    // donc F^T[j][k] = F[k][j]
+
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 6; j++) {
+            // Initialisation avec Q[i][j]
+            float val = Q[i][j];
+
+            // somme sur k
+            val += P_temp[i][0] * F[j][0];
+            val += P_temp[i][1] * F[j][1];
+            val += P_temp[i][2] * F[j][2];
+            val += P_temp[i][3] * F[j][3];
+            val += P_temp[i][4] * F[j][4];
+            val += P_temp[i][5] * F[j][5];
+
+            state->P[i][j] = val;
         }
+    }
 }
 
 void kalman_update(KalmanState* state, float z[3]) {
