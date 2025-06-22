@@ -50,5 +50,7 @@
 #include "shared_memory_structure.h"
 //#define DEBUG
 
+//feetech part
+#include "FEETECH/feetech_UART.h"
 
 #endif // MAIN_H
