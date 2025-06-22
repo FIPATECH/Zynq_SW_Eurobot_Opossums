@@ -59,12 +59,24 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s) {
     // On repropague en boucle circulaire jusqu'à la tête-1
     while (i != ((fifo->head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN)) {
         next_i = (i + 1) % KALMAN_FIFO_LEN;
-        fifo->buffer[next_i] = fifo->buffer[i];
+
+        // utilisation direct de l’état précédent, sans copie complète
+        KalmanState* current = &fifo->buffer[i];
+        KalmanState* next = &fifo->buffer[next_i];
+
+        Speed* speed = &fifo->speed_robot[i];
+
+         // Calcul prédictif sur l’état "next" basé sur "current"
+        memcpy(next, current, sizeof(KalmanState)); // Copie une fois
+
         // On prédit l'état suivant à partir de l'état courant i et de la vitesse à i
-        kalman_predict(&fifo->buffer[next_i], &fifo->speed_robot[i], dt_s);
+        kalman_predict(next, speed, dt_s);
 
         i = next_i;
     }
+    
+    // Après propagation, mettre à jour l’état courant
+    kalman_current_state = fifo->buffer[(fifo->head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
 }
 
 void kalman_init_with_lidar(KalmanFIFO* fifo, Position* lidar_pos) {
