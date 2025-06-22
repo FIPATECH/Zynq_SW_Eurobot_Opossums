@@ -226,12 +226,12 @@ void Print_Position_loop(void) {
                     (double)(local_data.kalman_out.y));
                 printf(">post:%.4f\n", 
                     (double)(local_data.kalman_out.t));
-                printf(">vx:%.4f\n", 
-                    (double)(local_data.speed_robot.vx));
-                printf(">vy:%.4f\n",
-                    (double)(local_data.speed_robot.vy));
-                printf(">vt:%.4f\n",
-                    (double)(local_data.speed_robot.vt));
+                // printf(">vx:%.4f\n", 
+                //     (double)(local_data.speed_robot.vx));
+                // printf(">vy:%.4f\n",
+                //     (double)(local_data.speed_robot.vy));
+                // printf(">vt:%.4f\n",
+                //     (double)(local_data.speed_robot.vt));
             } else {
                 printf("POS ERROR: Position or speed not valid\n");
             }
