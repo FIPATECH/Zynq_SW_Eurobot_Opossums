@@ -53,8 +53,8 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
 
     // Jacobienne de la fonction de transition
     float F[STATE_SIZE][STATE_SIZE] = {
-        {1, 0, (-speed->vx * sin_theta - speed->vy * cos_theta) * dt, cos_theta * dt, -sin_theta * dt, 0},
-        {0, 1, ( speed->vx * cos_theta - speed->vy * sin_theta) * dt, sin_theta * dt,  cos_theta * dt, 0},
+        {1, 0, -v_dy * dt, cos_theta * dt, -sin_theta * dt, 0},
+        {0, 1, v_dx * dt, sin_theta * dt,  cos_theta * dt, 0},
         {0, 0, 1, 0, 0, dt},
         {0, 0, 0, 1, 0, 0},
         {0, 0, 0, 0, 1, 0},
