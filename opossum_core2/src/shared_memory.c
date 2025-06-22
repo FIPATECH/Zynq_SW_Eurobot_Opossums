@@ -179,6 +179,10 @@ void check_for_cmd_loop(void){
                 if(CHECK_FIELD(&local_data, set_lidar)){
                     Set_Lidar_Cmd(local_data.set_lidar);                        
                 }
+                // printf("lidar pos: %f %f %f\n", 
+                //     (double)(local_data.set_lidar.lidar_position_x), 
+                //     (double)(local_data.set_lidar.lidar_position_y), 
+                //     (double)(local_data.set_lidar.lidar_position_t));
                 check_for_cmd_state++;
                 break;
             case 5: 
