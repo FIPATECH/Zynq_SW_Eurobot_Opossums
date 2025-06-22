@@ -23,7 +23,7 @@ typedef struct {
 
 extern Position Wanted_Pos;
 extern Speed Wanted_Speed;
-extern Speed speed_robot;
+extern Speed speed_robot_asserv;
 extern Speed speed_robot_odom;
 
 

@@ -4,7 +4,7 @@
 /******************************    Variables    *******************************/
 float robot_wheel_distance;
 
-Speed speed_robot;                  // en repere relatif
+Speed speed_robot_asserv;                  // en repere relatif
 Speed speed_robot_odom;
 Speed cumulated_speed;    
 Position position_robot; // Position odometrique
@@ -27,9 +27,9 @@ void odo_init(void) {
     position_robot.y = 0;
     position_robot.t = 0;
 
-    speed_robot.vx = 0;
-    speed_robot.vy = 0;
-    speed_robot.vt = 0;
+    speed_robot_asserv.vx = 0;
+    speed_robot_asserv.vy = 0;
+    speed_robot_asserv.vt = 0;
 
     acceleration_robot.ax = 0;
     acceleration_robot.ay = 0;
@@ -92,9 +92,9 @@ void odo_speed_cumulate_step(float nbr_step) {
     Cumulated_Speed_3 = 0;
     Cumulated_Speed_4 = 0;
     
-    speed_robot.vx = (cumulated_speed.vx / nbr_step);
-    speed_robot.vy = (cumulated_speed.vy / nbr_step);
-    speed_robot.vt = (cumulated_speed.vt / nbr_step);
+    speed_robot_asserv.vx = (cumulated_speed.vx / nbr_step);
+    speed_robot_asserv.vy = (cumulated_speed.vy / nbr_step);
+    speed_robot_asserv.vt = (cumulated_speed.vt / nbr_step);
 
     cumulated_speed.vx = 0;
     cumulated_speed.vy = 0;
@@ -130,7 +130,7 @@ Position get_position(void) {
 }
 
 Speed get_speed(void) {
-    return speed_robot;
+    return speed_robot_asserv;
 }
 
 Acceleration get_acceleration(void) {

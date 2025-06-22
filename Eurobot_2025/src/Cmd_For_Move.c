@@ -215,7 +215,7 @@ void Print_Position_loop(void) {
     if (auto_printpos_en) {
         if ((Timer_ms1 - Last_Timer_print_pos) >= auto_printpos_delay) {
             Last_Timer_print_pos = Timer_ms1;
-            if (CHECK_FIELD(&local_data, kalman_out)) {
+            if (CHECK_FIELD(&local_data, kalman_out) && CHECK_FIELD(&local_data, speed_robot)) {
                 // printf("POS ");
                 // printf("%.4f ", (double)(local_data.kalman_out.x));
                 // printf("%.4f ", (double)(local_data.kalman_out.y));
@@ -226,8 +226,14 @@ void Print_Position_loop(void) {
                     (double)(local_data.kalman_out.y));
                 printf(">post:%.4f\n", 
                     (double)(local_data.kalman_out.t));
+                printf(">vx:%.4f\n", 
+                    (double)(local_data.speed_robot.vx));
+                printf(">vy:%.4f\n",
+                    (double)(local_data.speed_robot.vy));
+                printf(">vt:%.4f\n",
+                    (double)(local_data.speed_robot.vt));
             } else {
-                printf("POS ERROR: Position not valid\n");
+                printf("POS ERROR: Position or speed not valid\n");
             }
         }
     }

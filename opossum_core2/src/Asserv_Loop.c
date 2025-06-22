@@ -128,6 +128,22 @@ void Asserv_Loop(void)
                         #ifdef DEBUG_TIMING
                         local_data.asserv_step_timing.odo_step_3 = Timer_us1 - tampon;
                         #endif
+        Asserv_State = 4;
+
+    } else if (Asserv_State == 4) {
+        // -----------------------------------
+        // ODO step 4:
+        // - mise a jour de la position du robot dans la mémoire partagée
+        // - mse a jour de la vitesse du robot dans la mémoire partagée
+        // -----------------------------------
+        local_data.kalman_out.x = kalman_current_state.x[0];
+        local_data.kalman_out.y = kalman_current_state.x[1];
+        local_data.kalman_out.t = kalman_current_state.x[2];
+
+        local_data.speed_robot = speed_robot_asserv;
+
+        SEND_FIELD(&local_data, kalman_out);
+        SEND_FIELD(&local_data, speed_robot);
         Asserv_State = 10;
     
     } else if (Asserv_State == 10) {
@@ -221,23 +237,7 @@ void Asserv_Loop(void)
             motor4_current_order = Consigne.command4;
         }
         CAN_transmit_motor(motor1_current_order, motor2_current_order, motor3_current_order, motor4_current_order);
-        Asserv_State = 60;
-
-    } else if (Asserv_State == 60) {
-
-        local_data.kalman_out.x = kalman_current_state.x[0];
-        local_data.kalman_out.y = kalman_current_state.x[1];
-        local_data.kalman_out.t = kalman_current_state.x[2];
-        SEND_FIELD(&local_data, kalman_out);
-        local_data.speed_robot = speed_robot;
-        SEND_FIELD(&local_data, speed_robot);
-
-        SEND_FIELD(&local_data, asserv_step_timing);
         Asserv_State = 0;
-        
-        #ifdef DEBUG_TIMING
-        SEND_FIELD(shared_mem, asserv_step_timing);
-        #endif
 
     } else {
         Asserv_State = 0;

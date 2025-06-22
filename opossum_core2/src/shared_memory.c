@@ -71,9 +71,9 @@ int send_to_other_core(const void *data, size_t size,
                         volatile uint32_t *flag_valid,
                         volatile uint32_t *flag_ack) {
     // Si la donnée précédente n'a pas encore été lue, on refuse d'envoyer
-    if (*flag_valid && !(*flag_ack)) {
-        return 0; // Pas encore consommé
-    }
+    // if (*flag_valid && !(*flag_ack)) {
+    //     return 0; // Pas encore consommé
+    // }
 
     // Copie mémoire
     const uint8_t *src_bytes = (const uint8_t *)data;
