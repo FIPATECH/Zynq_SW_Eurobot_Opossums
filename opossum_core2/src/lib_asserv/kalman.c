@@ -44,6 +44,9 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     float v_dy = speed->vx * sin_theta + speed->vy * cos_theta;
     float v_ang = speed->vt;
 
+    float v_dx_dt = v_dx * dt;
+    float v_dy_dt = v_dy * dt;
+
     // Mise à jour de la position estimée
     state->x[0] += v_dx * dt;
     state->x[1] += v_dy * dt;
@@ -56,8 +59,8 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
 
     // Jacobienne de la fonction de transition
     float F[STATE_SIZE][STATE_SIZE] = {
-        {1, 0, -v_dy * dt, cos_theta * dt, -sin_theta * dt, 0},
-        {0, 1, v_dx * dt, sin_theta * dt,  cos_theta * dt, 0},
+        {1, 0, -v_dy_dt, cos_theta_dt, -sin_theta_dt, 0},
+        {0, 1,  v_dx_dt, sin_theta_dt,  cos_theta_dt, 0},
         {0, 0, 1, 0, 0, dt},
         {0, 0, 0, 1, 0, 0},
         {0, 0, 0, 0, 1, 0},
@@ -66,21 +69,23 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
 
     float P_temp[6][6];
     
+    // Calcul de la nouvelle covariance P_temp = F * P + Q
+    // P_temp[i][j] = sum(F[i][k] * state->P[k][j]) + Q[i][j]
     // i=0
-    P_temp[0][0] = state->P[0][0] + (-v_dy*dt)*state->P[2][0] + (cos_theta_dt)*state->P[3][0] + (-sin_theta_dt)*state->P[4][0];
-    P_temp[0][1] = state->P[0][1] + (-v_dy*dt)*state->P[2][1] + (cos_theta_dt)*state->P[3][1] + (-sin_theta_dt)*state->P[4][1];
-    P_temp[0][2] = state->P[0][2] + (-v_dy*dt)*state->P[2][2] + (cos_theta_dt)*state->P[3][2] + (-sin_theta_dt)*state->P[4][2];
-    P_temp[0][3] = state->P[0][3] + (-v_dy*dt)*state->P[2][3] + (cos_theta_dt)*state->P[3][3] + (-sin_theta_dt)*state->P[4][3];
-    P_temp[0][4] = state->P[0][4] + (-v_dy*dt)*state->P[2][4] + (cos_theta_dt)*state->P[3][4] + (-sin_theta_dt)*state->P[4][4];
-    P_temp[0][5] = state->P[0][5] + (-v_dy*dt)*state->P[2][5] + (cos_theta_dt)*state->P[3][5] + (-sin_theta_dt)*state->P[4][5];
+    P_temp[0][0] = state->P[0][0] + (-v_dy_dt)*state->P[2][0] + (cos_theta_dt)*state->P[3][0] + (-sin_theta_dt)*state->P[4][0];
+    P_temp[0][1] = state->P[0][1] + (-v_dy_dt)*state->P[2][1] + (cos_theta_dt)*state->P[3][1] + (-sin_theta_dt)*state->P[4][1];
+    P_temp[0][2] = state->P[0][2] + (-v_dy_dt)*state->P[2][2] + (cos_theta_dt)*state->P[3][2] + (-sin_theta_dt)*state->P[4][2];
+    P_temp[0][3] = state->P[0][3] + (-v_dy_dt)*state->P[2][3] + (cos_theta_dt)*state->P[3][3] + (-sin_theta_dt)*state->P[4][3];
+    P_temp[0][4] = state->P[0][4] + (-v_dy_dt)*state->P[2][4] + (cos_theta_dt)*state->P[3][4] + (-sin_theta_dt)*state->P[4][4];
+    P_temp[0][5] = state->P[0][5] + (-v_dy_dt)*state->P[2][5] + (cos_theta_dt)*state->P[3][5] + (-sin_theta_dt)*state->P[4][5];
     
     // i=1
-    P_temp[1][0] = state->P[1][0] + (v_dx*dt)*state->P[2][0] + (sin_theta_dt)*state->P[3][0] + (cos_theta_dt)*state->P[4][0];
-    P_temp[1][1] = state->P[1][1] + (v_dx*dt)*state->P[2][1] + (sin_theta_dt)*state->P[3][1] + (cos_theta_dt)*state->P[4][1];
-    P_temp[1][2] = state->P[1][2] + (v_dx*dt)*state->P[2][2] + (sin_theta_dt)*state->P[3][2] + (cos_theta_dt)*state->P[4][2];
-    P_temp[1][3] = state->P[1][3] + (v_dx*dt)*state->P[2][3] + (sin_theta_dt)*state->P[3][3] + (cos_theta_dt)*state->P[4][3];
-    P_temp[1][4] = state->P[1][4] + (v_dx*dt)*state->P[2][4] + (sin_theta_dt)*state->P[3][4] + (cos_theta_dt)*state->P[4][4];
-    P_temp[1][5] = state->P[1][5] + (v_dx*dt)*state->P[2][5] + (sin_theta_dt)*state->P[3][5] + (cos_theta_dt)*state->P[4][5];
+    P_temp[1][0] = state->P[1][0] + (v_dx_dt)*state->P[2][0] + (sin_theta_dt)*state->P[3][0] + (cos_theta_dt)*state->P[4][0];
+    P_temp[1][1] = state->P[1][1] + (v_dx_dt)*state->P[2][1] + (sin_theta_dt)*state->P[3][1] + (cos_theta_dt)*state->P[4][1];
+    P_temp[1][2] = state->P[1][2] + (v_dx_dt)*state->P[2][2] + (sin_theta_dt)*state->P[3][2] + (cos_theta_dt)*state->P[4][2];
+    P_temp[1][3] = state->P[1][3] + (v_dx_dt)*state->P[2][3] + (sin_theta_dt)*state->P[3][3] + (cos_theta_dt)*state->P[4][3];
+    P_temp[1][4] = state->P[1][4] + (v_dx_dt)*state->P[2][4] + (sin_theta_dt)*state->P[3][4] + (cos_theta_dt)*state->P[4][4];
+    P_temp[1][5] = state->P[1][5] + (v_dx_dt)*state->P[2][5] + (sin_theta_dt)*state->P[3][5] + (cos_theta_dt)*state->P[4][5];
 
     // i=2
     P_temp[2][0] = state->P[2][0] + dt*state->P[5][0];
