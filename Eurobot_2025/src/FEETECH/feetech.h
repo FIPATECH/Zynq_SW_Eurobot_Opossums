@@ -21,62 +21,72 @@ typedef unsigned char byte;
 #define FEETECH_STATUS_TIMEOUT         0x82
 #define FEETECH_STATUS_CHKSUM_ERROR    0x83
 
-//-------EPROM--------
-#define  STS_MODEL_L 3
-#define  STS_MODEL_H 4
+
+// Instruction Set
+#define FEETECH_INST_PING                1
+#define FEETECH_INST_READ_DATA           2
+#define FEETECH_INST_WRITE_DATA          3
+#define FEETECH_INST_REG_WRITE           4
+#define FEETECH_INST_ACTION              5
+#define FEETECH_INST_RESET               6
+#define FEETECH_INST_SYNC_WRITE          131
 
 //-------EPROM--------
-#define  STS_ID 5
-#define  STS_BAUD_RATE 6
-#define  STS_DELAY_TIME_RETURN 7
-#define  STS_LEVEL_RETURN 8
-#define  STS_MIN_ANGLE_LIMIT_L 9
-#define  STS_MIN_ANGLE_LIMIT_H 10
-#define  STS_MAX_ANGLE_LIMIT_L 11
-#define  STS_MAX_ANGLE_LIMIT_H 12
-#define  STS_MAX_TEMP_LIMIT 13
-#define  STS_MAX_INPUT_VOLT 14
-#define  STS_MIN_INPUT_VOLT 15
-#define  STS_MAX_TORQUE_LIMIT_L 16
-#define  STS_MAX_TORQUE_LIMIT_H 17
-#define  STS_SETTING_BYTE 18
-#define  STS_PROTECTION_ENABLE 19
-#define  STS_ALARM_LED 20
-#define  STS_MIN_START_TORQUE 24
-#define  STS_CW_DEAD 26
-#define  STS_CCW_DEAD 27
-#define  STS_OVERLOAD_CURRENT_L 28
-#define  STS_OVERLOAD_CURRENT_H 29
-#define  STS_RESOLUTION 30
-#define  STS_OFS_L 31
-#define  STS_OFS_H 32
-#define  STS_MODE 33
+#define  FEETECH_MODEL_L 3
+#define  FEETECH_MODEL_H 4
+
+//-------EPROM--------
+#define  FEETECH_ID 5
+#define  FEETECH_BAUD_RATE 6
+#define  FEETECH_DELAY_TIME_RETURN 7
+#define  FEETECH_LEVEL_RETURN 8
+#define  FEETECH_MIN_ANGLE_LIMIT_L 9
+#define  FEETECH_MIN_ANGLE_LIMIT_H 10
+#define  FEETECH_MAX_ANGLE_LIMIT_L 11
+#define  FEETECH_MAX_ANGLE_LIMIT_H 12
+#define  FEETECH_MAX_TEMP_LIMIT 13
+#define  FEETECH_MAX_INPUT_VOLT 14
+#define  FEETECH_MIN_INPUT_VOLT 15
+#define  FEETECH_MAX_TORQUE_LIMIT_L 16
+#define  FEETECH_MAX_TORQUE_LIMIT_H 17
+#define  FEETECH_SETTING_BYTE 18
+#define  FEETECH_PROTECTION_ENABLE 19
+#define  FEETECH_ALARM_LED 20
+#define  FEETECH_MIN_START_TORQUE 24
+#define  FEETECH_CW_DEAD 26
+#define  FEETECH_CCW_DEAD 27
+#define  FEETECH_OVERLOAD_CURRENT_L 28
+#define  FEETECH_OVERLOAD_CURRENT_H 29
+#define  FEETECH_RESOLUTION 30
+#define  FEETECH_OFS_L 31
+#define  FEETECH_OFS_H 32
+#define  FEETECH_MODE 33
 
 //-------SRAM--------
-#define  STS_TORQUE_ENABLE 40
-#define  STS_ACC 41
-#define  STS_GOAL_POSITION_L 42
-#define  STS_GOAL_POSITION_H 43
-#define  STS_GOAL_TIME_L 44
-#define  STS_GOAL_TIME_H 45
-#define  STS_GOAL_SPEED_L 46
-#define  STS_GOAL_SPEED_H 47
-#define  STS_TORQUE_LIMIT_L 48
-#define  STS_TORQUE_LIMIT_H 49
-#define  STS_LOCK 55
+#define  FEETECH_TORQUE_ENABLE 40
+#define  FEETECH_ACC 41
+#define  FEETECH_GOAL_POSITION_L 42
+#define  FEETECH_GOAL_POSITION_H 43
+#define  FEETECH_GOAL_TIME_L 44
+#define  FEETECH_GOAL_TIME_H 45
+#define  FEETECH_GOAL_SPEED_L 46
+#define  FEETECH_GOAL_SPEED_H 47
+#define  FEETECH_TORQUE_LIMIT_L 48
+#define  FEETECH_TORQUE_LIMIT_H 49
+#define  FEETECH_LOCK 55
 
 //-------SRAM(只读)--------
-#define  STS_PRESENT_POSITION_L 56
-#define  STS_PRESENT_POSITION_H 57
-#define  STS_PRESENT_SPEED_L 58
-#define  STS_PRESENT_SPEED_H 59
-#define  STS_PRESENT_LOAD_L 60
-#define  STS_PRESENT_LOAD_H 61
-#define  STS_PRESENT_VOLTAGE 62
-#define  STS_PRESENT_TEMPERATURE 63
-#define  STS_MOVING 66
-#define  STS_PRESENT_CURRENT_L 69
-#define  STS_PRESENT_CURRENT_H 70
+#define  FEETECH_PRESENT_POSITION_L 56
+#define  FEETECH_PRESENT_POSITION_H 57
+#define  FEETECH_PRESENT_SPEED_L 58
+#define  FEETECH_PRESENT_SPEED_H 59
+#define  FEETECH_PRESENT_LOAD_L 60
+#define  FEETECH_PRESENT_LOAD_H 61
+#define  FEETECH_PRESENT_VOLTAGE 62
+#define  FEETECH_PRESENT_TEMPERATURE 63
+#define  FEETECH_MOVING 66
+#define  FEETECH_PRESENT_CURRENT_L 69
+#define  FEETECH_PRESENT_CURRENT_H 70
 
   
 typedef struct {
@@ -104,11 +114,11 @@ uint8_t RegisterLenFEETECH(uint8_t address);
 void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t FEETECH_Bus, uint8_t Command, uint8_t Reg_Addr, uint32_t Data_To_Send, void *Data_Answer, uint8_t Nb_Data, uint8_t *Status, void *Done);
 
 void PutFEETECH(uint8_t id, uint8_t Reg, uint32_t Data);
-void PutFEETECH_Wait(uint8_t id, uint8_t Reg, uint32_t Data); // interdit dans le robot, sauf pour d�bug !!!
+void PutFEETECH_Wait(uint8_t id, uint8_t Reg, uint32_t Data); // interdit dans le robot, sauf pour debug !!!
 void PutFEETECH_Ext_Done(uint8_t id, uint8_t Reg, uint32_t Data, void *Done);
 
 void GetFEETECH(uint8_t id, uint8_t Reg, void *Data_Answer);
-uint32_t GetFEETECH_Wait(uint8_t id, uint8_t Reg); // interdit dans le robot, sauf pour d�bug !!!
+uint32_t GetFEETECH_Wait(uint8_t id, uint8_t Reg); // interdit dans le robot, sauf pour debug !!!
 void GetFEETECH_Ext_Done(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done);
 
 uint8_t FEETECH_All_Cmd_Done(void);

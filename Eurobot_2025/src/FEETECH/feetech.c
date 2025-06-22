@@ -46,13 +46,13 @@ void Init_Com_FEETECH(void){
     FEETECH_EN_VMOT_TRIS    = 0;
     FEETECH_EN_VMOT         = 1;  //
   
-    FEETECH_TORQUE_ENABLE = STS_TORQUE_ENABLE;
-    FEETECH_ID = STS_ID;
-    FEETECH_GOAL_POSITION = STS_GOAL_POSITION_L;
-    FEETECH_MOVING_SPEED = STS_GOAL_SPEED_L;
-    FEETECH_TORQUE_LIMIT = STS_TORQUE_LIMIT_L;
-    FEETECH_PRESENT_POSITION = STS_PRESENT_POSITION_L;
-    FEETECH_PRESENT_SPEED = STS_PRESENT_SPEED_L;
+    FEETECH_TORQUE_ENABLE = FEETECH_TORQUE_ENABLE;
+    FEETECH_ID = FEETECH_ID;
+    FEETECH_GOAL_POSITION = FEETECH_GOAL_POSITION_L;
+    FEETECH_MOVING_SPEED = FEETECH_GOAL_SPEED_L;
+    FEETECH_TORQUE_LIMIT = FEETECH_TORQUE_LIMIT_L;
+    FEETECH_PRESENT_POSITION = FEETECH_PRESENT_POSITION_L;
+    FEETECH_PRESENT_SPEED = FEETECH_PRESENT_SPEED_L;
 };
 
 /*************************************************
@@ -134,7 +134,6 @@ void FEETECH_Loop(void){
 
 ////////////////////////////////////////////////// en reception ///////////////////////////////////////////////
         case 20:    // attente de la reception
-            
             if (Com_FEETECH_Status == COM_FEETECH_WAIT_ANSWER) {
                 FEETECH_Loop_State++;
                 Time_Of_Last_FEETECH_Received = Timer_ms1;
@@ -145,7 +144,7 @@ void FEETECH_Loop(void){
             if (Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr == FEETECH_BROADCAST) {
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_OK;
                 FEETECH_Loop_State = 100;
-            // ou alors on a recu une tramme de longueur coherente
+            // ou alors on a recu une trame de longueur coherente
             } else if ((FEETECH_Receive_Ptr > 3) && (FEETECH_Receive_Tab[3] == (FEETECH_Receive_Ptr - 4)) && U2STAbits.RIDLE) {
                 FEETECH_Loop_State = 30;   // va l'analyser
             // ou si on a depasse le maxtime, pb
@@ -155,7 +154,7 @@ void FEETECH_Loop(void){
             }
             break;
         case 30:
-            // ici la tramme a forcement la bonne longueur
+            // ici la trame a forcement la bonne longueur
             // verif du checksum
             val8 = 0;
             for (i = 2; i <= (FEETECH_Receive_Tab[3] + 2); i++)
@@ -203,16 +202,10 @@ void FEETECH_Loop(void){
             Command_FEETECH_DONE++;
             if (Command_FEETECH_DONE == FEETECH_CMD_LIST_SIZE)
                 Command_FEETECH_DONE = 0;
-#ifdef DEBUG_FEETECH
-            printf("fin loop\n");
-#endif
             FEETECH_Loop_State = 0;
             break;
             
         default:
-#ifdef DEBUG_FEETECH
-            printf("FEETECH_Loop Error\r\n");
-#endif
             FEETECH_Loop_State = 0;
             break;
     }
@@ -225,7 +218,7 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     FEETECH_Transmit_Tab [0] = 0xFF;
     FEETECH_Transmit_Tab [1] = 0xFF;
     FEETECH_Transmit_Tab [2] = Cmd->FEETECH_Addr;
-    // la longueur du packet, dans le 3, apr�s :
+    // la longueur du packet, dans le 3, apres :
 
     FEETECH_Transmit_Tab [4] = Cmd->Command;
     FEETECH_Transmit_Tab [5] = Cmd->Reg_Addr;
@@ -251,14 +244,11 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     }
     FEETECH_Transmit_Tab[FEETECH_Transmit_Goal - 1] = ~val8;
     
-//    printf("Must Send");
-//    for (i = 0; i < FEETECH_Transmit_Goal; i++) {
-//        printf(" %02X", FEETECH_Transmit_Tab[i]);
-//    }
-//    printf("\r\n");
-    
     FEETECH_Transmit_Ptr = 0;
     FEETECH_Receive_Ptr = 0;
+    
+
+
     
     FEETECH_BUS_EN = 1;
     FEETECH_BUS_TX_RX_RP_REG = _RPOUT_U2TX;
@@ -290,15 +280,15 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
 
 uint8_t RegisterLenFEETECH(uint8_t address) {
     switch (address) {
-        case STS_MODEL_L: case STS_MODEL_H: case STS_ID: case STS_BAUD_RATE: case STS_DELAY_TIME_RETURN: case STS_LEVEL_RETURN: case STS_MAX_TEMP_LIMIT: case STS_MAX_INPUT_VOLT:
-        case STS_MIN_INPUT_VOLT: case STS_SETTING_BYTE: case STS_PROTECTION_ENABLE: case STS_ALARM_LED: case STS_CW_DEAD: case STS_CCW_DEAD:
-        case STS_RESOLUTION: case STS_MODE: case STS_TORQUE_ENABLE: case STS_LOCK: case STS_PRESENT_VOLTAGE:
-        case STS_ACC: case STS_PRESENT_TEMPERATURE: case STS_MOVING:
+        case FEETECH_MODEL_L: case FEETECH_MODEL_H: case FEETECH_ID: case FEETECH_BAUD_RATE: case FEETECH_DELAY_TIME_RETURN: case FEETECH_LEVEL_RETURN: case FEETECH_MAX_TEMP_LIMIT: case FEETECH_MAX_INPUT_VOLT:
+        case FEETECH_MIN_INPUT_VOLT: case FEETECH_SETTING_BYTE: case FEETECH_PROTECTION_ENABLE: case FEETECH_ALARM_LED: case FEETECH_CW_DEAD: case FEETECH_CCW_DEAD:
+        case FEETECH_RESOLUTION: case FEETECH_MODE: case FEETECH_TORQUE_ENABLE: case FEETECH_LOCK: case FEETECH_PRESENT_VOLTAGE:
+        case FEETECH_ACC: case FEETECH_PRESENT_TEMPERATURE: case FEETECH_MOVING:
             return 1;
             break;
-        case STS_MIN_ANGLE_LIMIT_L:  case STS_MAX_ANGLE_LIMIT_L: case STS_MAX_TORQUE_LIMIT_L:  
-        case STS_OFS_L: case STS_MIN_START_TORQUE: case STS_OVERLOAD_CURRENT_L: case STS_GOAL_POSITION_L: case STS_GOAL_TIME_L: case STS_GOAL_SPEED_L: 
-        case STS_TORQUE_LIMIT_L: case STS_PRESENT_POSITION_L: case STS_PRESENT_SPEED_L: case STS_PRESENT_LOAD_L: case STS_PRESENT_CURRENT_L:
+        case FEETECH_MIN_ANGLE_LIMIT_L:  case FEETECH_MAX_ANGLE_LIMIT_L: case FEETECH_MAX_TORQUE_LIMIT_L:  
+        case FEETECH_OFS_L: case FEETECH_MIN_START_TORQUE: case FEETECH_OVERLOAD_CURRENT_L: case FEETECH_GOAL_POSITION_L: case FEETECH_GOAL_TIME_L: case FEETECH_GOAL_SPEED_L: 
+        case FEETECH_TORQUE_LIMIT_L: case FEETECH_PRESENT_POSITION_L: case FEETECH_PRESENT_SPEED_L: case FEETECH_PRESENT_LOAD_L: case FEETECH_PRESENT_CURRENT_L:
             return 2;
             break;
         default:
