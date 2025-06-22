@@ -184,4 +184,12 @@ uint8_t Set_Odo_Spacing_Cmd(void);
  */
 uint8_t Activate_Position_Sending_Func(void);
 
+
+/**
+ * @brief Function to print the current position in a loop.
+ * 
+ * This function checks if automatic position printing is enabled and prints the current position
+ * at regular intervals defined by `auto_printpos_delay`.
+ */
+void Print_Position_loop(void);
 #endif

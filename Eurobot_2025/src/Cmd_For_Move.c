@@ -194,7 +194,7 @@ uint8_t Set_Odo_Spacing_Cmd(void) {
 }
 
 
-int auto_printpos_en = 0; // si on active l'envoi de la position
+int auto_printpos_en = 1; // si on active l'envoi de la position
 uint32_t auto_printpos_delay = 100; // en ms
 uint32_t Last_Timer_print_pos = 0; // dernier envoi de la position
 
@@ -209,4 +209,26 @@ uint8_t Activate_Position_Sending_Func (void) {
         auto_printpos_delay = Delay;
     }
     return 0;
+}
+
+void Print_Position_loop(void) {
+    if (auto_printpos_en) {
+        if ((Timer_ms1 - Last_Timer_print_pos) >= auto_printpos_delay) {
+            Last_Timer_print_pos = Timer_ms1;
+            if (CHECK_FIELD(&local_data, kalman_out)) {
+                // printf("POS ");
+                // printf("%.4f ", (double)(local_data.kalman_out.x));
+                // printf("%.4f ", (double)(local_data.kalman_out.y));
+                // printf("%.4f\n", (double)(local_data.kalman_out.t));
+                printf(">posx:%.4f\n", 
+                    (double)(local_data.kalman_out.x));
+                printf(">posy:%.4f\n", 
+                    (double)(local_data.kalman_out.y));
+                printf(">post:%.4f\n", 
+                    (double)(local_data.kalman_out.t));
+            } else {
+                printf("POS ERROR: Position not valid\n");
+            }
+        }
+    }
 }
