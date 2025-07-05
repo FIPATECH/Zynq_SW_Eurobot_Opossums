@@ -107,27 +107,18 @@ void SendHandler(void *CallBackRef, unsigned int EventData)
 void RecvHandler(void *CallBackRef, unsigned int EventData)
 {
     XUartLite *UartLitePtr = (XUartLite *)CallBackRef;
-    u8 receivedByte;
+    u8 buffer[UART_PL_BUFFER_SIZE];
     int bytesRead;
+    bytesRead = XUartLite_Recv(UartLitePtr, buffer, EventData);
 
-    int count = 0;
-    // Lire chaque octet reçu un par un
-    while (XUartLite_Recv(UartLitePtr, &receivedByte, 1) == 1) {
-        // Stockage circulaire dans ReceiveBuffer
-        u16 nextIndex = (i_RX_PL_CMD_Buff_TODO + 1) % UART_PL_BUFFER_SIZE;
-        if (nextIndex != i_RX_PL_CMD_Buff_DONE) {  // Pas plein
-            ReceiveBuffer[i_RX_PL_CMD_Buff_TODO] = receivedByte;
-            i_RX_PL_CMD_Buff_TODO = nextIndex;
-            count++;
-        } else {
-            // Buffer plein, on ignore les données ou gérer différemment
-            xil_printf("Buffer RX plein, perte de données\n\r");
-            break;
+    if (bytesRead > 0) {
+        for (int i = 0; i < bytesRead; i++) {
+            ReceiveBuffer[i_RX_PL_CMD_Buff_TODO] = buffer[i];
+            i_RX_PL_CMD_Buff_TODO++;
+            if (i_RX_PL_CMD_Buff_TODO >= UART_PL_BUFFER_SIZE) {
+                i_RX_PL_CMD_Buff_TODO = 0; // Reset to avoid overflow
+            }
         }
-    }
-
-    if (count > 0) {
-        xil_printf("RecvHandler lu %d octets\n\r", count);
     }
 }
 

@@ -46,7 +46,7 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
     XScuGic_Enable(GicInstancePtr, UART_IRPT_INTR);
 
     // ---------------------- UART PL ----------------------
-    XScuGic_SetPriorityTriggerType(GicInstancePtr, UARTLITE_IRPT_INTR, 0xA0, 0x3);
+    XScuGic_SetPriorityTriggerType(GicInstancePtr, UARTLITE_IRPT_INTR, 8, 0x1);
     // Connect and enable UART PL interrupt
     Status = XScuGic_Connect(GicInstancePtr, UARTLITE_IRPT_INTR,
                             (Xil_InterruptHandler)XUartLite_InterruptHandler, &UartLite);
