@@ -13,8 +13,8 @@ int main()
     // S=b1 TEX=b100 AP=b11, Domain=b1111, C=b0, B=b0
     Xil_SetTlbAttributes(0xFFFF0000,0x14de2); 
     
-    
     u8 c;
+    u8 test;
     init_platform();
 
     
@@ -27,12 +27,12 @@ int main()
     sev();
 
     Status = SetupInterruptSystem(&InterruptController);
-
     if (Status != XST_SUCCESS) {
         xil_printf("Interrupt Setup Failed\r\n");
     } else {
         xil_printf("Interrupt Setup Done\r\n");
     }
+
 
     Status = UART_Init();
     if (Status != XST_SUCCESS) {
@@ -52,10 +52,19 @@ int main()
         Status = 0;
     }
 
+    Status = UART_PL_Init();
+    if (Status != XST_SUCCESS) {
+        xil_printf("UART PL init failed\n\r");
+        Status = 0;
+    } else {
+        xil_printf("UART PL init done\n\r");
+        Status = 0;
+    }
+
     // init_QEI();
     // PWM_Init();
-    // Std_Com_Init();
-    init_AU();
+    Std_Com_Init();
+    // init_AU();
     // ws2812b_init();
     // init_switch();
     // Init_Pump();
@@ -69,32 +78,26 @@ int main()
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            
-            if(CHECK_FIELD(&local_data, asserv_step_timing)){
-                // printf("CPU1, %d, %d, %d, %d, %d, %d, %d, %d\n\r", 
-                //     local_data.asserv_step_timing.odo_step_1,
-                //     local_data.asserv_step_timing.odo_step_2,
-                //     local_data.asserv_step_timing.odo_step_3,
-                //     local_data.asserv_step_timing.motion_step,
-                //     local_data.asserv_step_timing.speed_constrain_step,
-                //     local_data.asserv_step_timing.acceleration_constrain_step,
-                //     local_data.asserv_step_timing.consigne_step,
-                //     local_data.asserv_step_timing.pwm_step);
-            }
-    
+            // printf("Timer_ms1: %d\n\r", Timer_ms1);
+        }
+
+        if(Get_Uart_PL_Cmd(&test)) {
+            // xil_printf("Received from PL UART: %c\n\r", c);
+            // printf("Received from PL UART: %c\n\r", test);
+            Interp(test);
         }
 
 
         if (Get_Std_In(&c)) {
-            Interp(c);
+            // Interp(c);
         }
 
         
 
-        AU_Loop();
+        // AU_Loop();
         // LED_loop();
         Std_Com_Loop();
-        Print_Position_loop();
+        // Print_Position_loop();
         // if(AU_state == 1){
         //     LED_AU();
         //     Init_Pump();

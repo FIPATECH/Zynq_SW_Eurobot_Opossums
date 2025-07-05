@@ -34,29 +34,29 @@ int main()
     init_shared_memory();
 
 
-    Init_CAN();
+    // Init_CAN();
     Init_AU();
     Init_Asserv();
     
 
     while(1){
         if(Timer_ms1 - old_timer_ms1 >= 100) {
-            // printf("Position: %.4f, %.4f, %.4f\n", 
-            //          (double)kalman_current_state.x[0], 
-            //          (double)kalman_current_state.x[1], 
+            // printf("Position: %.4f, %.4f, %.4f\n",
+            //          (double)kalman_current_state.x[0],
+            //          (double)kalman_current_state.x[1],
             //          (double)kalman_current_state.x[2]);
             old_timer_ms1 = Timer_ms1;
         }
 
-        AU_Loop();
-        check_for_cmd_loop();
-        if(AU_state == 1){
-            motion_free();
-            Init_CAN_MOTOR_variables();
-            Init_Asserv();
-        }else{
-            Asserv_Loop();
-        }
+        // AU_Loop();
+        // check_for_cmd_loop();
+        // if(AU_state == 1){
+        //     motion_free();
+        //     Init_CAN_MOTOR_variables();
+        //     Init_Asserv();
+        // }else{
+        //     Asserv_Loop();
+        // }
     }
 
     cleanup_platform();

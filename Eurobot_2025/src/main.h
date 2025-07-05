@@ -19,6 +19,8 @@
 #include "xuartps.h"
 #include "xplatform_info.h"
 
+#include "xuartlite.h"
+
 // driver part 
 #include "Timer.h"
 #include "UART.h"
@@ -50,5 +52,6 @@
 #include "shared_memory_structure.h"
 //#define DEBUG
 
-
+// uart pl
+#include "UART_PL.h"
 #endif // MAIN_H
