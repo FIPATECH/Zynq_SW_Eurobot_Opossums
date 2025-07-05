@@ -78,18 +78,12 @@ int main()
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            printf("Timer_ms1: %d\n\r", Timer_ms1);
+            // printf("Timer_ms1: %d\n\r", Timer_ms1);
         }
-
-        // if(Get_Uart_PL_Cmd(&test)) {
-        //     // xil_printf("Received from PL UART: %c\n\r", c);
-        //     // printf("Received from PL UART: %c\n\r", test);
-        //     Interp(test);
-        // }
 
         int ret = XUartLite_Recv(&UartLite, &test, 1);
         if (ret == 1) {
-            xil_printf("Received char: %c\n\r", test);
+            xil_printf("%c", test);
         }
 
 

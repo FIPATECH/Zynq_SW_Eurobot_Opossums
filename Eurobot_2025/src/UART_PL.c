@@ -107,13 +107,15 @@ void SendHandler(void *CallBackRef, unsigned int EventData)
 void RecvHandler(void *CallBackRef, unsigned int EventData)
 {
     XUartLite *UartLitePtr = (XUartLite *)CallBackRef;
-    u8 buffer[UART_PL_BUFFER_SIZE];
+    u8 receivedByte;
     int bytesRead;
-    bytesRead = XUartLite_Recv(UartLitePtr, buffer, EventData);
-
-    if (bytesRead > 0) {
-        for (int i = 0; i < bytesRead; i++) {
-            ReceiveBuffer[i_RX_PL_CMD_Buff_TODO] = buffer[i];
+    for (int i = 0; i < EventData; i++) {
+        // Read the received byte from the UartLite
+        bytesRead = XUartLite_Recv(UartLitePtr, &receivedByte, 1);
+        if (bytesRead > 0) {
+            // Store the received byte in the buffer
+            printf("Received byte: %c\n\r", receivedByte); // Debug print
+            ReceiveBuffer[i_RX_PL_CMD_Buff_TODO] = receivedByte;
             i_RX_PL_CMD_Buff_TODO++;
             if (i_RX_PL_CMD_Buff_TODO >= UART_PL_BUFFER_SIZE) {
                 i_RX_PL_CMD_Buff_TODO = 0; // Reset to avoid overflow
