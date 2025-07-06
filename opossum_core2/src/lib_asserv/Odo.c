@@ -55,7 +55,7 @@ void odo_speed_step(int16_t Rotor_RPM1, int16_t Rotor_RPM2, int16_t Rotor_RPM3, 
     
     // maj des vitesses odometrique pur pour le calcul de la position
     float inv_sqrt2 = 0.70710678f; // 1/sqrt(2)
-    speed_robot_odom.vx = inv_sqrt2 * (Odo_Speed_1 - Odo_Speed_2 - Odo_Speed_3 + Odo_Speed_4) / 4.0f;
+    speed_robot_odom.vx = inv_sqrt2 * (-Odo_Speed_1 + Odo_Speed_2 + Odo_Speed_3 - Odo_Speed_4) / 4.0f;
     speed_robot_odom.vy = inv_sqrt2 * (Odo_Speed_1 + Odo_Speed_2 - Odo_Speed_3 - Odo_Speed_4) / 4.0f;
     speed_robot_odom.vt = -(Odo_Speed_1 + Odo_Speed_2 + Odo_Speed_3 + Odo_Speed_4) / (4.0f * robot_wheel_distance);
 
