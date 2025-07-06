@@ -53,8 +53,8 @@ int main()
     }
 
     // init_QEI();
-    // PWM_Init();
-    // Std_Com_Init();
+    PWM_Init();
+    Std_Com_Init();
     init_AU();
     // ws2812b_init();
     // init_switch();
@@ -68,20 +68,7 @@ int main()
     xil_printf("Init done\n\r");
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
-            old_timer_ms1 = Timer_ms1;
-            
-            if(CHECK_FIELD(&local_data, asserv_step_timing)){
-                // printf("CPU1, %d, %d, %d, %d, %d, %d, %d, %d\n\r", 
-                //     local_data.asserv_step_timing.odo_step_1,
-                //     local_data.asserv_step_timing.odo_step_2,
-                //     local_data.asserv_step_timing.odo_step_3,
-                //     local_data.asserv_step_timing.motion_step,
-                //     local_data.asserv_step_timing.speed_constrain_step,
-                //     local_data.asserv_step_timing.acceleration_constrain_step,
-                //     local_data.asserv_step_timing.consigne_step,
-                //     local_data.asserv_step_timing.pwm_step);
-            }
-    
+            old_timer_ms1 = Timer_ms1;   
         }
 
 
@@ -94,7 +81,7 @@ int main()
         AU_Loop();
         // LED_loop();
         Std_Com_Loop();
-        Print_Position_loop();
+        // Print_Position_loop();
         // if(AU_state == 1){
         //     LED_AU();
         //     Init_Pump();
@@ -105,7 +92,7 @@ int main()
         //     Stepper_Loop();
 
         //     LED_CLASSIC_MODE();
-        //     PWM_Loop();
+        PWM_Loop();
 
         //     Pump_Loop();
         //     Valve_Loop();
