@@ -18,6 +18,9 @@
 #define PROCESS_NOISE_LIDAR_Y 1.3f
 #define PROCESS_NOISE_LIDAR_THETA 1.5f
 
+#define S_INV_EPS 1e-6f
+
+
 typedef struct {
     float x[STATE_SIZE];                 // état X[x, y, theta, vx, vy, vtheta]
     float P[STATE_SIZE][STATE_SIZE];     // covariance

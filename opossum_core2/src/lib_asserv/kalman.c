@@ -32,182 +32,246 @@ void kalman_init(KalmanState* state) {
 }
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
+    // 1) calcul des vitesses monde à partir des vitesses robot (au theta courant)
     float theta = principal_angle(state->x[2]);
-    float cos_theta = cosf(theta);
-    float sin_theta = sinf(theta);
+    float cos_t = cosf(theta);
+    float sin_t = sinf(theta);
 
-    float cos_theta_dt = cosf(theta + speed->vt * dt);
-    float sin_theta_dt = sinf(theta + speed->vt * dt);
-
-    // Transformation des vitesses robot → monde
-    float v_dx = speed->vx * cos_theta - speed->vy * sin_theta;
-    float v_dy = speed->vx * sin_theta + speed->vy * cos_theta;
+    // v_dx, v_dy : vitesse dans le repère monde (instantanée, provenant de la commande/odom)
+    float v_dx = speed->vx * cos_t - speed->vy * sin_t;
+    float v_dy = speed->vx * sin_t + speed->vy * cos_t;
     float v_ang = speed->vt;
 
-    float v_dx_dt = v_dx * dt;
-    float v_dy_dt = v_dy * dt;
-
-    // Mise à jour de la position estimée
+    // 2) mise à jour d'état (intégration simple)
     state->x[0] += v_dx * dt;
     state->x[1] += v_dy * dt;
     state->x[2] = principal_angle(state->x[2] + v_ang * dt);
 
-    // Mise à jour des vitesses (optionnel, utile pour debug ou asserv)
-    state->x[3] = v_dx;  // vitesse monde en x
-    state->x[4] = v_dy;  // vitesse monde en y
-    state->x[5] = v_ang; // vitesse angulaire
+    // Optionnel : garder les vitesses "observable" dans l'état (utile pour debug/asserv)
+    state->x[3] = v_dx;
+    state->x[4] = v_dy;
+    state->x[5] = v_ang;
 
-    // Jacobienne de la fonction de transition
-    float F[STATE_SIZE][STATE_SIZE] = {
-        {1, 0, -v_dy_dt, cos_theta_dt, -sin_theta_dt, 0},
-        {0, 1,  v_dx_dt, sin_theta_dt,  cos_theta_dt, 0},
-        {0, 0, 1, 0, 0, dt},
-        {0, 0, 0, 1, 0, 0},
-        {0, 0, 0, 0, 1, 0},
-        {0, 0, 0, 0, 0, 1}
-    };
+    // 3) Jacobienne F : on utilise un modèle constant-velocity simple et robuste
+    //    x' = x + dt * vx_world
+    //    y' = y + dt * vy_world
+    //    theta' = theta + dt * vtheta
+    //    vx', vy', vtheta' = identités (on suppose pas de dynamique complexe des vitesses)
+    //
+    //    F =
+    //    [1 0 0 dt 0 0]
+    //    [0 1 0 0 dt 0]
+    //    [0 0 1 0 0 dt]
+    //    [0 0 0 1 0 0]
+    //    [0 0 0 0 1 0]
+    //    [0 0 0 0 0 1]
 
-    float P_temp[6][6];
-    
-    // Calcul de la nouvelle covariance P_temp = F * P + Q
-    // P_temp[i][j] = sum(F[i][k] * state->P[k][j]) + Q[i][j]
-    // i=0
-    P_temp[0][0] = state->P[0][0] + (-v_dy_dt)*state->P[2][0] + (cos_theta_dt)*state->P[3][0] + (-sin_theta_dt)*state->P[4][0];
-    P_temp[0][1] = state->P[0][1] + (-v_dy_dt)*state->P[2][1] + (cos_theta_dt)*state->P[3][1] + (-sin_theta_dt)*state->P[4][1];
-    P_temp[0][2] = state->P[0][2] + (-v_dy_dt)*state->P[2][2] + (cos_theta_dt)*state->P[3][2] + (-sin_theta_dt)*state->P[4][2];
-    P_temp[0][3] = state->P[0][3] + (-v_dy_dt)*state->P[2][3] + (cos_theta_dt)*state->P[3][3] + (-sin_theta_dt)*state->P[4][3];
-    P_temp[0][4] = state->P[0][4] + (-v_dy_dt)*state->P[2][4] + (cos_theta_dt)*state->P[3][4] + (-sin_theta_dt)*state->P[4][4];
-    P_temp[0][5] = state->P[0][5] + (-v_dy_dt)*state->P[2][5] + (cos_theta_dt)*state->P[3][5] + (-sin_theta_dt)*state->P[4][5];
-    
-    // i=1
-    P_temp[1][0] = state->P[1][0] + (v_dx_dt)*state->P[2][0] + (sin_theta_dt)*state->P[3][0] + (cos_theta_dt)*state->P[4][0];
-    P_temp[1][1] = state->P[1][1] + (v_dx_dt)*state->P[2][1] + (sin_theta_dt)*state->P[3][1] + (cos_theta_dt)*state->P[4][1];
-    P_temp[1][2] = state->P[1][2] + (v_dx_dt)*state->P[2][2] + (sin_theta_dt)*state->P[3][2] + (cos_theta_dt)*state->P[4][2];
-    P_temp[1][3] = state->P[1][3] + (v_dx_dt)*state->P[2][3] + (sin_theta_dt)*state->P[3][3] + (cos_theta_dt)*state->P[4][3];
-    P_temp[1][4] = state->P[1][4] + (v_dx_dt)*state->P[2][4] + (sin_theta_dt)*state->P[3][4] + (cos_theta_dt)*state->P[4][4];
-    P_temp[1][5] = state->P[1][5] + (v_dx_dt)*state->P[2][5] + (sin_theta_dt)*state->P[3][5] + (cos_theta_dt)*state->P[4][5];
+    // 4) Calcul P = F * P * F^T + Q
+    // On effectue l'opération en deux étapes optimisées : P_temp = F * P, puis P = P_temp * F^T + Q
+    // Vu la forme de F, on peut optimiser fortement.
 
-    // i=2
-    P_temp[2][0] = state->P[2][0] + dt*state->P[5][0];
-    P_temp[2][1] = state->P[2][1] + dt*state->P[5][1];
-    P_temp[2][2] = state->P[2][2] + dt*state->P[5][2];
-    P_temp[2][3] = state->P[2][3] + dt*state->P[5][3];
-    P_temp[2][4] = state->P[2][4] + dt*state->P[5][4];
-    P_temp[2][5] = state->P[2][5] + dt*state->P[5][5];
-
-    // i=3
-    for (int j = 0; j < 6; j++) {
-        P_temp[3][j] = state->P[3][j]; // F[3][3]=1
+    float P0[6][6];
+    // P_temp = F * P
+    // ligne 0 : F[0] = [1 0 0 dt 0 0] => row0 = row0_old + dt * row3_old
+    for (int j = 0; j < 6; ++j) {
+        P0[0][j] = state->P[0][j] + dt * state->P[3][j];
+    }
+    // ligne 1 : [0 1 0 0 dt 0] => row1 = row1_old + dt * row4_old
+    for (int j = 0; j < 6; ++j) {
+        P0[1][j] = state->P[1][j] + dt * state->P[4][j];
+    }
+    // ligne 2 : [0 0 1 0 0 dt] => row2 = row2_old + dt * row5_old
+    for (int j = 0; j < 6; ++j) {
+        P0[2][j] = state->P[2][j] + dt * state->P[5][j];
+    }
+    // ligne 3..5 : identités
+    for (int j = 0; j < 6; ++j) {
+        P0[3][j] = state->P[3][j];
+        P0[4][j] = state->P[4][j];
+        P0[5][j] = state->P[5][j];
     }
 
-    // i=4
-    for (int j = 0; j < 6; j++) {
-        P_temp[4][j] = state->P[4][j]; // F[4][4]=1
+    // P = P_temp * F^T + Q
+    // Par la forme de F^T, les colonnes s'obtiennent simplement :
+    // col0 = col0_old + dt * col3_old, etc.
+    float P_next[6][6];
+
+    // col 0
+    for (int i = 0; i < 6; ++i) {
+        P_next[i][0] = P0[i][0] + dt * P0[i][3] + Q[i][0];
+    }
+    // col 1
+    for (int i = 0; i < 6; ++i) {
+        P_next[i][1] = P0[i][1] + dt * P0[i][4] + Q[i][1];
+    }
+    // col 2
+    for (int i = 0; i < 6; ++i) {
+        P_next[i][2] = P0[i][2] + dt * P0[i][5] + Q[i][2];
+    }
+    // col 3 (F^T col3 is [dt,0,0,1,0,0]^T)
+    for (int i = 0; i < 6; ++i) {
+        P_next[i][3] = dt * P0[i][0] + P0[i][3] + Q[i][3];
+    }
+    // col 4
+    for (int i = 0; i < 6; ++i) {
+        P_next[i][4] = dt * P0[i][1] + P0[i][4] + Q[i][4];
+    }
+    // col 5
+    for (int i = 0; i < 6; ++i) {
+        P_next[i][5] = dt * P0[i][2] + P0[i][5] + Q[i][5];
     }
 
-    // i=5
-    for (int j = 0; j < 6; j++) {
-        P_temp[5][j] = state->P[5][j]; // F[5][5]=1
+    // 5) Forcer la symétrie (pratique et sécurise la stabilité numérique)
+    for (int i = 0; i < 6; ++i) {
+        for (int j = i; j < 6; ++j) {
+            float sym = 0.5f * (P_next[i][j] + P_next[j][i]);
+            state->P[i][j] = sym;
+            state->P[j][i] = sym;
+        }
     }
 
-    // Maintenant multiplication finale : P = P_temp * F^T + Q
-    // F^T est la transposée de F,
-    // donc F^T[j][k] = F[k][j]
-
-    // Ligne 0
-    state->P[0][0] = Q[0][0] + P_temp[0][0]*F[0][0] + P_temp[0][1]*F[1][0] + P_temp[0][2]*F[2][0] + P_temp[0][3]*F[3][0] + P_temp[0][4]*F[4][0] + P_temp[0][5]*F[5][0];
-    state->P[0][1] = Q[0][1] + P_temp[0][0]*F[0][1] + P_temp[0][1]*F[1][1] + P_temp[0][2]*F[2][1] + P_temp[0][3]*F[3][1] + P_temp[0][4]*F[4][1] + P_temp[0][5]*F[5][1];
-    state->P[0][2] = Q[0][2] + P_temp[0][0]*F[0][2] + P_temp[0][1]*F[1][2] + P_temp[0][2]*F[2][2] + P_temp[0][3]*F[3][2] + P_temp[0][4]*F[4][2] + P_temp[0][5]*F[5][2];
-    state->P[0][3] = Q[0][3] + P_temp[0][0]*F[0][3] + P_temp[0][1]*F[1][3] + P_temp[0][2]*F[2][3] + P_temp[0][3]*F[3][3] + P_temp[0][4]*F[4][3] + P_temp[0][5]*F[5][3];
-    state->P[0][4] = Q[0][4] + P_temp[0][0]*F[0][4] + P_temp[0][1]*F[1][4] + P_temp[0][2]*F[2][4] + P_temp[0][3]*F[3][4] + P_temp[0][4]*F[4][4] + P_temp[0][5]*F[5][4];
-    state->P[0][5] = Q[0][5] + P_temp[0][0]*F[0][5] + P_temp[0][1]*F[1][5] + P_temp[0][2]*F[2][5] + P_temp[0][3]*F[3][5] + P_temp[0][4]*F[4][5] + P_temp[0][5]*F[5][5];
-
-    // Ligne 1
-    state->P[1][0] = Q[1][0] + P_temp[1][0]*F[0][0] + P_temp[1][1]*F[1][0] + P_temp[1][2]*F[2][0] + P_temp[1][3]*F[3][0] + P_temp[1][4]*F[4][0] + P_temp[1][5]*F[5][0];
-    state->P[1][1] = Q[1][1] + P_temp[1][0]*F[0][1] + P_temp[1][1]*F[1][1] + P_temp[1][2]*F[2][1] + P_temp[1][3]*F[3][1] + P_temp[1][4]*F[4][1] + P_temp[1][5]*F[5][1];
-    state->P[1][2] = Q[1][2] + P_temp[1][0]*F[0][2] + P_temp[1][1]*F[1][2] + P_temp[1][2]*F[2][2] + P_temp[1][3]*F[3][2] + P_temp[1][4]*F[4][2] + P_temp[1][5]*F[5][2];
-    state->P[1][3] = Q[1][3] + P_temp[1][0]*F[0][3] + P_temp[1][1]*F[1][3] + P_temp[1][2]*F[2][3] + P_temp[1][3]*F[3][3] + P_temp[1][4]*F[4][3] + P_temp[1][5]*F[5][3];
-    state->P[1][4] = Q[1][4] + P_temp[1][0]*F[0][4] + P_temp[1][1]*F[1][4] + P_temp[1][2]*F[2][4] + P_temp[1][3]*F[3][4] + P_temp[1][4]*F[4][4] + P_temp[1][5]*F[5][4];
-    state->P[1][5] = Q[1][5] + P_temp[1][0]*F[0][5] + P_temp[1][1]*F[1][5] + P_temp[1][2]*F[2][5] + P_temp[1][3]*F[3][5] + P_temp[1][4]*F[4][5] + P_temp[1][5]*F[5][5];
-
-    // Ligne 2
-    state->P[2][0] = Q[2][0] + P_temp[2][0]*F[0][0] + P_temp[2][1]*F[1][0] + P_temp[2][2]*F[2][0] + P_temp[2][3]*F[3][0] + P_temp[2][4]*F[4][0] + P_temp[2][5]*F[5][0];
-    state->P[2][1] = Q[2][1] + P_temp[2][0]*F[0][1] + P_temp[2][1]*F[1][1] + P_temp[2][2]*F[2][1] + P_temp[2][3]*F[3][1] + P_temp[2][4]*F[4][1] + P_temp[2][5]*F[5][1];
-    state->P[2][2] = Q[2][2] + P_temp[2][0]*F[0][2] + P_temp[2][1]*F[1][2] + P_temp[2][2]*F[2][2] + P_temp[2][3]*F[3][2] + P_temp[2][4]*F[4][2] + P_temp[2][5]*F[5][2];
-    state->P[2][3] = Q[2][3] + P_temp[2][0]*F[0][3] + P_temp[2][1]*F[1][3] + P_temp[2][2]*F[2][3] + P_temp[2][3]*F[3][3] + P_temp[2][4]*F[4][3] + P_temp[2][5]*F[5][3];
-    state->P[2][4] = Q[2][4] + P_temp[2][0]*F[0][4] + P_temp[2][1]*F[1][4] + P_temp[2][2]*F[2][4] + P_temp[2][3]*F[3][4] + P_temp[2][4]*F[4][4] + P_temp[2][5]*F[5][4];
-    state->P[2][5] = Q[2][5] + P_temp[2][0]*F[0][5] + P_temp[2][1]*F[1][5] + P_temp[2][2]*F[2][5] + P_temp[2][3]*F[3][5] + P_temp[2][4]*F[4][5] + P_temp[2][5]*F[5][5];
-
-    // Ligne 3
-    state->P[3][0] = Q[3][0] + P_temp[3][0]*F[0][0] + P_temp[3][1]*F[1][0] + P_temp[3][2]*F[2][0] + P_temp[3][3]*F[3][0] + P_temp[3][4]*F[4][0] + P_temp[3][5]*F[5][0];
-    state->P[3][1] = Q[3][1] + P_temp[3][0]*F[0][1] + P_temp[3][1]*F[1][1] + P_temp[3][2]*F[2][1] + P_temp[3][3]*F[3][1] + P_temp[3][4]*F[4][1] + P_temp[3][5]*F[5][1];
-    state->P[3][2] = Q[3][2] + P_temp[3][0]*F[0][2] + P_temp[3][1]*F[1][2] + P_temp[3][2]*F[2][2] + P_temp[3][3]*F[3][2] + P_temp[3][4]*F[4][2] + P_temp[3][5]*F[5][2];
-    state->P[3][3] = Q[3][3] + P_temp[3][0]*F[0][3] + P_temp[3][1]*F[1][3] + P_temp[3][2]*F[2][3] + P_temp[3][3]*F[3][3] + P_temp[3][4]*F[4][3] + P_temp[3][5]*F[5][3];
-    state->P[3][4] = Q[3][4] + P_temp[3][0]*F[0][4] + P_temp[3][1]*F[1][4] + P_temp[3][2]*F[2][4] + P_temp[3][3]*F[3][4] + P_temp[3][4]*F[4][4] + P_temp[3][5]*F[5][4];
-    state->P[3][5] = Q[3][5] + P_temp[3][0]*F[0][5] + P_temp[3][1]*F[1][5] + P_temp[3][2]*F[2][5] + P_temp[3][3]*F[3][5] + P_temp[3][4]*F[4][5] + P_temp[3][5]*F[5][5];
-
-    // Ligne 4
-    state->P[4][0] = Q[4][0] + P_temp[4][0]*F[0][0] + P_temp[4][1]*F[1][0] + P_temp[4][2]*F[2][0] + P_temp[4][3]*F[3][0] + P_temp[4][4]*F[4][0] + P_temp[4][5]*F[5][0];
-    state->P[4][1] = Q[4][1] + P_temp[4][0]*F[0][1] + P_temp[4][1]*F[1][1] + P_temp[4][2]*F[2][1] + P_temp[4][3]*F[3][1] + P_temp[4][4]*F[4][1] + P_temp[4][5]*F[5][1];
-    state->P[4][2] = Q[4][2] + P_temp[4][0]*F[0][2] + P_temp[4][1]*F[1][2] + P_temp[4][2]*F[2][2] + P_temp[4][3]*F[3][2] + P_temp[4][4]*F[4][2] + P_temp[4][5]*F[5][2];
-    state->P[4][3] = Q[4][3] + P_temp[4][0]*F[0][3] + P_temp[4][1]*F[1][3] + P_temp[4][2]*F[2][3] + P_temp[4][3]*F[3][3] + P_temp[4][4]*F[4][3] + P_temp[4][5]*F[5][3];
-    state->P[4][4] = Q[4][4] + P_temp[4][0]*F[0][4] + P_temp[4][1]*F[1][4] + P_temp[4][2]*F[2][4] + P_temp[4][3]*F[3][4] + P_temp[4][4]*F[4][4] + P_temp[4][5]*F[5][4];
-    state->P[4][5] = Q[4][5] + P_temp[4][0]*F[0][5] + P_temp[4][1]*F[1][5] + P_temp[4][2]*F[2][5] + P_temp[4][3]*F[3][5] + P_temp[4][4]*F[4][5] + P_temp[4][5]*F[5][5];
-
-    // Ligne 5
-    state->P[5][0] = Q[5][0] + P_temp[5][0]*F[0][0] + P_temp[5][1]*F[1][0] + P_temp[5][2]*F[2][0] + P_temp[5][3]*F[3][0] + P_temp[5][4]*F[4][0] + P_temp[5][5]*F[5][0];
-    state->P[5][1] = Q[5][1] + P_temp[5][0]*F[0][1] + P_temp[5][1]*F[1][1] + P_temp[5][2]*F[2][1] + P_temp[5][3]*F[3][1] + P_temp[5][4]*F[4][1] + P_temp[5][5]*F[5][1];
-    state->P[5][2] = Q[5][2] + P_temp[5][0]*F[0][2] + P_temp[5][1]*F[1][2] + P_temp[5][2]*F[2][2] + P_temp[5][3]*F[3][2] + P_temp[5][4]*F[4][2] + P_temp[5][5]*F[5][2];
-    state->P[5][3] = Q[5][3] + P_temp[5][0]*F[0][3] + P_temp[5][1]*F[1][3] + P_temp[5][2]*F[2][3] + P_temp[5][3]*F[3][3] + P_temp[5][4]*F[4][3] + P_temp[5][5]*F[5][3];
-    state->P[5][4] = Q[5][4] + P_temp[5][0]*F[0][4] + P_temp[5][1]*F[1][4] + P_temp[5][2]*F[2][4] + P_temp[5][3]*F[3][4] + P_temp[5][4]*F[4][4] + P_temp[5][5]*F[5][4];
-    state->P[5][5] = Q[5][5] + P_temp[5][0]*F[0][5] + P_temp[5][1]*F[1][5] + P_temp[5][2]*F[2][5] + P_temp[5][3]*F[3][5] + P_temp[5][4]*F[4][5] + P_temp[5][5]*F[5][5];
+    // Fin predict
 }
+
 
 void kalman_update(KalmanState* state, float z[3]) {
-    for (int i = 0; i < 3; i++) {
-        if (isnan(z[i]) || isnan(state->x[i]))
-            return;
+    // Vérifs NaN
+    for (int i = 0; i < 3; ++i) {
+        if (isnan(z[i]) || isnan(state->x[i])) return;
     }
 
-    float y[3] = { z[0]-state->x[0], z[1]-state->x[1], principal_angle(z[2]-state->x[2]) };
+    // H = [ I3  0 ] (mesure = x,y,theta)
+    // innovation y = z - H x
+    float y0 = z[0] - state->x[0];
+    float y1 = z[1] - state->x[1];
+    float y2 = principal_angle(z[2] - state->x[2]);
 
-    float S[3][3] = {
-        {state->P[0][0]+R_diag[0], state->P[0][1], state->P[0][2]},
-        {state->P[1][0], state->P[1][1]+R_diag[1], state->P[1][2]},
-        {state->P[2][0], state->P[2][1], state->P[2][2]+R_diag[2]}
-    };
+    // S = H P H^T + R = top-left 3x3 of P + R_diag
+    float S[3][3];
+    S[0][0] = state->P[0][0] + R_diag[0];
+    S[0][1] = state->P[0][1];
+    S[0][2] = state->P[0][2];
 
-    float det = S[0][0]*(S[1][1]*S[2][2]-S[1][2]*S[2][1]) -
-                S[0][1]*(S[1][0]*S[2][2]-S[1][2]*S[2][0]) +
-                S[0][2]*(S[1][0]*S[2][1]-S[1][1]*S[2][0]);
-    if (fabsf(det) < 1e-6f) return;
+    S[1][0] = state->P[1][0];
+    S[1][1] = state->P[1][1] + R_diag[1];
+    S[1][2] = state->P[1][2];
+
+    S[2][0] = state->P[2][0];
+    S[2][1] = state->P[2][1];
+    S[2][2] = state->P[2][2] + R_diag[2];
+
+    // Inversion 3x3 de S avec régularisation numérique si besoin
+    // calcul du déterminant
+    float det = S[0][0]*(S[1][1]*S[2][2] - S[1][2]*S[2][1])
+              - S[0][1]*(S[1][0]*S[2][2] - S[1][2]*S[2][0])
+              + S[0][2]*(S[1][0]*S[2][1] - S[1][1]*S[2][0]);
+
+    // si mal conditionné, ajouter eps sur la diagonale puis recalculer (simple fallback)
+    if (fabsf(det) < S_INV_EPS) {
+        S[0][0] += S_INV_EPS;
+        S[1][1] += S_INV_EPS;
+        S[2][2] += S_INV_EPS;
+        det = S[0][0]*(S[1][1]*S[2][2] - S[1][2]*S[2][1])
+            - S[0][1]*(S[1][0]*S[2][2] - S[1][2]*S[2][0])
+            + S[0][2]*(S[1][0]*S[2][1] - S[1][1]*S[2][0]);
+        if (fabsf(det) < S_INV_EPS) return; // toujours mal conditionné : abandonner update
+    }
+
     float invDet = 1.0f / det;
+    float S_inv[3][3];
 
-    float S_inv[3][3] = {
-        {(S[1][1]*S[2][2]-S[1][2]*S[2][1])*invDet, -(S[0][1]*S[2][2]-S[0][2]*S[2][1])*invDet, (S[0][1]*S[1][2]-S[0][2]*S[1][1])*invDet},
-        {-(S[1][0]*S[2][2]-S[1][2]*S[2][0])*invDet, (S[0][0]*S[2][2]-S[0][2]*S[2][0])*invDet, -(S[0][0]*S[1][2]-S[0][2]*S[1][0])*invDet},
-        {(S[1][0]*S[2][1]-S[1][1]*S[2][0])*invDet, -(S[0][0]*S[2][1]-S[0][1]*S[2][0])*invDet, (S[0][0]*S[1][1]-S[0][1]*S[1][0])*invDet}
-    };
+    S_inv[0][0] =  (S[1][1]*S[2][2] - S[1][2]*S[2][1]) * invDet;
+    S_inv[0][1] = -(S[0][1]*S[2][2] - S[0][2]*S[2][1]) * invDet;
+    S_inv[0][2] =  (S[0][1]*S[1][2] - S[0][2]*S[1][1]) * invDet;
 
-    float K[6][3] = {0};
-    for (int i = 0; i < 6; i++)
-        for (int j = 0; j < 3; j++)
-            for (int k = 0; k < 3; k++)
-                K[i][j] += state->P[i][k] * S_inv[k][j];
+    S_inv[1][0] = -(S[1][0]*S[2][2] - S[1][2]*S[2][0]) * invDet;
+    S_inv[1][1] =  (S[0][0]*S[2][2] - S[0][2]*S[2][0]) * invDet;
+    S_inv[1][2] = -(S[0][0]*S[1][2] - S[0][2]*S[1][0]) * invDet;
 
-    for (int i = 0; i < 6; i++) {
-        float delta = K[i][0]*y[0] + K[i][1]*y[1] + K[i][2]*y[2];
-        state->x[i] = (i==2) ? principal_angle(state->x[i]+delta) : state->x[i]+delta;
+    S_inv[2][0] =  (S[1][0]*S[2][1] - S[1][1]*S[2][0]) * invDet;
+    S_inv[2][1] = -(S[0][0]*S[2][1] - S[0][1]*S[2][0]) * invDet;
+    S_inv[2][2] =  (S[0][0]*S[1][1] - S[0][1]*S[1][0]) * invDet;
+
+    // Gain K = P * H^T * S_inv
+    // H^T = [ I3; 0 ] => K rows 0..5, cols 0..2:
+    float K[6][3];
+    // pour i=0..5, K[i] = [ P[i][0], P[i][1], P[i][2] ] * S_inv
+    for (int i = 0; i < 6; ++i) {
+        // produit 1x3 = 1x3 * 3x3
+        for (int j = 0; j < 3; ++j) {
+            K[i][j] = state->P[i][0] * S_inv[0][j]
+                    + state->P[i][1] * S_inv[1][j]
+                    + state->P[i][2] * S_inv[2][j];
+        }
     }
+
+    // Mise à jour de l'état : x = x + K * y
+    float dy[3] = { y0, y1, y2 };
+    for (int i = 0; i < 6; ++i) {
+        float delta = K[i][0]*dy[0] + K[i][1]*dy[1] + K[i][2]*dy[2];
+        if (i == 2)
+            state->x[i] = principal_angle(state->x[i] + delta);
+        else
+            state->x[i] += delta;
+    }
+
+    // Mise à jour de la covariance P via la forme Joseph :
+    // P = (I - K H) P (I - K H)^T + K R K^T
+    // Avec H = [I3 0], (I - K H) est une 6x6 = I6 ; les premiers 3 cols of KH are K[:,0..2] in rows 0..5
+    // On calcule explicitement pour stabilité.
+
+    // Precompute (I-KH) matrix works as:
+    // (I-KH)[i][j] = -K[i][j] for j=0..2, else 1 if i==j (for j>=3), else 0
+    // But better compute P_new using expanded Joseph form to avoid building large intermediates.
 
     float P_new[6][6];
-    for (int i = 0; i < 6; i++)
-        for (int j = 0; j < 6; j++) {
+    // Compute A = (I - K*H)
+    // Then P_new = A * P * A^T + K * R * K^T
+    // Because H picks top-left, A is simple. We'll compute directly with unrolled sums to reduce temporaries.
+
+    // First compute A * P  (A is 6x6)
+    // For row i, col j:
+    // (A*P)[i][j] = P[i][j] - sum_{m=0..2} K[i][m] * P[m][j]
+    float AP[6][6];
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 6; ++j) {
             float val = state->P[i][j];
-            for (int k = 0; k < 3; k++)
-                val -= K[i][k] * state->P[k][j];
+            val -= K[i][0] * state->P[0][j];
+            val -= K[i][1] * state->P[1][j];
+            val -= K[i][2] * state->P[2][j];
+            AP[i][j] = val;
+        }
+    }
+
+    // Then P_new = AP * A^T + K * R * K^T
+    // Note A^T: (AP * A^T)[i][j] = AP[i][j] - sum_{m=0..2} AP[i][m]*K[j][m]
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            float val = AP[i][j];
+            val -= AP[i][0] * K[j][0];
+            val -= AP[i][1] * K[j][1];
+            val -= AP[i][2] * K[j][2];
             P_new[i][j] = val;
         }
-    memcpy(state->P, P_new, sizeof(P_new));
-}
+    }
 
+    // Add K * R * K^T  (R is diagonal R_diag)
+    // (K R K^T)[i][j] = sum_m K[i][m] * R_diag[m] * K[j][m]
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            float add = K[i][0] * R_diag[0] * K[j][0]
+                      + K[i][1] * R_diag[1] * K[j][1]
+                      + K[i][2] * R_diag[2] * K[j][2];
+            P_new[i][j] += add;
+        }
+    }
+
+    // Symétriser P_new et copier dans state->P
+    for (int i = 0; i < 6; ++i) {
+        for (int j = i; j < 6; ++j) {
+            float s = 0.5f * (P_new[i][j] + P_new[j][i]);
+            state->P[i][j] = s;
+            state->P[j][i] = s;
+        }
+    }
+}
