@@ -18,6 +18,8 @@
 #include "xscugic.h"
 #include "xuartps.h"
 #include "xplatform_info.h"
+#include "xaxidma.h"
+
 
 #include "xuartlite.h"
 
@@ -54,4 +56,7 @@
 
 // uart pl
 #include "UART_PL.h"
+
+
+#include "lidar.h"
 #endif // MAIN_H

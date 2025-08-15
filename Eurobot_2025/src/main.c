@@ -61,6 +61,8 @@ int main()
         Status = 0;
     }
 
+    init_dma();
+
     // init_QEI();
     // PWM_Init();
     Std_Com_Init();
@@ -75,16 +77,30 @@ int main()
     init_shared_memory();
 
     xil_printf("Init done\n\r");
+
+    u8 f = 0;
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
             // printf("Timer_ms1: %d\n\r", Timer_ms1);
+
+            u8 *buf = RxBuf[f & 1];  // alterne 0/1
+            Xil_DCacheFlushRange((UINTPTR)buf, RX_BUFFER_SIZE);
+            Xil_DCacheInvalidateRange((UINTPTR)buf, RX_BUFFER_SIZE);
+
+            Status = lidar_dma_recv(buf, RX_BUFFER_SIZE);
+            if(Status != XST_SUCCESS) {
+                xil_printf("Lidar DMA receive failed\n\r");
+            }
+            Xil_DCacheInvalidateRange((UINTPTR)buf, RX_BUFFER_SIZE);
+
+
         }
 
-        int ret = XUartLite_Recv(&UartLite, &test, 1);
-        if (ret == 1 && test == 0x54) {
-            printf("%d", test);
-        }
+        // int ret = XUartLite_Recv(&UartLite, &test, 1);
+        // if (ret == 1 && test == 0x54) {
+        //     printf("%d", test);
+        // }
 
         
 
