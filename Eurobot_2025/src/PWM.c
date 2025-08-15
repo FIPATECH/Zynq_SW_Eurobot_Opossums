@@ -25,36 +25,36 @@ void PWM_Init(void)
     
     for (int i = 0; i < 8; i++){
         switch (i){
-            case 0:
-                gpio_id = XPAR_AXI_GPIO_2_DEVICE_ID;
-                angle = SERVO_1_ANGLE_MAX;
-                angle_min = SERVO_1_ANGLE_MIN;
-                angle_max = SERVO_1_ANGLE_MAX;
-                break;
-            case 1:
-                gpio_id = XPAR_AXI_GPIO_3_DEVICE_ID;
-                angle = SERVO_2_ANGLE_MIN;
-                angle_min = SERVO_2_ANGLE_MIN;
-                angle_max = SERVO_2_ANGLE_MAX;
-                break;
-            case 2:
-                gpio_id = XPAR_AXI_GPIO_4_DEVICE_ID;
-                break;
-            case 3:
-                gpio_id = XPAR_AXI_GPIO_5_DEVICE_ID;
-                break;
-            case 4:
-                gpio_id = XPAR_AXI_GPIO_6_DEVICE_ID;
-                break;
-            case 5:
-                gpio_id = XPAR_AXI_GPIO_7_DEVICE_ID;
-                break;
-            case 6:
-                gpio_id = XPAR_AXI_GPIO_8_DEVICE_ID;
-                break;
-            case 7:
-                gpio_id = XPAR_AXI_GPIO_9_DEVICE_ID;
-                break;
+            // case 0:
+            //     gpio_id = XPAR_AXI_GPIO_2_DEVICE_ID;
+            //     angle = SERVO_1_ANGLE_MAX;
+            //     angle_min = SERVO_1_ANGLE_MIN;
+            //     angle_max = SERVO_1_ANGLE_MAX;
+            //     break;
+            // case 1:
+            //     gpio_id = XPAR_AXI_GPIO_3_DEVICE_ID;
+            //     angle = SERVO_2_ANGLE_MIN;
+            //     angle_min = SERVO_2_ANGLE_MIN;
+            //     angle_max = SERVO_2_ANGLE_MAX;
+            //     break;
+            // case 2:
+            //     gpio_id = XPAR_AXI_GPIO_4_DEVICE_ID;
+            //     break;
+            // case 3:
+            //     gpio_id = XPAR_AXI_GPIO_5_DEVICE_ID;
+            //     break;
+            // case 4:
+            //     gpio_id = XPAR_AXI_GPIO_6_DEVICE_ID;
+            //     break;
+            // case 5:
+            //     gpio_id = XPAR_AXI_GPIO_7_DEVICE_ID;
+            //     break;
+            // case 6:
+            //     gpio_id = XPAR_AXI_GPIO_8_DEVICE_ID;
+            //     break;
+            // case 7:
+            //     gpio_id = XPAR_AXI_GPIO_9_DEVICE_ID;
+            //     break;
             // case 8:
             //     gpio_id = XPAR_AXI_GPIO_10_DEVICE_ID;
             //     break;
