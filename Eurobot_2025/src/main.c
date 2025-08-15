@@ -82,9 +82,11 @@ int main()
         }
 
         int ret = XUartLite_Recv(&UartLite, &test, 1);
-        if (ret == 1) {
-            xil_printf("%c", test);
+        if (ret == 1 && test == 0x54) {
+            printf("%d", test);
         }
+
+        
 
 
         if (Get_Std_In(&c)) {
