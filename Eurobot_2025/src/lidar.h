@@ -5,7 +5,7 @@
 #define RX_BUFFER_SIZE  48 // Taille en bytes (ex : 12 points * 4 bytes)
 
 #define NUM_BUFFERS        2 // 
-#define DMA_ALIGN          32
+#define DMA_ALIGN          64
 
 #define DMA_TIMEOUT        100 // Timeout en ms
 
