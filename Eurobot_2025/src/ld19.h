@@ -124,7 +124,31 @@ void LD19_setUpsideDown(LD19Instance *self, uint8_t upsideDown);
 void LD19_setOffsetPosition(LD19Instance *self, int16_t xPos, int16_t yPos, float anglePos);
 
 
-void LD19_printScanCSV(LD19Instance *inst, LD19DataPointHandler *scan);
-void LD19_printScanTeleplot(LD19Instance *inst, LD19DataPointHandler *scan);
+void LD19_printScanCSV(LD19Instance *self);
+void LD19_printScanTeleplot(LD19Instance *self);
+
+static inline float LD19_getAngleStep(LD19Instance *self){
+    float fsa = (float)self->receivedData.packet.startAngle / 100.0;
+    float lsa = (float)self->receivedData.packet.endAngle / 100.0;
+
+    float range = lsa - fsa;
+    if (range < 0)
+        range += 360;
+
+    float angleStep = range / (LD19_PTS_PER_PACKETS - 1);
+    return angleStep;
+}
+
+static inline uint8_t LD19_filter(LD19Instance *self, LD19DataPoint *data) {
+    uint8_t distanceFilter = data->distance <= self->maxDist && data->distance >= self->minDist;
+    uint8_t intensityFilter = data->intensity >= self->threshold;
+    uint8_t angularFilter;
+    if (self->minAngle <= self->maxAngle) {
+        angularFilter = data->angle <= self->maxAngle && data->angle >= self->minAngle;
+    } else {
+        angularFilter = data->angle <= self->maxAngle || data->angle >= self->minAngle;
+    }
+    return distanceFilter && intensityFilter && angularFilter;
+}
 
 #endif // LD19_H

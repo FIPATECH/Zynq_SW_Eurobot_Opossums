@@ -114,7 +114,7 @@ void RecvHandler(void *CallBackRef, unsigned int EventData)
         bytesRead = XUartLite_Recv(UartLitePtr, &receivedByte, 1);
         if (bytesRead > 0) {
             // Store the received byte in the buffer
-            printf("Received byte: %c\n\r", receivedByte); // Debug print
+            // printf("Received byte: %c\n\r", receivedByte); // Debug print
             ReceiveBuffer[i_RX_PL_CMD_Buff_TODO] = receivedByte;
             i_RX_PL_CMD_Buff_TODO++;
             if (i_RX_PL_CMD_Buff_TODO >= UART_PL_BUFFER_SIZE) {

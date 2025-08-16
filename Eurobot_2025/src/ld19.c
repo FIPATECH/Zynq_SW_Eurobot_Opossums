@@ -2,16 +2,48 @@
 #include "ld19crc.h"
 
 
-void LD06_init(LD19Instance *self) {
-    self->useCRC = 0;
-    self->fullScan = 0;
-    self->useFiltering = 0;
-    self->upsideDown = 0;
-    self->currentBuffer = 0;
+void LD19_init(LD19Instance *self) {
+    // Tout mettre à zéro par défaut
+    memset(self, 0, sizeof(LD19Instance));
+
+    // Initialisation des pointeurs de scan
     self->currentScan = &self->scanA;
     self->previousScan = &self->scanB;
+    // Valeurs par défaut des settings
+    self->useCRC = 0;         // activer CRC par défaut
+    self->fullScan = 1;       // utiliser un scan complet
+    self->useFiltering = 0;   // filtrage désactivé
+    self->upsideDown = 0;     // pas inversé
+
+    self->threshold = 0;      // seuil 0
+    self->minDist = 5;       // distance min 50 mm
+    self->maxDist = 12000;    // distance max 12 m
+    self->minAngle = 0;       // angle min 0°
+    self->maxAngle = 36000;   // angle max 360° *100 si tu gardes l'unité centi-degrés
+
+    self->xOffset = 0;
+    self->yOffset = 0;
+    self->angularOffset = 0.0f;
+
+    self->xPosition = 0.0f;
+    self->yPosition = 0.0f;
+    self->angularPosition = 0.0f;
+
+    self->newScan = 0;
+    self->currentBuffer = 0;
+    self->checksumFailCount = 0;
+
+    // initialiser les tableaux à 0
+    for (int i = 0; i < LD19_PTS_PER_PACKETS; i++) {
+        self->angles[i] = 0.0f;
+    }
+
     self->currentScan->index = 0;
     self->previousScan->index = 0;
+
+    self->receivedData.index = 0;
+    self->receivedData.computedCrc = 0;
+
 }
 
 
@@ -56,14 +88,13 @@ uint8_t LD19_readDataNoCRC(LD19Instance *self, XUartLite *UartLite) {
         if (self->receivedData.index > 1 ||
             (self->receivedData.index == 0 && current == LD19_HEADER) ||
             (self->receivedData.index == 1 && current == LD19_VER_SIZE)) {
-
-            self->receivedData.packet.bytes[self->receivedData.index] = current;
-            self->receivedData.index++;
-            if (self->receivedData.index == LD19_PACKET_SIZE - 1) {
-                LD19_computeData(self);
-                self->receivedData.index = 0;
-                return 1;
-            }
+                self->receivedData.packet.bytes[self->receivedData.index] = current;
+                self->receivedData.index++;
+                if (self->receivedData.index == LD19_PACKET_SIZE - 1) {
+                    LD19_computeData(self);
+                    self->receivedData.index = 0;
+                    return 1;
+                }
         } else {
             self->receivedData.index = 0;
         }
@@ -179,18 +210,22 @@ void LD19_setIntensityThreshold(LD19Instance *self, uint8_t threshold) {
 void LD19_setMaxDistance(LD19Instance *self, uint16_t maxDist) { 
     self->maxDist = maxDist; 
 }
-void LD19_setMinDistance(LD19Instance *self, uint16_t minDist) { 
-    self->minDist = LD19_rescaleAngle(minDist); 
-}
+
 void LD19_setDistanceRange(LD19Instance *self, uint16_t minDist, uint16_t maxDist) {
     self->minDist = minDist;
     self->maxDist = maxDist;
 }
+
 int16_t LD19_rescaleAngle(int16_t angle) {
     if (angle > 360) angle %= 360;
     else while (angle < 0) angle += 360;
     return angle;
 }
+
+void LD19_setMinDistance(LD19Instance *self, uint16_t minDist) {
+    self->minDist = LD19_rescaleAngle(minDist);
+}
+
 void LD19_setMaxAngle(LD19Instance *self, int16_t maxAngle) { 
     self->maxAngle = LD19_rescaleAngle(maxAngle); 
 }
@@ -211,26 +246,21 @@ void LD19_setOffsetPosition(LD19Instance *self, int16_t xPos, int16_t yPos, floa
     self->angularOffset = anglePos;
 }
 
-void LD19_printScanCSV(LD19Instance *inst, LD19DataPointHandler *scan) {
-    for (uint16_t i = 0; i < scan->index; i++) {
-        LD19DataPoint *p = &scan->points[i];
+void LD19_printScanCSV(LD19Instance *self) {
+    for (uint16_t i = 0; i < self->currentScan->index; i++) {
+        LD19DataPoint *p = &self->currentScan->points[i];
         printf("%.2f, %u, %u\n", p->angle, p->distance, p->intensity);
     }
 }
 
 
-void LD19_printScanTeleplot(LD19Instance *inst, LD19DataPointHandler *scan) {
-    for (uint16_t i = 0; i < scan->index; i++) {
-        LD19DataPoint *p = &scan->points[i];
-#ifdef LD19_COMPUTE_XY
-        printf(">LidarX:%d\n", (int)p->x);
-        printf(">LidarY:%d\n", (int)p->y);
-#else
-        float rad = p->angle * (M_PI / 180.0);
-        int x = (int)(p->distance * cos(rad));
-        int y = (int)(-p->distance * sin(rad));
-        printf(">LidarX:%d\n", x);
-        printf(">LidarY:%d\n", y);
-#endif
+void LD19_printScanTeleplot(LD19Instance *self) {
+    if (self->currentScan->index) {
+        printf(">lidar:");
+        for (uint16_t i = 0; i < self->currentScan->index; i++) {
+            printf("%f:%f;", self->currentScan->points[i].x, self->currentScan->points[i].y);
+        }
+        printf("|xy");
     }
-}
+  }
+

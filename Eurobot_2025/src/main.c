@@ -7,6 +7,10 @@
 int old_timer_ms1 = 0;
 int Status = 0;
 
+
+LD19Instance LD19;
+
+
 int main()
 {
     //Disable cache on OCM    
@@ -61,7 +65,7 @@ int main()
         Status = 0;
     }
 
-    init_dma();
+    // init_dma();
 
     // init_QEI();
     // PWM_Init();
@@ -74,6 +78,8 @@ int main()
     // Init_Asserv();
     // Init_Stepper();
 
+    LD19_init(&LD19);
+
     init_shared_memory();
 
     xil_printf("Init done\n\r");
@@ -84,26 +90,27 @@ int main()
             old_timer_ms1 = Timer_ms1;
             // printf("Timer_ms1: %d\n\r", Timer_ms1);
 
-            u8 *buf = RxBuf[f & 1];  // alterne 0/1
-            Xil_DCacheFlushRange((UINTPTR)buf, RX_BUFFER_SIZE);
-            Xil_DCacheInvalidateRange((UINTPTR)buf, RX_BUFFER_SIZE);
+            // u8 *buf = RxBuf[f & 1];  // alterne 0/1
+            // Xil_DCacheFlushRange((UINTPTR)buf, RX_BUFFER_SIZE);
+            // Xil_DCacheInvalidateRange((UINTPTR)buf, RX_BUFFER_SIZE);
 
-            Status = lidar_dma_recv(buf, RX_BUFFER_SIZE);
-            if(Status != XST_SUCCESS) {
-                xil_printf("Lidar DMA receive failed\n\r");
-            }
-            Xil_DCacheInvalidateRange((UINTPTR)buf, RX_BUFFER_SIZE);
+            // Status = lidar_dma_recv(buf, RX_BUFFER_SIZE);
+            // if(Status != XST_SUCCESS) {
+            //     xil_printf("Lidar DMA receive failed\n\r");
+            // }
+            // Xil_DCacheInvalidateRange((UINTPTR)buf, RX_BUFFER_SIZE);
 
 
         }
 
         // int ret = XUartLite_Recv(&UartLite, &test, 1);
-        // if (ret == 1 && test == 0x54) {
-        //     printf("%d", test);
+        // if (ret == 1) {
+        //     printf("Received byte: %02X\n", test);
         // }
 
-        
-
+        if (LD19_readScan(&LD19, &UartLite)) {
+            LD19_printScanTeleplot(&LD19);
+        }
 
         if (Get_Std_In(&c)) {
             Interp(c);
