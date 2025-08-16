@@ -103,7 +103,7 @@ uint8_t LD19_readDataCRC(LD19Instance *self, XUartLite *UartLite);
 uint8_t LD19_readDataNoCRC(LD19Instance *self, XUartLite *UartLite);
 
 // Scan complet
-uint8_t LD19_readScan(LD19Instance *self, , XUartLite *UartLite);
+uint8_t LD19_readScan(LD19Instance *self, XUartLite *UartLite);
 
 // Traitement
 void LD19_computeData(LD19Instance *self);
