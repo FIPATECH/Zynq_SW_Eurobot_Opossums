@@ -12,108 +12,119 @@
 
 #define LD19_ANGLE_STEP_MAX 5
 
-typedef struct { 
-    uint16_t distance; 
-    uint8_t intensity; 
-} LidarPointStructDef; 
 
-typedef struct { 
-    uint8_t  header; 
-    uint8_t  ver_len; 
-    uint16_t speed; 
-    uint16_t startAngle; 
-    LidarPointStructDef point[LD19_PTS_PER_PACKETS]; 
-    float angles[LD19_PTS_PER_PACKETS];
-    uint16_t lastAngle; 
-    uint16_t timestamp; 
-    uint8_t crc8; 
-    uint8_t bytes[LD19_PACKET_SIZE]
-} LD19Packet;
+#define M_PI 3.14159265358979323846
 
 typedef struct {
-    uint16_t distance; //mm
-    float angle; //int16_t
-    int x;
-    int y;
-    uint8_t intensity; 
-} DataPoint; 
+    union {
+        struct {
+            uint16_t distance;  // mm
+            uint8_t intensity;  // 0-255
+        } __attribute__((packed));
+        uint8_t bytes[LD19_DATA_SIZE];
+    };
+} __attribute__((packed)) LD19Measure;
 
-typedef struct  {
-  DataPoint points[LD19_MAX_PTS_SCAN];
-  uint16_t index;
+typedef union {
+    struct {
+        uint8_t header;
+        uint8_t verLen;
+        uint16_t speed;
+        uint16_t startAngle;
+        LD19Measure measures[LD19_PTS_PER_PACKETS];
+        uint16_t endAngle;
+        uint16_t timestamp;
+        uint8_t crc8;
+    } __attribute__((packed));
+    uint8_t bytes[LD19_PACKET_SIZE];
+} LD19Packet;
+
+
+typedef struct {
+    float angle;
+    uint16_t distance;
+    uint8_t intensity;
+    float x;
+    float y;
+} LD19DataPoint;
+
+typedef struct {
+    LD19DataPoint points[LD19_MAX_PTS_SCAN];
+    uint16_t index;
 } LD19DataPointHandler;
 
 typedef struct {
     LD19Packet packet;
-    uint8_t computedCRC;
-    uint8_t index;
-
-    uint8_t checksumFailCount; // Count of checksum failures
+    uint16_t index;
+    uint8_t computedCrc;
 } LD19PacketHandler;
 
-
 typedef struct {
-    uint16_t min_distance;
-    uint16_t max_distance;
-    float min_angle;
-    float max_angle;
-    uint8_t intensity_threshold;
-} LD19Filter;
-
-typedef struct {
-    LD19PacketHandler receivedData;
-    LD19Filter filter;
-    LD19DataPointHandler dataHandler;
-    uint8_t en_crc_check; // Enable CRC check
-    uint8_t en_full_scan; // return true only when a full 360° scan is available
-    uint8_t en_filtering; // Enable filtering
-    uint8_t set_upside_down; // Set upside down (1: upside down)
-
+    // Buffers
     LD19DataPointHandler scanA;
     LD19DataPointHandler scanB;
     LD19DataPointHandler *currentScan;
     LD19DataPointHandler *previousScan;
-    uint8_t currentBuffer; // 0: scanA, 1: scanB
+    uint8_t currentBuffer;
 
-    int xPosition; // X position of the sensor in the robot 
-    int yPosition; // Y position of the sensor in the robot 
-    int xOffset; // X offset of the sensor in the robot
-    int yOffset; // Y offset of the sensor in the robot
-    float angularPosition; // Angular position of the sensor in the robot 
-    float angularOffset; // Angular offset of the sensor in the robot 
-}LD19Instance;
+    // Reception
+    LD19PacketHandler receivedData;
+    float angles[LD19_PTS_PER_PACKETS];
+    uint32_t checksumFailCount;
 
-uint8_t CalCRC8(uint8_t *p, uint8_t len);
+    // Settings
+    uint8_t useCRC;
+    uint8_t fullScan;
+    uint8_t useFiltering;
+    uint8_t upsideDown;
 
-void initLD19Instance(LD19Instance *instance);
-void initLiDARFrame(LD19PacketHandler *frame);
-void initLiDARFilter(LD19Filter *filter);
+    uint8_t threshold;
+    uint16_t minDist;
+    uint16_t maxDist;
+    int16_t minAngle;
+    int16_t maxAngle;
 
-void setIntensityThreshold(LD19Filter *filter, uint8_t threshold);
-void setDistanceRange(LD19Filter *filter, uint16_t min_distance, uint16_t max_distance);
-void setMinDistance(LD19Filter *filter, uint16_t min_distance);
-void setMaxDistance(LD19Filter *filter, uint16_t max_distance);
-void setAngleRange(LD19Filter *filter, float min_angle, float max_angle);
-void setMinAngle(LD19Filter *filter, float min_angle);
-void setMaxAngle(LD19Filter *filter, float max_angle);
+    int16_t xOffset;
+    int16_t yOffset;
+    float angularOffset;
+    float xPosition;
+    float yPosition;
+    float angularPosition;
 
-void enableCRCCheck(LD19Instance *instance);
-void disableCRCCheck(LD19Instance *instance);
-void enableFullScan(LD19Instance *instance);
-void disableFullScan(LD19Instance *instance);
-void enableFiltering(LD19Instance *instance);
-void disableFiltering(LD19Instance *instance);
-void turnUpsideDown(LD19Instance *instance);
-void turnRightSideUp(LD19Instance *instance);
+    uint8_t newScan;
+} LD19Instance;
+
+// Init
+void LD19_init(LD19Instance *self);
+
+// Lecture brute
+uint8_t LD19_readData(LD19Instance *self, XUartLite *UartLite);
+uint8_t LD19_readDataCRC(LD19Instance *self, XUartLite *UartLite);
+uint8_t LD19_readDataNoCRC(LD19Instance *self, XUartLite *UartLite);
+
+// Scan complet
+uint8_t LD19_readScan(LD19Instance *self, , XUartLite *UartLite);
+
+// Traitement
+void LD19_computeData(LD19Instance *self);
+void LD19_swapBuffers(LD19Instance *self);
+
+// Configuration
+void LD19_enableCRC(LD19Instance *self);
+void LD19_disableCRC(LD19Instance *self);
+void LD19_enableFullScan(LD19Instance *self);
+void LD19_disableFullScan(LD19Instance *self);
+void LD19_enableFiltering(LD19Instance *self);
+void LD19_disableFiltering(LD19Instance *self);
+void LD19_setIntensityThreshold(LD19Instance *self, uint8_t threshold);
+void LD19_setDistanceRange(LD19Instance *self, uint16_t minDist, uint16_t maxDist);
+void LD19_setAngleRange(LD19Instance *self, int16_t minAngle, int16_t maxAngle);
+void LD19_setUpsideDown(LD19Instance *self, uint8_t upsideDown);
+
+void LD19_setOffsetPosition(LD19Instance *self, int16_t xPos, int16_t yPos, float anglePos);
 
 
-uint8_t ld19_readData(LD19Instance *instance, XUartLite *UartLite);
-uint8_t ld19_readDataCRC(LD19Instance *instance, XUartLite *UartLite);
-uint8_t ld19_readDataNoCRC(LD19Instance *instance, XUartLite *UartLite);
-
-void ld19_readscan(LD19Instance *instance, XUartLite *UartLite);
-float ld19_getAngleStep(LD19Instance *instance);
-
-void ld19_swapBuffers(LD19Instance *instance);
+void LD19_printScanCSV(LD19Instance *inst, LD19DataPointHandler *scan);
+void LD19_printScanTeleplot(LD19Instance *inst, LD19DataPointHandler *scan);
 
 #endif // LD19_H
