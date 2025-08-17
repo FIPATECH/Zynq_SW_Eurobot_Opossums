@@ -12,11 +12,11 @@ void LD19_init(LD19Instance *self) {
     // Valeurs par défaut des settings
     self->useCRC = 1;         // activer CRC par défaut
     self->fullScan = 1;       // utiliser un scan complet
-    self->useFiltering = 0;   // filtrage désactivé
+    self->useFiltering = 0;   // filtrage activé
     self->upsideDown = 0;     // pas inversé
 
     self->threshold = 0;      // seuil 0
-    self->minDist = 0;       // distance min 50 mm
+    self->minDist = 0;       // distance min 0 mm
     self->maxDist = 12000;    // distance max 12 m
     self->minAngle = 0;       // angle min 0°
     self->maxAngle = 360;   // angle max 360°
@@ -25,7 +25,7 @@ void LD19_init(LD19Instance *self) {
     self->yOffset = 0;
     self->angularOffset = 0.0f;
 
-    self->xPosition = 0;
+    self->xPosition = 0;    
     self->yPosition = 0;
     self->angularPosition = 0.0f;
 
@@ -273,7 +273,7 @@ void LD19_printScanTeleplot(LD19Instance *self) {
         for (uint16_t i = 0; i < self->previousScan->index; i++) {
             printf("%f:%f;", self->previousScan->points[i].x, self->previousScan->points[i].y);
         }
-        printf("|xy\n");
+        printf("|xy,clr\n");
     }
   }
 

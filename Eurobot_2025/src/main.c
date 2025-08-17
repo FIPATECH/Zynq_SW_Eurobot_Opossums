@@ -7,6 +7,8 @@
 int old_timer_ms1 = 0;
 int Status = 0;
 
+int timer_lidar = 0;
+
 
 LD19Instance LD19;
 
@@ -86,7 +88,10 @@ int main()
 
     u8 f = 0;
     while(1){
-        if (Timer_ms1 - old_timer_ms1 >= 1000) {
+        if (Timer_ms1 - old_timer_ms1 >= 1) {
+            if (Timer_ms1 - old_timer_ms1 > 1){
+                printf("delta: %d\n", Timer_ms1 - old_timer_ms1);
+            }
             old_timer_ms1 = Timer_ms1;
             // printf("Timer_ms1: %d\n\r", Timer_ms1);
 
@@ -108,8 +113,10 @@ int main()
         //     printf("Received byte: %02X\n", test);
         // }
 
+
+        
         if (LD19_readScan(&LD19, &UartLite)) {
-            LD19_printScanTeleplot(&LD19);
+            // LD19_printScanTeleplot(&LD19);
         }
 
         if (Get_Std_In(&c)) {
