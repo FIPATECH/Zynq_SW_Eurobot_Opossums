@@ -13,11 +13,11 @@ int read_channel(int base_addr){
 
 void init_QEI(void){
 	// Init QEI
-    XGpio_Initialize(&QEI_0, XPAR_AXI_GPIO_0_DEVICE_ID);
-    XGpio_Initialize(&QEI_1, XPAR_AXI_GPIO_1_DEVICE_ID);
-
-	XGpio_SetDataDirection(&QEI_0, 1, 1);
-    XGpio_SetDataDirection(&QEI_1, 1, 1);
+//    XGpio_Initialize(&QEI_0, XPAR_AXI_GPIO_0_DEVICE_ID);
+//    XGpio_Initialize(&QEI_1, XPAR_AXI_GPIO_1_DEVICE_ID);
+//
+//	XGpio_SetDataDirection(&QEI_0, 1, 1);
+//    XGpio_SetDataDirection(&QEI_1, 1, 1);
 }
 
 void read_qei(void){
