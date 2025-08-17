@@ -87,8 +87,8 @@ typedef struct {
     int16_t xOffset;
     int16_t yOffset;
     float angularOffset;
-    float xPosition;
-    float yPosition;
+    int16_t xPosition;
+    int16_t yPosition;
     float angularPosition;
 
     uint8_t newScan;
