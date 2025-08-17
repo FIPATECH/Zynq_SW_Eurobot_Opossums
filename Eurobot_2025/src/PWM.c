@@ -4,20 +4,21 @@ Servo servo[NBR_SERVO];
 
 int old_Timer_ms1 = 0;
 
-void Init_Servo(Servo *servo, int axi_id, int default_pos, int min_pos, int max_pos, int step, int to_do){
-    servo->axi_id       = axi_id;
-    servo->default_pos  = default_pos;
-    servo->min_pos      = min_pos;
-    servo->max_pos      = max_pos;
-    servo->pos          = default_pos;
-    servo->current_pos  = default_pos;
-    servo->to_do        = to_do;
-    servo->step         = step;
+void Init_Servo(Servo *servo, int axi_addr, int default_pos, int min_pos, int max_pos, int step, int to_do)
+{
+    servo->axi_addr = axi_addr;
+    servo->default_pos = default_pos;
+    servo->current_pos = default_pos;
+    servo->min_pos = min_pos;
+    servo->max_pos = max_pos;
+    servo->pos = default_pos;
+    servo->step = step;
+    servo->to_do = to_do;
 }
+
 
 void PWM_Init(void)
 {
-    int gpio_id; //change XPAR_AXI_GPIO_2_DEVICE_ID with the correct ID when all pwm will be created
     int angle = DEFAULT_ANGLE;
     int angle_min = DEFAULT_ANGLE_MIN;
     int angle_max = DEFAULT_ANGLE_MAX;
@@ -59,9 +60,8 @@ void PWM_Init(void)
             //     gpio_id = XPAR_AXI_GPIO_10_DEVICE_ID;
             //     break;
         }
-        Init_Servo(&servo[i], gpio_id, angle, angle_min, angle_max, step, 1); 
-        XGpio_Initialize(&servo[i].gpio, servo[i].axi_id);
-	    XGpio_SetDataDirection(&servo[i].gpio, 1, 0);
+
+        Init_Servo(&servo[i], AXI_PWM_BASEADDR + (i * 4), angle, angle_min, angle_max, step, 0);
     }
 }
 
@@ -94,7 +94,7 @@ void PWM_Loop(void){
                             servo[i].current_pos = servo[i].pos;
                         }
                     }
-                    XGpio_DiscreteWrite(&servo[i].gpio, 1, servo[i].current_pos);
+                    *((volatile uint32_t*)servo[i].axi_addr) = (uint32_t)servo[i].current_pos;
                     if (servo[i].current_pos == servo[i].pos){
                         servo[i].to_do = 0;
                     }  

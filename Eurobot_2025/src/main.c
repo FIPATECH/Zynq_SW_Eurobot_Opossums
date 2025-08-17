@@ -86,7 +86,7 @@ int main()
 
     u8 f = 0;
     while(1){
-        if (Timer_ms1 - old_timer_ms1 >= 1) {
+        if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
         }
 
@@ -114,7 +114,7 @@ int main()
         //     Stepper_Loop();
 
         //     LED_CLASSIC_MODE();
-        //     PWM_Loop();
+        PWM_Loop();
 
         //     Pump_Loop();
         //     Valve_Loop();
