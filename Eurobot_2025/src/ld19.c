@@ -8,7 +8,6 @@ void LD19_init(LD19Instance *self) {
 
     // Initialisation des pointeurs de scan
     self->currentScan = &self->scanA;
-    self->previousScan = &self->scanB;
     // Valeurs par défaut des settings
     self->useCRC = 0;         // activer CRC par défaut
     self->fullScan = 1;       // utiliser un scan complet
@@ -50,7 +49,6 @@ void LD19_init(LD19Instance *self) {
 uint8_t LD19_readData(LD19Instance *self, XUartLite *UartLite) {
     return self->useCRC ? LD19_readDataCRC(self, UartLite) : LD19_readDataNoCRC(self, UartLite);
 }
-
 
 uint8_t LD19_readDataCRC(LD19Instance *self, XUartLite *UartLite) {
     uint8_t result = 0;
@@ -189,21 +187,18 @@ void LD19_enableCRC(LD19Instance *self) {
 void LD19_disableCRC(LD19Instance *self) { 
     self->useCRC = 0; 
 }
-
 void LD19_enableFullScan(LD19Instance *self) { 
     self->fullScan = 1; 
 }
 void LD19_disableFullScan(LD19Instance *self) { 
     self->fullScan = 0; 
 }
-
 void LD19_enableFiltering(LD19Instance *self) { 
     self->useFiltering = 1; 
 }
 void LD19_disableFiltering(LD19Instance *self) { 
     self->useFiltering = 0; 
 }
-
 void LD19_setIntensityThreshold(LD19Instance *self, uint8_t threshold) { 
     self->threshold = threshold; 
 }
@@ -239,11 +234,24 @@ void LD19_setAngleRange(LD19Instance *self, int16_t minAngle, int16_t maxAngle) 
 void LD19_setUpsideDown(LD19Instance *self, uint8_t upsideDown) { 
     self->upsideDown = upsideDown; 
 }
-
 void LD19_setOffsetPosition(LD19Instance *self, int16_t xPos, int16_t yPos, float anglePos) {
     self->xOffset = xPos;
     self->yOffset = yPos;
     self->angularOffset = anglePos;
+}
+
+void LD19_setBasePosition(LD19Instance *self, float xBase, float yBase, float angleBase) {
+    self->xPosition = xBase;
+    self->yPosition = yBase;
+    self->angularPosition = angleBase;
+}
+
+uint16_t LD19_getNbPointsInScan(LD19Instance *self) {
+    return self->previousScan->index;
+}
+
+uint16_t LD19_getSpeed(LD19Instance *self) {
+    return self->receivedData.packet.speed;
 }
 
 void LD19_printScanCSV(LD19Instance *self) {
@@ -264,3 +272,27 @@ void LD19_printScanTeleplot(LD19Instance *self) {
     }
   }
 
+uint8_t LD19_isNewScan(LD19Instance *self) {
+    return self->newScan;
+}
+
+LD19DataPoint *LD19_getPoint(LD19Instance *self, uint16_t n) {
+    static LD19DataPoint empty;
+    LD19DataPoint *result = &empty;
+    if (n < self->previousScan->index) {
+        result = &self->previousScan->points[n];
+    }
+    return result;
+}
+
+uint16_t LD19_getChecksumFailCount(LD19Instance *self) {
+    return self->checksumFailCount;
+}
+
+uint8_t LD19_isChecksumFail(LD19Instance *self) {
+    static uint8_t previousChecksumFailCount = 0;
+    uint8_t currentChecksumFailCount = LD19_getChecksumFailCount(self);
+    uint8_t isFail = (currentChecksumFailCount > previousChecksumFailCount);
+    previousChecksumFailCount = currentChecksumFailCount;
+    return isFail;
+}

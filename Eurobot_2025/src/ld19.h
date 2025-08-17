@@ -120,12 +120,19 @@ void LD19_setIntensityThreshold(LD19Instance *self, uint8_t threshold);
 void LD19_setDistanceRange(LD19Instance *self, uint16_t minDist, uint16_t maxDist);
 void LD19_setAngleRange(LD19Instance *self, int16_t minAngle, int16_t maxAngle);
 void LD19_setUpsideDown(LD19Instance *self, uint8_t upsideDown);
-
 void LD19_setOffsetPosition(LD19Instance *self, int16_t xPos, int16_t yPos, float anglePos);
-
+void LD19_setBasePosition(LD19Instance *self, float xBase, float yBase, float angleBase);
+uint16_t LD19_getNbPointsInScan(LD19Instance *self);
+uint16_t LD19_getSpeed(LD19Instance *self);
 
 void LD19_printScanCSV(LD19Instance *self);
 void LD19_printScanTeleplot(LD19Instance *self);
+
+uint8_t LD19_isNewScan(LD19Instance *self);
+LD19DataPoint *LD19_getPoint(LD19Instance *self, uint16_t n);
+uint16_t LD19_getChecksumFailCount(LD19Instance *self);
+uint8_t LD19_isChecksumFail(LD19Instance *self);
+
 
 static inline float LD19_getAngleStep(LD19Instance *self){
     float fsa = (float)self->receivedData.packet.startAngle / 100.0;
