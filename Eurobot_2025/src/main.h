@@ -57,9 +57,5 @@
 // uart pl
 #include "UART_PL.h"
 
-
-#include "lidar.h"
-
-
 #include "ld19.h"
 #endif // MAIN_H
