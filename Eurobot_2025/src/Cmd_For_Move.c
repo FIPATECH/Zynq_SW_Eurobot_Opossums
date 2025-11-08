@@ -120,13 +120,25 @@ uint8_t SET_Cmd(void) {
     return 0;
 }
 
+uint8_t SET0_Cmd(void) {
+    local_data.set_pos.x = 0.0f; // position x
+    local_data.set_pos.y = 0.0f; // position y
+    local_data.set_pos.t = 0.0f; // position t
+    // ecriture de la mémoire partagée
+    SEND_FIELD(&local_data, set_pos);
+    return 0;
+}
+
 uint8_t Set_Lidar_Cmd(void) {
     // Récupération des mesures LIDAR
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_x))     return PARAM_ERROR_CODE;
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_y))     return PARAM_ERROR_CODE;
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_t))     return PARAM_ERROR_CODE; 
     if (Get_Param_u32(&local_data.set_lidar.delay))                  return PARAM_ERROR_CODE;
-
+    printf("lidar pos: %f %f %f\n", 
+            (double)(local_data.set_lidar.lidar_position_x), 
+            (double)(local_data.set_lidar.lidar_position_y), 
+            (double)(local_data.set_lidar.lidar_position_t));
     // ecriture dans la mémoire partagée
     SEND_FIELD(&local_data, set_lidar);
     return 0;
@@ -185,7 +197,7 @@ uint8_t Set_Odo_Spacing_Cmd(void) {
 }
 
 
-int auto_printpos_en = 0; // si on active l'envoi de la position
+int auto_printpos_en = 1; // si on active l'envoi de la position
 uint32_t auto_printpos_delay = 100; // en ms
 uint32_t Last_Timer_print_pos = 0; // dernier envoi de la position
 
@@ -200,4 +212,32 @@ uint8_t Activate_Position_Sending_Func (void) {
         auto_printpos_delay = Delay;
     }
     return 0;
+}
+
+void Print_Position_loop(void) {
+    if (auto_printpos_en) {
+        if ((Timer_ms1 - Last_Timer_print_pos) >= auto_printpos_delay) {
+            Last_Timer_print_pos = Timer_ms1;
+            if (CHECK_FIELD(&local_data, kalman_out) && CHECK_FIELD(&local_data, speed_robot)) {
+                // printf("POS ");
+                // printf("%.4f ", (double)(local_data.kalman_out.x));
+                // printf("%.4f ", (double)(local_data.kalman_out.y));
+                // printf("%.4f\n", (double)(local_data.kalman_out.t));
+                printf(">posx:%.4f\n", 
+                    (double)(local_data.kalman_out.x));
+                printf(">posy:%.4f\n", 
+                    (double)(local_data.kalman_out.y));
+                printf(">post:%.4f\n", 
+                    (double)(local_data.kalman_out.t));
+                printf(">vx:%.4f\n", 
+                    (double)(local_data.speed_robot.vx));
+                printf(">vy:%.4f\n",
+                    (double)(local_data.speed_robot.vy));
+                printf(">vt:%.4f\n",
+                    (double)(local_data.speed_robot.vt));
+            } else {
+                printf("POS ERROR: Position or speed not valid\n");
+            }
+        }
+    }
 }

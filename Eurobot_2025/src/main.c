@@ -7,14 +7,20 @@
 int old_timer_ms1 = 0;
 int Status = 0;
 
+int timer_lidar = 0;
+
+
+LD19Instance LD19;
+
+
 int main()
 {
     //Disable cache on OCM    
     // S=b1 TEX=b100 AP=b11, Domain=b1111, C=b0, B=b0
     Xil_SetTlbAttributes(0xFFFF0000,0x14de2); 
     
-    
     u8 c;
+    u8 test;
     init_platform();
 
     
@@ -27,12 +33,12 @@ int main()
     sev();
 
     Status = SetupInterruptSystem(&InterruptController);
-
     if (Status != XST_SUCCESS) {
         xil_printf("Interrupt Setup Failed\r\n");
     } else {
         xil_printf("Interrupt Setup Done\r\n");
     }
+
 
     Status = UART_Init();
     if (Status != XST_SUCCESS) {
@@ -52,10 +58,19 @@ int main()
         Status = 0;
     }
 
+    Status = UART_PL_Init();
+    if (Status != XST_SUCCESS) {
+        xil_printf("UART PL init failed\n\r");
+        Status = 0;
+    } else {
+        xil_printf("UART PL init done\n\r");
+        Status = 0;
+    }
+
     // init_QEI();
     // PWM_Init();
-    // Std_Com_Init();
-    init_AU();
+    Std_Com_Init();
+    // init_AU();
     // ws2812b_init();
     // init_switch();
     // Init_Pump();
@@ -63,27 +78,21 @@ int main()
     // Init_Asserv();
     // Init_Stepper();
 
+    LD19_init(&LD19);
+
     init_shared_memory();
 
     xil_printf("Init done\n\r");
+
+    u8 f = 0;
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
-            
-            if(CHECK_FIELD(&local_data, asserv_step_timing)){
-                // printf("CPU1, %d, %d, %d, %d, %d, %d, %d, %d\n\r", 
-                //     local_data.asserv_step_timing.odo_step_1,
-                //     local_data.asserv_step_timing.odo_step_2,
-                //     local_data.asserv_step_timing.odo_step_3,
-                //     local_data.asserv_step_timing.motion_step,
-                //     local_data.asserv_step_timing.speed_constrain_step,
-                //     local_data.asserv_step_timing.acceleration_constrain_step,
-                //     local_data.asserv_step_timing.consigne_step,
-                //     local_data.asserv_step_timing.pwm_step);
-            }
-    
         }
 
+        if (LD19_readScan(&LD19, &UartLite)) {
+            // LD19_printScanTeleplot(&LD19);
+        }
 
         if (Get_Std_In(&c)) {
             Interp(c);
@@ -91,10 +100,10 @@ int main()
 
         
 
-        AU_Loop();
+        // AU_Loop();
         // LED_loop();
         Std_Com_Loop();
-
+        // Print_Position_loop();
         // if(AU_state == 1){
         //     LED_AU();
         //     Init_Pump();
@@ -105,7 +114,7 @@ int main()
         //     Stepper_Loop();
 
         //     LED_CLASSIC_MODE();
-        //     PWM_Loop();
+        PWM_Loop();
 
         //     Pump_Loop();
         //     Valve_Loop();

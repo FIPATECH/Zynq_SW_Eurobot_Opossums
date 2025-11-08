@@ -76,7 +76,30 @@ uint8_t Get_Odo_Cmd(void);
  * @return uint8_t 
  */
 uint8_t Get_Speed_Wheel_Cmd(void);
+
+/**
+ * @brief Interpreter function for the Set Position command.
+ * 
+ * @note This function takes 3 parameters: x, y, t.
+ * 
+ * @return uint8_t 
+ */
 uint8_t SET_Cmd(void);
+
+/**
+ * @brief Interpreter function for the Set Position 0 command.
+ * 
+ * @return uint8_t 
+ */
+uint8_t SET0_Cmd(void);
+
+/**
+ * @brief Interpreter function for the Set Lidar command.
+ * 
+ * @note This function takes 3 parameters: lidar_position_x, lidar_position_y, lidar_position_t, and a delay.
+ * 
+ * @return uint8_t 
+ */
 uint8_t Set_Lidar_Cmd(void);
 
 /**
@@ -161,4 +184,12 @@ uint8_t Set_Odo_Spacing_Cmd(void);
  */
 uint8_t Activate_Position_Sending_Func(void);
 
+
+/**
+ * @brief Function to print the current position in a loop.
+ * 
+ * This function checks if automatic position printing is enabled and prints the current position
+ * at regular intervals defined by `auto_printpos_delay`.
+ */
+void Print_Position_loop(void);
 #endif

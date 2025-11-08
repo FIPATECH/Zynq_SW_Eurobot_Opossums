@@ -18,6 +18,10 @@
 #include "xscugic.h"
 #include "xuartps.h"
 #include "xplatform_info.h"
+#include "xaxidma.h"
+
+
+#include "xuartlite.h"
 
 // driver part 
 #include "Timer.h"
@@ -53,5 +57,8 @@
 //feetech part
 #include "FEETECH/feetech_UART.h"
 #include "FEETECH/feetech.h"
+// uart pl
+#include "UART_PL.h"
 
+#include "ld19.h"
 #endif // MAIN_H

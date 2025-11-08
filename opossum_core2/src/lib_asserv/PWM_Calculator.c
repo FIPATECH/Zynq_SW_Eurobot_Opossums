@@ -1,11 +1,6 @@
 #include "lib_asserv.h"
 
 void Asserv_PWM_calculator(ESC_Command *commande) {
-	float measure1 = Speed_1;
-	float measure2 = Speed_2;
-	float measure3 = Speed_3;
-	float measure4 = Speed_4;
-
     // maj des consignes des PID
 	float err1 = Speed_Order_1 - Speed_1;
 	float err2 = Speed_Order_2 - Speed_2;

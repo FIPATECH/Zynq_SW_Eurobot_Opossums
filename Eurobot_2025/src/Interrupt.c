@@ -2,6 +2,7 @@
 
 XScuGic InterruptController;
 
+
 int SetupInterruptSystem(XScuGic *GicInstancePtr) {
     int Status;
     XScuGic_Config *GicConfig;
@@ -35,7 +36,7 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
     XScuGic_Enable(GicInstancePtr, TIMER_IRPT_INTR);
 
 
-    // ---------------------- UART ----------------------
+    // ---------------------- UART PS ----------------------
     // Connect and enable UART interrupt
     Status = XScuGic_Connect(GicInstancePtr, UART_IRPT_INTR,
                     (Xil_InterruptHandler)XUartPs_InterruptHandler, &UartInstance);
@@ -44,6 +45,16 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
     }
     XScuGic_Enable(GicInstancePtr, UART_IRPT_INTR);
 
+    // ---------------------- UART PL ----------------------
+    XScuGic_SetPriorityTriggerType(GicInstancePtr, UARTLITE_IRPT_INTR, 8, 0x1);
+    // Connect and enable UART PL interrupt
+    Status = XScuGic_Connect(GicInstancePtr, UARTLITE_IRPT_INTR,
+                            (Xil_InterruptHandler)XUartLite_InterruptHandler, &UartLite);
+    if (Status != XST_SUCCESS) {
+        return XST_FAILURE;
+    }
+
+    XScuGic_Enable(GicInstancePtr, UARTLITE_IRPT_INTR);
     // --------------------------------------------------------
 
 
@@ -56,6 +67,7 @@ int SetupInterruptSystem(XScuGic *GicInstancePtr) {
     Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,
                                 (Xil_ExceptionHandler)XScuGic_InterruptHandler,
                                 GicInstancePtr);
+
     Xil_ExceptionEnable();
     
     return XST_SUCCESS;

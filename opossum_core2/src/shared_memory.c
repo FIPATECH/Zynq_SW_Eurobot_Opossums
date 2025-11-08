@@ -71,9 +71,9 @@ int send_to_other_core(const void *data, size_t size,
                         volatile uint32_t *flag_valid,
                         volatile uint32_t *flag_ack) {
     // Si la donnée précédente n'a pas encore été lue, on refuse d'envoyer
-    if (*flag_valid && !(*flag_ack)) {
-        return 0; // Pas encore consommé
-    }
+    // if (*flag_valid && !(*flag_ack)) {
+    //     return 0; // Pas encore consommé
+    // }
 
     // Copie mémoire
     const uint8_t *src_bytes = (const uint8_t *)data;
@@ -179,6 +179,10 @@ void check_for_cmd_loop(void){
                 if(CHECK_FIELD(&local_data, set_lidar)){
                     Set_Lidar_Cmd(local_data.set_lidar);                        
                 }
+                // printf("lidar pos: %f %f %f\n", 
+                //     (double)(local_data.set_lidar.lidar_position_x), 
+                //     (double)(local_data.set_lidar.lidar_position_y), 
+                //     (double)(local_data.set_lidar.lidar_position_t));
                 check_for_cmd_state++;
                 break;
             case 5: 

@@ -23,7 +23,7 @@ typedef struct {
 
 extern Position Wanted_Pos;
 extern Speed Wanted_Speed;
-extern Speed speed_robot;
+extern Speed speed_robot_asserv;
 extern Speed speed_robot_odom;
 
 
@@ -86,9 +86,9 @@ typedef struct {
 } Asserv_Step_Timing;
 
 typedef struct {
-    int lidar_position_x; // position of the robot according to the lidar
-    int lidar_position_y; // position of the robot according to the lidar
-    int lidar_position_t; // position of the robot according to the lidar
+    float lidar_position_x; // position of the robot according to the lidar
+    float lidar_position_y; // position of the robot according to the lidar
+    float lidar_position_t; // position of the robot according to the lidar
     int delay; // calculation delay in ms 
 } Set_lidar;
 

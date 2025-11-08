@@ -12,29 +12,30 @@ const Command Command_List[] = {
     { "VERSION", Version_cmd},
 
     //pump command
-    { "PUMP", Pump_cmd},
+//    { "PUMP", Pump_cmd},
 
     // valve command
-    { "VALVE", Valve_cmd},
+//    { "VALVE", Valve_cmd},
 
     // Asserv print
     { "SETLIDAR", Set_Lidar_Cmd},
     { "ENKALMAN", Enable_Kalman_Cmd},
 
     { "SERVO", Servo_cmd},
-    { "LED", LED_cmd},
+//    { "LED", LED_cmd},
 
     { "ODOSPACING", Set_Odo_Spacing_Cmd},
 
     { "PDE", Activate_Position_Sending_Func},
 
     // Stepper command
-    { "STEPPER", Stepper_cmd},
-    { "STEPPER1", Stepper_1_cmd},
-    { "HELP_STEPPER", Stepper_help_cmd},
+//    { "STEPPER", Stepper_cmd},
+//    { "STEPPER1", Stepper_1_cmd},
+//    { "HELP_STEPPER", Stepper_help_cmd},
 
     //odometry command
-    { "SETX", SET_Cmd},
+    { "SET", SET_Cmd},
+    { "SET0", SET0_Cmd},
 
     //asserv command
     { "VMAX", VMAX_Cmd},

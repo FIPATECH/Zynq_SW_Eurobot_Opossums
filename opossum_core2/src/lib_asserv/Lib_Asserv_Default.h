@@ -6,18 +6,18 @@
 /*############################################################################*/
 
 // {tic/m, m/tic, entre roues}
-#define DEFAULT_ODO_SPACING  0.115//0.115
+#define DEFAULT_ODO_SPACING  0.110
 #define DEFAULT_SIZE_WHEEL 0.060 // 6cm
 #define DEFAULT_WHEEL_RADIUS DEFAULT_SIZE_WHEEL/2 // 3cm
 
 /*############################################################################*/
 /*                                  Motion                                    */
 /*############################################################################*/
-#define DEFAULT_CONSTRAINT_V_MAX 0.2
-#define DEFAULT_CONSTRAINT_VT_MAX 0.6
+#define DEFAULT_CONSTRAINT_V_MAX 0.5
+#define DEFAULT_CONSTRAINT_VT_MAX 1
 
-#define DEFAULT_CONSTRAINT_A_MAX 0.3
-#define DEFAULT_CONSTRAINT_AT_MAX 0.3
+#define DEFAULT_CONSTRAINT_A_MAX 0.5
+#define DEFAULT_CONSTRAINT_AT_MAX 1
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 

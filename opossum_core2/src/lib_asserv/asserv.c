@@ -148,9 +148,9 @@ void asserv_free_step(void)
 	speed_order.vt = 0;
     Pid_Speed_En = 1;
 
-	if ((fabs(speed_robot.vx) < DEFAULT_SPEED_LIN_STOP) && 
-        (fabs(speed_robot.vy) < DEFAULT_SPEED_LIN_STOP) && 
-        (fabs(speed_robot.vt) < DEFAULT_SPEED_ROT_STOP)) {
+	if ((fabs(speed_robot_asserv.vx) < DEFAULT_SPEED_LIN_STOP) && 
+        (fabs(speed_robot_asserv.vy) < DEFAULT_SPEED_LIN_STOP) && 
+        (fabs(speed_robot_asserv.vt) < DEFAULT_SPEED_ROT_STOP)) {
         
             motion_off();
 	}
@@ -158,7 +158,7 @@ void asserv_free_step(void)
 
 void speed_asserv_break_step(void) {
     // break only if the robot is moving 
-    if (fabs(speed_robot.vx) > DEFAULT_SPEED_LIN_STOP || fabs(speed_robot.vy) > DEFAULT_SPEED_LIN_STOP || fabs(speed_robot.vt) > DEFAULT_SPEED_ROT_STOP){
+    if (fabs(speed_robot_asserv.vx) > DEFAULT_SPEED_LIN_STOP || fabs(speed_robot_asserv.vy) > DEFAULT_SPEED_LIN_STOP || fabs(speed_robot_asserv.vt) > DEFAULT_SPEED_ROT_STOP){
         emergency_break_requested = 1;
         speed_order.vx = 0;
         speed_order.vy = 0;
@@ -263,9 +263,9 @@ int Get_asserv_done(void) {
 // verifier qu'on est pas bloque par un obstacle
 // si bloque, annule la consigne de vitesse
 void asserv_check_blocked(float period) {
-    if (   (fabs(speed_robot.vx - speed_order_constrained.vx) > 0.1) || 
-           (fabs(speed_robot.vy - speed_order_constrained.vy) > 0.1) || 
-           (fabs(speed_robot.vt - speed_order_constrained.vt) > 0.4)    ) {
+    if (   (fabs(speed_robot_asserv.vx - speed_order_constrained.vx) > 0.1) || 
+           (fabs(speed_robot_asserv.vy - speed_order_constrained.vy) > 0.1) || 
+           (fabs(speed_robot_asserv.vt - speed_order_constrained.vt) > 0.4)    ) {
         if (blocked_time >= ASSERV_BLOCK_TIME_LIMIT) {
 			printf("asserv,blocked\n");
             motion_free();
