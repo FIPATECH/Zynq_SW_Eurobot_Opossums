@@ -14,9 +14,6 @@ typedef unsigned char byte;
 
 #define FEETECH_BROADCAST               254
 
-#define FEETECH_BUS1   1
-#define FEETECH_BUS2   2
-
 #define FEETECH_CMD_NB_MAX_TRY_SEND 3
 #define FEETECH_CMD_LIST_SIZE 20
 #define FEETECH_CMD_BUFF_LENGTH 20
@@ -97,7 +94,6 @@ typedef unsigned char byte;
   
 typedef struct {
     uint16_t Uart_Brg;  // vitesse 
-    uint8_t FEETECH_Bus;     // 1 ou 2
     uint8_t FEETECH_Addr;
     uint8_t Command;
     uint8_t Reg_Addr;
@@ -117,7 +113,7 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd);
 
 uint8_t RegisterLenFEETECH(uint8_t address);
 
-void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t FEETECH_Bus, uint8_t Command, uint8_t Reg_Addr, uint32_t Data_To_Send, void *Data_Answer, uint8_t Nb_Data, uint8_t *Status, void *Done);
+void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t Command, uint8_t Reg_Addr, uint32_t Data_To_Send, void *Data_Answer, uint8_t Nb_Data, uint8_t *Status, void *Done);
 
 void PutFEETECH(uint8_t id, uint8_t Reg, uint32_t Data);
 void PutFEETECH_Wait(uint8_t id, uint8_t Reg, uint32_t Data); // interdit dans le robot, sauf pour debug !!!

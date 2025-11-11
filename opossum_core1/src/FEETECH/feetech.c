@@ -113,9 +113,9 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     FEETECH_Receive_Ptr = 0;
 
     /* === Update UART baudrate live if different === */
-    if (Cmd->Uart_Brg > 0) {
-        XUartPs_SetBaudRate(&Uart1_Instance, Cmd->Uart_Brg);
-    }
+    // if (Cmd->Uart_Brg > 0) {
+    //     XUartPs_SetBaudRate(&Uart1_Instance, Cmd->Uart_Brg);
+    // }
 
     /* Put bus in TX mode */
     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_TX);
@@ -135,12 +135,12 @@ void FEETECH_Loop(void){
     uint8_t val8, i;
     uint8_t b;
     /* drain incoming bytes into FEETECH_Receive_Tab */
-    while (Get_Uart1_Cmd(&b)) {
-        FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
-        if (FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
-            FEETECH_Receive_Ptr++;
-        Time_Of_Last_FEETECH_Received = Timer_ms1;
-    }
+    // while (Get_Uart1_Cmd(&b)) {
+    //     FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
+    //     if (FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
+    //         FEETECH_Receive_Ptr++;
+    //     Time_Of_Last_FEETECH_Received = Timer_ms1;
+    // }
 
     switch(FEETECH_Loop_State) {
         case 0:
@@ -253,9 +253,8 @@ uint8_t RegisterLenFEETECH(uint8_t address) {
 }
 
 /* Command queue helpers (same as original) */
-void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t FEETECH_Bus, uint8_t Command, uint8_t Reg_Addr, uint32_t Data_To_Send, void *Data_Answer, uint8_t Nb_Data, uint8_t *Status, void *Done) {
+void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t Command, uint8_t Reg_Addr, uint32_t Data_To_Send, void *Data_Answer, uint8_t Nb_Data, uint8_t *Status, void *Done) {
     Liste_Command_FEETECH[Command_FEETECH_TODO].Uart_Brg = Uart_Brg;
-    Liste_Command_FEETECH[Command_FEETECH_TODO].FEETECH_Bus = FEETECH_Bus;
     Liste_Command_FEETECH[Command_FEETECH_TODO].FEETECH_Addr = FEETECH_Addr;
     Liste_Command_FEETECH[Command_FEETECH_TODO].Command = Command;
     Liste_Command_FEETECH[Command_FEETECH_TODO].Reg_Addr = Reg_Addr;
@@ -271,35 +270,35 @@ void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t FEETECH_Bu
 }
 
 void PutFEETECH(uint8_t id, uint8_t Reg, uint32_t Data) {
-    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_BUS2, FEETECH_INST_WRITE_DATA, Reg, Data, NULL, RegisterLenFEETECH(Reg), &FEETECH_Dumy, &FEETECH_Dumy);
+    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_WRITE_DATA, Reg, Data, NULL, RegisterLenFEETECH(Reg), &FEETECH_Dumy, &FEETECH_Dumy);
 }
 
 void PutFEETECH_Wait(uint8_t id, uint8_t Reg, uint32_t Data) {
     volatile uint8_t Done = 0;
-    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_BUS2, FEETECH_INST_WRITE_DATA, Reg, Data, NULL, RegisterLenFEETECH(Reg), &FEETECH_Dumy, (void*) (&Done));
+    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_WRITE_DATA, Reg, Data, NULL, RegisterLenFEETECH(Reg), &FEETECH_Dumy, (void*) (&Done));
     while (!Done)
         FEETECH_Loop();
 }
 
 void PutFEETECH_Ext_Done(uint8_t id, uint8_t Reg, uint32_t Data, void *Done) {
-    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_BUS2, FEETECH_INST_WRITE_DATA, Reg, Data, NULL, RegisterLenFEETECH(Reg), &FEETECH_Dumy, Done);
+    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_WRITE_DATA, Reg, Data, NULL, RegisterLenFEETECH(Reg), &FEETECH_Dumy, Done);
 }
 
 uint32_t GetFEETECH_Wait(uint8_t id, uint8_t Reg) {
     volatile uint8_t Done = 0;
     uint32_t Data_Answer = 0;
-    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_BUS2, FEETECH_INST_READ_DATA, Reg, 0, &Data_Answer, RegisterLenFEETECH(Reg), &FEETECH_Dumy, (void*) (&Done));
+    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_READ_DATA, Reg, 0, &Data_Answer, RegisterLenFEETECH(Reg), &FEETECH_Dumy, (void*) (&Done));
     while (!Done)
         FEETECH_Loop();
     return Data_Answer;
 }
 
 void GetFEETECH(uint8_t id, uint8_t Reg, void *Data_Answer) {
-    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_BUS2, FEETECH_INST_READ_DATA, Reg, 0, Data_Answer, RegisterLenFEETECH(Reg), &FEETECH_Dumy, &FEETECH_Dumy);
+    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_READ_DATA, Reg, 0, Data_Answer, RegisterLenFEETECH(Reg), &FEETECH_Dumy, &FEETECH_Dumy);
 }
 
 void GetFEETECH_Ext_Done(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done) {
-    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_BUS2, FEETECH_INST_READ_DATA, Reg, 0, Data_Answer, RegisterLenFEETECH(Reg), &FEETECH_Dumy, Done);
+    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_READ_DATA, Reg, 0, Data_Answer, RegisterLenFEETECH(Reg), &FEETECH_Dumy, Done);
 }
 
 uint8_t FEETECH_All_Cmd_Done(void) {
