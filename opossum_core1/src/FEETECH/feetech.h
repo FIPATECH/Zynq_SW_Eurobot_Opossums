@@ -123,4 +123,6 @@ void GetFEETECH_Ext_Done(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done)
 
 uint8_t FEETECH_All_Cmd_Done(void);
 
+void FEETECH_Uart_EventHandler(unsigned int Event, unsigned int EventData);
+
 #endif // FEETECH_H

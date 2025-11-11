@@ -20,7 +20,6 @@ int main()
     Xil_SetTlbAttributes(0xFFFF0000,0x14de2); 
     
     u8 c;
-    u8 test;
     init_platform();
 
     
@@ -84,7 +83,6 @@ int main()
 
     xil_printf("Init done\n\r");
 
-    u8 f = 0;
     while(1){
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;

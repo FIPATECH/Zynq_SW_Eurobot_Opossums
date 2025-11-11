@@ -43,10 +43,8 @@ uint8_t RegisterLenFEETECH(uint8_t address);
 
 /* Initialize FEETECH port using board-specific macros */
 void Init_Com_FEETECH(void){
-    /* Voltage selection pin */
-    FEETECH_SELECT_5V(); // select 5V by default (maps to FEETECH_VOLTAGE = 1 on dsPIC)
     /* Put bus in receive mode */
-    FEETECH_BUS_EN_CLR();
+    // FEETECH_BUS_EN_CLR();
 
     feetech_torque_enable = FEETECH_TORQUE_ENABLE;
     feetech_id = FEETECH_ID;
@@ -63,7 +61,7 @@ void FEETECH_Uart_EventHandler(unsigned int Event, unsigned int EventData)
     if (Event == XUARTPS_EVENT_SENT_DATA) {
         feetech_tx_done = 1;
         /* when transmission completes, bus can be returned to RX */
-        FEETECH_BUS_EN_CLR();
+        // FEETECH_BUS_EN_CLR();
         /* mark as waiting for answer (if applicable) */
         Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
         Time_Of_Last_FEETECH_Received = Timer_ms1;
@@ -110,20 +108,13 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     FEETECH_Transmit_Ptr = 0;
     FEETECH_Receive_Ptr = 0;
 
-    /* select 5V for feetech if necessary (keeps original behaviour) */
-    FEETECH_SELECT_5V();
-
-        /* === Update UART baudrate live if different === */
+    /* === Update UART baudrate live if different === */
     if (Cmd->Uart_Brg > 0) {
-        /* only update if requested baudrate differs */
-        u32 current_baud = XUartPs_GetBaudRate(&Uart1_Instance);
-        if (current_baud != Cmd->Uart_Brg) {
-            XUartPs_SetBaudRate(&Uart1_Instance, Cmd->Uart_Brg);
-        }
+        XUartPs_SetBaudRate(&Uart1_Instance, Cmd->Uart_Brg);
     }
 
     /* Put bus in TX mode */
-    FEETECH_BUS_EN_SET();
+    // FEETECH_BUS_EN_SET();
     feetech_tx_done = 0;
 
     /* send buffer via your wrapper */
