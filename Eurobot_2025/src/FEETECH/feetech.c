@@ -114,7 +114,14 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     /* select 5V for feetech if necessary (keeps original behaviour) */
     FEETECH_SELECT_5V();
 
-    /* Baudrate setting removed — UART baudrate is now assumed fixed */
+        /* === Update UART baudrate live if different === */
+    if (Cmd->Uart_Brg > 0) {
+        /* only update if requested baudrate differs */
+        u32 current_baud = XUartPs_GetBaudRate(&Uart1_Instance);
+        if (current_baud != Cmd->Uart_Brg) {
+            XUartPs_SetBaudRate(&Uart1_Instance, Cmd->Uart_Brg);
+        }
+    }
 
     /* Put bus in TX mode */
     FEETECH_BUS_EN_SET();
