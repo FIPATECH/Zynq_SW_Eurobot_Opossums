@@ -18,7 +18,6 @@
 #include "xscugic.h"
 #include "xuartps.h"
 #include "xplatform_info.h"
-#include "xaxidma.h"
 
 
 #include "xuartlite.h"
