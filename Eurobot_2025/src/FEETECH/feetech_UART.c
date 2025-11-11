@@ -98,9 +98,12 @@ int UART1_Init(void) {
 ***************************************************************************/
 void UART1_Handler(void *CallBackRef, u32 Event, unsigned int EventData)
 {
+	/* forward to FEETECH module so it can handle TX-complete and RX-timeout */
+	FEETECH_Uart_EventHandler(Event, EventData);
 	XUartPs *Uart1_InstancePtr = (XUartPs *)CallBackRef;
 	/* All of the data has been sent */
 	if (Event == XUARTPS_EVENT_SENT_DATA) {
+		
 		// xil_printf("Data sent\r\n");
 	}
 
