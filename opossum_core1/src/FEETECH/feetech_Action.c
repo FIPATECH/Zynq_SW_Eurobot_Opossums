@@ -45,69 +45,44 @@ uint8_t done_ID=0;
 uint16_t ID_return=0;
 uint16_t ID_test=0;
 
-/* Example baudrate table for FEETECH servos (you can adjust this list) */
-static const uint32_t FEETECH_Baudrates[] = {
-    38400, 57600, 76800, 115200, 128000, 250000, 50000, 1000000
-};
-#define FEETECH_BAUD_COUNT (sizeof(FEETECH_Baudrates)/sizeof(FEETECH_Baudrates[0]))
-
 void FEETECH_Search_ID_Loop(void) {
-    static uint8_t baud_index = 0; // index in baudrate table
-
-    switch (etat_ID) {
-
+    switch(etat_ID){
         case 0:
-            if (start_ID == 1) {
-                start_ID = 0;
-                ID_test = 0;
-                ID_return = 0;
-                baud_index = 0;
-
-                /* set first baudrate */
-                XUartPs_SetBaudRate(&Uart1_Instance, FEETECH_Baudrates[baud_index]);
-                xil_printf("Start FEETECH ID scan at %lu bps\n", FEETECH_Baudrates[baud_index]);
-                etat_ID = 1;
+            if(start_ID==1){
+                start_ID=0;
+                etat_ID ++;
             }
-            break;
+        break;
 
         case 1:
-            if (ID_test < 255) {
-                /* send read command to test current ID at current baudrate */
+            if (ID_test<255){
                 GetFEETECH_Ext_Done(ID_test, FEETECH_ID, &ID_return, &done_ID);
-                xil_printf("Testing ID=%d at %lu bps\n", ID_test, FEETECH_Baudrates[baud_index]);
-                etat_ID = 2;
-            } else {
-                /* Finished all IDs at current baudrate, move to next */
-                baud_index++;
-                if (baud_index < FEETECH_BAUD_COUNT) {
-                    XUartPs_SetBaudRate(&Uart1_Instance, FEETECH_Baudrates[baud_index]);
-                    xil_printf("Switch to baudrate %lu bps\n", FEETECH_Baudrates[baud_index]);
-                    ID_test = 0;
-                    etat_ID = 1;
-                } else {
-                    xil_printf("FEETECH search finished.\n");
-                    baud_index = 0;
-                    ID_test = 0;
-                    ID_return = 0;
-                    etat_ID = 0;
-                }
+                //printf("ID test: %d\n", ID_test);
+                etat_ID ++;
             }
-            break;
+            else {
+                printf("done research \n");
+                ID_test=0;
+                ID_return=0;
+                etat_ID=0;
+            }
 
+            break;
         case 2:
-            if (done_ID) {
-                done_ID = 0;
-                if (ID_return != 0) {
-                    xil_printf("Found servo: ID=%d at %lu bps\n",
-                               ID_return, FEETECH_Baudrates[baud_index]);
+            if(done_ID){
+                done_ID = 0;   
+                if(ID_return != 0){                       
+                        printf("ID return: %d\n",ID_return);
                 }
                 ID_test++;
-                ID_return = 0;
-                etat_ID = 1;
-            }
+                ID_return=0;
+                etat_ID=1;
+                //printf("ID test: %d\n", ID_test);
+            }               
             break;
-    }
+    }  
 }
+
 
 uint8_t Test_ID_FEETECH_Cmd(void){
     //launch search id

@@ -35,6 +35,8 @@ uint8_t feetech_present_position;
 uint8_t feetech_present_speed;
 uint32_t BRGVALFEETECH;
 
+volatile uint8_t feetech_ignore_echo = 0;
+
 /* internal flags */
 static volatile uint8_t feetech_tx_done = 0; /* set by FEETECH_Uart_EventHandler when SENT event occurs */
 
@@ -65,7 +67,9 @@ void FEETECH_Uart_EventHandler(unsigned int Event, unsigned int EventData)
     if (Event == XUARTPS_EVENT_SENT_DATA) {
         feetech_tx_done = 1;
         /* when transmission completes, bus can be returned to RX */
+        // usleep(2000);
         XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
+        feetech_ignore_echo = 0;
         /* mark as waiting for answer (if applicable) */
         Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
         Time_Of_Last_FEETECH_Received = Timer_ms1;
@@ -120,6 +124,7 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     /* Put bus in TX mode */
     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_TX);
     feetech_tx_done = 0;
+    feetech_ignore_echo = 1;
 
     /* send buffer via your wrapper */
     Send_Uart1_Buff_Cmd(FEETECH_Transmit_Tab, FEETECH_Transmit_Goal);
@@ -133,14 +138,22 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
 /* The original FEETECH loop adapted to pull RX bytes from your RX ring using Get_Uart1_Cmd */
 void FEETECH_Loop(void){
     uint8_t val8, i;
+    
     uint8_t b;
-    /* drain incoming bytes into FEETECH_Receive_Tab */
-    // while (Get_Uart1_Cmd(&b)) {
-    //     FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
-    //     if (FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
-    //         FEETECH_Receive_Ptr++;
-    //     Time_Of_Last_FEETECH_Received = Timer_ms1;
-    // }
+    while (Get_Uart1_Cmd(&b)) {
+
+        // Si on est en phase d’écho, on ignore tout ce qui revient
+        if (!feetech_ignore_echo){
+            FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
+            xil_printf("FEETECH RX: 0x%02X\n", b);
+
+            if (FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
+                FEETECH_Receive_Ptr++;
+
+            Time_Of_Last_FEETECH_Received = Timer_ms1;
+        }
+
+    }
 
     switch(FEETECH_Loop_State) {
         case 0:
@@ -182,6 +195,7 @@ void FEETECH_Loop(void){
                        (FEETECH_Receive_Tab[3] == (FEETECH_Receive_Ptr - 4)) ) {
                 FEETECH_Loop_State = 30;
             } else if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime) {
+                // xil_printf("FEETECH ID %d timeout\n", Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr);
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
                 FEETECH_Loop_State = 90;
             }

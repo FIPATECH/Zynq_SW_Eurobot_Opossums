@@ -7,7 +7,7 @@
 #endif
 
 #define UART1_BUFFER_SIZE	100
-#define BAUDRATE_UART1      1000000 //115200
+#define BAUDRATE_UART1      1000000
 
 extern XUartPs Uart1_Instance;
 

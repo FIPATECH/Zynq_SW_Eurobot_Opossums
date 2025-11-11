@@ -114,7 +114,7 @@ void UART1_Handler(void *CallBackRef, u32 Event, unsigned int EventData)
 		u16 i = i_RX1_CMD_Buff_TODO;
 		while (XUartPs_IsReceiveData(Uart1_InstancePtr->Config.BaseAddress)) {
             UART1_RecvBuffer[i] = XUartPs_ReadReg(Uart1_InstancePtr->Config.BaseAddress, XUARTPS_FIFO_OFFSET);
-            i++;
+			i++;
             if (i == UART_BUFFER_SIZE) {  // Check buffer overflow
                 i = 0;
             }
