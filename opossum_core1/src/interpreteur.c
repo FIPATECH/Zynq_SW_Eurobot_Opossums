@@ -21,7 +21,9 @@ const Command Command_List[] = {
     { "SETLIDAR", Set_Lidar_Cmd},
     { "ENKALMAN", Enable_Kalman_Cmd},
 
-    { "SERVO", Servo_cmd},
+    #ifdef PWM
+        { "SERVO", Servo_cmd},
+    #endif
 //    { "LED", LED_cmd},
 
     { "ODOSPACING", Set_Odo_Spacing_Cmd},

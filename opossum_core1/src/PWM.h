@@ -2,6 +2,7 @@
 #ifndef PWM_H
 #define PWM_H
 
+#ifdef PWM
 #define AXI_PWM_BASEADDR XPAR_PWM_AXI_SLAVE_0_BASEADDR
 
 #define NBR_SERVO 8
@@ -37,5 +38,7 @@ void write_servo(int id, int angle);
 
 // interpreter functions
 uint8_t Servo_cmd(void);
+
+#endif // PWM
 
 #endif // PWM_H

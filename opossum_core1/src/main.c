@@ -114,7 +114,9 @@ int main()
         //     Stepper_Loop();
 
         //     LED_CLASSIC_MODE();
-        PWM_Loop();
+        #ifdef PWM
+            PWM_Loop();
+        #endif
 
         //     Pump_Loop();
         //     Valve_Loop();

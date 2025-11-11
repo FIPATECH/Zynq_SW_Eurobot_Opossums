@@ -1,5 +1,7 @@
 #include "main.h"
 
+#ifdef PWM
+
 Servo servo[NBR_SERVO];
 
 int old_Timer_ms1 = 0;
@@ -132,3 +134,5 @@ uint8_t Servo_cmd(void) {
 	}
     return 0;
 }
+
+#endif // PWM
