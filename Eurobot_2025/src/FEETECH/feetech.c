@@ -8,7 +8,6 @@ extern XUartPs Uart1_Instance; // from your uart code (you had this variable)
 
 #define RX_TIMEOUT_MS_DEFAULT 20
 
-/* Local copies of many variables from your dsPIC implementation to preserve API */
 uint8_t Com_FEETECH_Status = COM_FEETECH_IDDLE;
 uint16_t Time_Of_Last_FEETECH_Received = 0;
 uint32_t Com_FEETECH_Maxtime = 5;
