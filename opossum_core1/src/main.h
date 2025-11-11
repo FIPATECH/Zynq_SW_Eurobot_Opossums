@@ -1,6 +1,12 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+// #define PWM
+#define FEETECH
+
+
+
+
 #include <stdio.h>
 #include <sleep.h>
 #include <xil_io.h>
@@ -56,6 +62,7 @@
 //feetech part
 #include "FEETECH/feetech_UART.h"
 #include "FEETECH/feetech.h"
+#include "FEETECH/feetech_Action.h"
 // uart pl
 #include "UART_PL.h"
 

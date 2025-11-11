@@ -109,6 +109,7 @@ void UART1_Handler(void *CallBackRef, u32 Event, unsigned int EventData)
 
 	/* All of the data has been received */
 	if (Event == XUARTPS_EVENT_RECV_DATA) {
+
 		// xil_printf("Data received\r\n");
 		u16 i = i_RX1_CMD_Buff_TODO;
 		while (XUartPs_IsReceiveData(Uart1_InstancePtr->Config.BaseAddress)) {

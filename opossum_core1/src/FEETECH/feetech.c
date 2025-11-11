@@ -41,10 +41,14 @@ static volatile uint8_t feetech_tx_done = 0; /* set by FEETECH_Uart_EventHandler
 /* forward */
 uint8_t RegisterLenFEETECH(uint8_t address);
 
+static XGpio GpioFeetechDir;  // instance AXI GPIO
+
 /* Initialize FEETECH port using board-specific macros */
 void Init_Com_FEETECH(void){
     /* Put bus in receive mode */
-    // FEETECH_BUS_EN_CLR();
+    XGpio_Initialize(&GpioFeetechDir, XPAR_AXI_GPIO_24_DEVICE_ID);
+    XGpio_SetDataDirection(&GpioFeetechDir, FEETECH_DIR_CHANNEL, 0x0); // en sortie
+    XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
 
     feetech_torque_enable = FEETECH_TORQUE_ENABLE;
     feetech_id = FEETECH_ID;
@@ -61,7 +65,7 @@ void FEETECH_Uart_EventHandler(unsigned int Event, unsigned int EventData)
     if (Event == XUARTPS_EVENT_SENT_DATA) {
         feetech_tx_done = 1;
         /* when transmission completes, bus can be returned to RX */
-        // FEETECH_BUS_EN_CLR();
+        XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
         /* mark as waiting for answer (if applicable) */
         Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
         Time_Of_Last_FEETECH_Received = Timer_ms1;
@@ -114,7 +118,7 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     }
 
     /* Put bus in TX mode */
-    // FEETECH_BUS_EN_SET();
+    XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_TX);
     feetech_tx_done = 0;
 
     /* send buffer via your wrapper */

@@ -4,6 +4,12 @@
 
 typedef unsigned char byte;
 // Broadcast ID
+
+#define FEETECH_DIR_GPIO_BASEADDR XPAR_AXI_GPIO_24_BASEADDR
+#define FEETECH_DIR_CHANNEL 1  // canal 1 du GPIO
+#define FEETECH_DIR_TX 1
+#define FEETECH_DIR_RX 0
+
 #define FEETECH_H
 
 #define FEETECH_BROADCAST               254

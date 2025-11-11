@@ -21,6 +21,12 @@ const Command Command_List[] = {
     { "SETLIDAR", Set_Lidar_Cmd},
     { "ENKALMAN", Enable_Kalman_Cmd},
 
+    #ifdef FEETECH
+        { "FEETECHSEND", Send_FEETECH_Cmd},
+        { "FEETECHGET", Get_FEETECH_Cmd},
+        { "FEETECHSEARCHID", Test_ID_FEETECH_Cmd},
+    #endif
+
     #ifdef PWM
         { "SERVO", Servo_cmd},
     #endif
