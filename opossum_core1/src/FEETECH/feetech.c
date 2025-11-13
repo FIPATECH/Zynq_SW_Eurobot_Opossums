@@ -6,7 +6,7 @@
 
 extern XUartPs Uart1_Instance; // from your uart code (you had this variable)
 
-#define RX_TIMEOUT_MS_DEFAULT 20
+#define RX_TIMEOUT_MS_DEFAULT 50
 
 uint8_t Com_FEETECH_Status = COM_FEETECH_IDDLE;
 uint16_t Time_Of_Last_FEETECH_Received = 0;
@@ -136,7 +136,7 @@ void FEETECH_Loop(void){
     while (Get_Uart1_Cmd(&b)) {
 
         // Si on est en phase d’écho, on ignore tout ce qui revient
-        if (!feetech_ignore_echo){
+        if (feetech_ignore_echo == 0){
             FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
             if (FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
                 FEETECH_Receive_Ptr++;
@@ -179,22 +179,25 @@ void FEETECH_Loop(void){
 
                     /* Clear echo ignore and mark waiting for response */
                     feetech_ignore_echo = 0;
-                    Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
-                    Time_Of_Last_FEETECH_Received = Timer_ms1;
 
                     /* Reset TX flag */
                     feetech_tx_done = 0;
 
-                    /* Advance to RX waiting phase */
-                    FEETECH_Loop_State = 20;
+                    /* small settle time before we actually start waiting for bytes */
+                    Time_Of_Last_FEETECH_Received = Timer_ms1;
+                    FEETECH_Loop_State = 20; /* next case will check the settle timeout */
                 }
             }
             break;
 
         case 20:
-            if (Com_FEETECH_Status == COM_FEETECH_WAIT_ANSWER) {
-                FEETECH_Loop_State++;
+             /* Wait one millisecond to let the line/PL direction settle, then start answer wait */
+            if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) >= 1) {
+                /* Now officially in 'waiting for answer' */
+                Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
+                /* refresh timestamp for RX timeout calculation */
                 Time_Of_Last_FEETECH_Received = Timer_ms1;
+                FEETECH_Loop_State = 21;
             }
             break;
         case 21:
