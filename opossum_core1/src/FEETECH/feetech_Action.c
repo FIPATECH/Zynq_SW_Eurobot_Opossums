@@ -72,7 +72,7 @@ void FEETECH_Search_ID_Loop(void) {
             if(done_ID){
                 done_ID = 0;   
                 if(ID_return != 0){                       
-                        printf("ID return: %d\n",ID_return);
+                    printf("ID return: %d\n",ID_return);
                 }
                 ID_test++;
                 ID_return=0;

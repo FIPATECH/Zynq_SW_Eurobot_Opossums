@@ -66,13 +66,6 @@ void FEETECH_Uart_EventHandler(unsigned int Event, unsigned int EventData)
 {
     if (Event == XUARTPS_EVENT_SENT_DATA) {
         feetech_tx_done = 1;
-        /* when transmission completes, bus can be returned to RX */
-        // usleep(2000);
-        XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
-        feetech_ignore_echo = 0;
-        /* mark as waiting for answer (if applicable) */
-        Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
-        Time_Of_Last_FEETECH_Received = Timer_ms1;
     } else if (Event == XUARTPS_EVENT_RECV_DATA || Event == XUARTPS_EVENT_RECV_TOUT) {
         /* we don't process bytes here; FEETECH_Loop will fetch bytes via Get_Uart1_Cmd */
         Time_Of_Last_FEETECH_Received = Timer_ms1;
@@ -145,8 +138,6 @@ void FEETECH_Loop(void){
         // Si on est en phase d’écho, on ignore tout ce qui revient
         if (!feetech_ignore_echo){
             FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
-            xil_printf("FEETECH RX: 0x%02X\n", b);
-
             if (FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
                 FEETECH_Receive_Ptr++;
 
@@ -178,7 +169,26 @@ void FEETECH_Loop(void){
             FEETECH_Loop_State++;
             break;
         case 11:
-            FEETECH_Loop_State = 20;
+            /* Wait for TX event flag from ISR */
+            if (feetech_tx_done)
+            {
+                if (XUartPs_IsTransmitEmpty(&Uart1_Instance)) // make sure all data is sent
+                {
+                    /* Safe to switch bus to RX */
+                    XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
+
+                    /* Clear echo ignore and mark waiting for response */
+                    feetech_ignore_echo = 0;
+                    Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
+                    Time_Of_Last_FEETECH_Received = Timer_ms1;
+
+                    /* Reset TX flag */
+                    feetech_tx_done = 0;
+
+                    /* Advance to RX waiting phase */
+                    FEETECH_Loop_State = 20;
+                }
+            }
             break;
 
         case 20:
