@@ -1,5 +1,7 @@
 #include "../main.h" // keep original defines and FEETECH_* constants
 
+#define DEBUG
+
 #define COM_FEETECH_IDDLE           0x00
 #define COM_FEETECH_SENDING         0x01
 #define COM_FEETECH_WAIT_ANSWER     0x02
@@ -137,6 +139,9 @@ void FEETECH_Loop(void){
 
         // Si on est en phase d’écho, on ignore tout ce qui revient
         if (feetech_ignore_echo == 0){
+            #ifdef DEBUG
+                printf("FEETECH RX byte: 0x%02X\n", b);
+            #endif
             FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
             if (FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
                 FEETECH_Receive_Ptr++;
@@ -149,6 +154,9 @@ void FEETECH_Loop(void){
     switch(FEETECH_Loop_State) {
         case 0:
             if (Command_FEETECH_TODO != Command_FEETECH_DONE){
+                #ifdef DEBUG
+                    printf("New command to process\n");
+                #endif
                 FEETECH_Loop_State++;
             }
             break;
@@ -166,6 +174,9 @@ void FEETECH_Loop(void){
             break;
 
         case 10:
+            #ifdef DEBUG
+                printf("Sending FEETECH command\n");
+            #endif
             FEETECH_Cmd_Send(&Liste_Command_FEETECH[Command_FEETECH_DONE]);
             FEETECH_Loop_State++;
             break;
@@ -181,6 +192,10 @@ void FEETECH_Loop(void){
                         XUartPs_Recv(&Uart1_Instance, &DummyByte, 1); // flush any received echo bytes
                     }
                     (void)DummyByte; // avoid compiler warning
+
+                    #ifdef DEBUG
+                        printf("FEETECH command sent, switching to RX mode\n");
+                    #endif
 
                     /* Safe to switch bus to RX */
                     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
@@ -201,6 +216,9 @@ void FEETECH_Loop(void){
         case 20:
              /* Wait one millisecond to let the line/PL direction settle, then start answer wait */
             if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) >= 1) {
+                #ifdef DEBUG
+                    printf("FEETECH now waiting for answer\n");
+                #endif
                 /* Now officially in 'waiting for answer' */
                 Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
                 /* refresh timestamp for RX timeout calculation */
@@ -212,9 +230,19 @@ void FEETECH_Loop(void){
             if (Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr == FEETECH_BROADCAST) {
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_OK;
                 FEETECH_Loop_State = 100;
-            } else if ((FEETECH_Receive_Ptr > 3) &&
-                       (FEETECH_Receive_Tab[3] == (FEETECH_Receive_Ptr - 4)) ) {
-                FEETECH_Loop_State = 30;
+            } else if ((FEETECH_Receive_Ptr > 3)){
+                if((FEETECH_Receive_Tab[3] == (FEETECH_Receive_Ptr - 4)) ) {
+                    if((Timer_ms1 - Time_Of_Last_FEETECH_Received) > 2) {
+                        // complete packet received and 1 ms silence after that
+                        FEETECH_Loop_State = 30;
+                    }
+                }else if((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime){
+                    // incomplete packet and timeout
+                    // xil_printf("FEETECH ID %d incomplete packet timeout\n", Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr);
+                    *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
+                    FEETECH_Loop_State = 90;
+                }
+
             } else if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime) {
                 // xil_printf("FEETECH ID %d timeout\n", Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr);
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
@@ -342,271 +370,4 @@ uint8_t FEETECH_All_Cmd_Done(void) {
 
 void GetFEETECH_Ext_Done_With_Status(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done, uint8_t *Status) {
     Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_READ_DATA, Reg, 0, Data_Answer, RegisterLenFEETECH(Reg), Status, Done);
-}
-
-
-void __attribute__((__interrupt__, no_auto_psv)) _U2TXInterrupt(void) {
-#ifdef DEBUG_AXSTS
-    printf("interrupt TX \n");
-#endif
-    // tant qu'il y a des trucs � mettre
-    IFS1bits.U2TXIF = 0; // clear TX interrupt flag
-    if (AXSTS_Transmit_Goal != AXSTS_Transmit_Ptr) {
-        while ((AXSTS_Transmit_Goal != AXSTS_Transmit_Ptr) && (!U2STAbits.UTXBF)) {
-            //printf("TX %02X\r\n", AXSTS_Transmit_Tab[AXSTS_Transmit_Ptr]);
-            U2TXREG = AXSTS_Transmit_Tab[AXSTS_Transmit_Ptr];
-            AXSTS_Transmit_Ptr++;
-        }
-    } else {
-        // desactive l'IT TX, passe en RX, active l'IT RX
-        Com_AXSTS_Status = COM_AXSTS_WAIT_ANSWER;
-#ifdef DEBUG_AXSTS
-        printf("Sw\r\n");
-#endif
-        _U2RXR = AXSTS_BUS_TX_RX_RP_NB;
-        AXSTS_BUS_TX_RX_RP_REG = 0;
-        AXSTS_BUS_EN = 0;
-        uint8_t poubelle;
-        while (U2STAbits.URXDA) {
-            poubelle = U2RXREG;
-        }
-        // change d'IT possible
-        IFS1bits.U2RXIF = 0;
-        IEC1bits.U2TXIE = 0;
-        IEC1bits.U2RXIE = 1;
-    }
-    Time_Of_Last_AXSTS_Received = Timer_ms1;
-}
-
-void __attribute__((__interrupt__, no_auto_psv)) _U2RXInterrupt(void) {
-    uint16_t valrx;
-    IFS1bits.U2RXIF = 0; // On baisse le FLAG
-    while (U2STAbits.URXDA) { // tant que la FIFO n'est pas vide, on prend
-        valrx = U2RXREG;
-        AXSTS_Receive_Tab[AXSTS_Receive_Ptr] = valrx;
-        //printf("%ld RX %02X\r\n", Timer_ms1, valrx);
-        if (AXSTS_Receive_Ptr < (AXSTS_CMD_BUFF_LENGTH - 1))
-            AXSTS_Receive_Ptr++;
-    }
-    Time_Of_Last_AXSTS_Received = Timer_ms1;
-}
-
-
-
-void AXSTS_Loop(void){
-    uint8_t val8, i;
-    switch(AXSTS_Loop_State) {
-/////////////////////////////////////////////////// repos ///////////////////////////////////////////////       
-        case 0: //�tat d'attente d'un envoie � effectuer
-            if (Command_AXSTS_TODO != Command_AXSTS_DONE){
-#ifdef DEBUG_AXSTS
-                printf("go command \n");
-#endif
-                AXSTS_Loop_State++;      
-            }
-            break;
-        case 1: // check et initialisations
-            AXSTS_Cmd_Nb_Try = 0;
-            if (((Liste_Command_AXSTS[Command_AXSTS_DONE].Command == AXSTS_INST_READ_DATA) &&
-                    (Liste_Command_AXSTS[Command_AXSTS_DONE].AXSTS_Addr != AXSTS_BROADCAST)) || // si ce nouvel ordre est support� (read ou write)
-                    (Liste_Command_AXSTS[Command_AXSTS_DONE].Command == AXSTS_INST_WRITE_DATA)){
-                AXSTS_Loop_State = 10;
-            } else { //si non support� on le mets en status, et on passe � la suite
-                *(Liste_Command_AXSTS[Command_AXSTS_DONE].Status) = AXSTS_STATUS_UNSUPORTED_CMD;
-                AXSTS_Loop_State = 100;
-            }
-            break;
-            
-////////////////////////////////////////////////// en transmission ///////////////////////////////////////////////    
-        case 10:    // debut de l'envoi
-#ifdef DEBUG_AXSTS
-            printf("debut envoi \n");
-#endif
-            AXSTS_Cmd_Send(&Liste_Command_AXSTS[Command_AXSTS_DONE]);
-            AXSTS_Loop_State ++;
-            break;
-        case 11:
-            // declenche l'IT TX :
-            IFS1bits.U2TXIF = 1;
-            IEC1bits.U2TXIE = 1;
-            AXSTS_Loop_State = 20;
-            break;
-            
-////////////////////////////////////////////////// en r�ception ///////////////////////////////////////////////    
-        case 20:    // attente de la reception
-            
-            if (Com_AXSTS_Status == COM_AXSTS_WAIT_ANSWER) {
-                AXSTS_Loop_State++;
-                Time_Of_Last_AXSTS_Received = Timer_ms1;
-            }
-            break;
-        case 21:
-#ifdef DEBUG_AXSTS
-            printf("case 21 \n");
-#endif
-            // si c'est un broadcast, on ne s'attend meme pas a recevoir quoique ce soit
-            if (Liste_Command_AXSTS[Command_AXSTS_DONE].AXSTS_Addr == AXSTS_BROADCAST) {
-#ifdef DEBUG_AXSTS
-                printf("status ok \n");
-#endif
-                *(Liste_Command_AXSTS[Command_AXSTS_DONE].Status) = AXSTS_STATUS_OK;
-                AXSTS_Loop_State = 100;
-            // ou alors on a recu une tramme de logueur coh�rente
-            } else if ((AXSTS_Receive_Ptr > 3) && (AXSTS_Receive_Tab[3] == (AXSTS_Receive_Ptr - 4)) && U2STAbits.RIDLE) {
-                AXSTS_Loop_State = 30;   // va l'analyser
-#ifdef DEBUG_AXSTS
-                printf("retour ok \n");
-#endif
-            // ou si on a depasse le maxtime, pb
-            } else if ((Timer_ms1 - Time_Of_Last_AXSTS_Received) > Com_AXSTS_Maxtime) {
-#ifdef DEBUG_AXSTS
-                printf("timeout \n");
-#endif
-                *(Liste_Command_AXSTS[Command_AXSTS_DONE].Status) = AXSTS_STATUS_TIMEOUT;
-                AXSTS_Loop_State = 90;
-            }
-            break;
-        case 30:
-#ifdef DEBUG_AXSTS
-            printf("case 30\n");
-#endif
-            // ici la tramme a forcement la bonne longueur
-            // verif du checksum
-            val8 = 0;
-            for (i = 2; i <= (AXSTS_Receive_Tab[3] + 2); i++)
-                val8 += AXSTS_Receive_Tab[i];
-            // v�rif si checksum est bon
-            val8 = ~val8;
-            if (val8 == AXSTS_Receive_Tab[AXSTS_Receive_Tab[3] + 3]) { // si le checksum en r�ception est bon
-                *(Liste_Command_AXSTS[Command_AXSTS_DONE].Status) = AXSTS_STATUS_OK;
-#ifdef DEBUG_AXSTS
-                printf("end checksum ok\n");
-#endif
-                AXSTS_Loop_State = 31;
-            } else {
-                *(Liste_Command_AXSTS[Command_AXSTS_DONE].Status) = AXSTS_STATUS_CHKSUM_ERROR;
-#ifdef DEBUG_AXSTS
-                printf("end checksum pas ok\n");
-#endif
-                AXSTS_Loop_State = 90;
-            }
-            break;
-        case 31:
-            // transfert des donn�es recues si c'est une lecture
-            if ((Liste_Command_AXSTS[Command_AXSTS_DONE].Command == AXSTS_INST_READ_DATA) &&
-                (Liste_Command_AXSTS[Command_AXSTS_DONE].Data_Answer != NULL)          ){ 
-                
-                uint8_t *ptr_on_u8 = Liste_Command_AXSTS[Command_AXSTS_DONE].Data_Answer;
-                for (i = 0; i < Liste_Command_AXSTS[Command_AXSTS_DONE].Nb_Data; i++) {
-                    ptr_on_u8[i] = AXSTS_Receive_Tab[i + 5];
-                }
-            }
-            AXSTS_Loop_State = 100;
-            break;
-            
-        case 90:
-            // maxtime, ou checksum errror, relance si y a encore des essais a faire
-            AXSTS_Cmd_Nb_Try ++;
-            if (AXSTS_Cmd_Nb_Try < AXSTS_CMD_NB_MAX_TRY_SEND) {
-                AXSTS_Loop_State = 10;   // relance la transmission
-                U2MODEbits.UARTEN = 0;  // re eteind le module Uart
-                Com_AXSTS_Status = COM_AXSTS_IDDLE;
-            } else {
-                AXSTS_Loop_State = 100;
-            }
-            break;
-            
-        case 100:
-            U2MODEbits.UARTEN = 0;  // re eteind le module Uart
-            IEC1bits.U2RXIE = 0;
-            Com_AXSTS_Status = COM_AXSTS_IDDLE;
-            *((uint8_t*) Liste_Command_AXSTS[Command_AXSTS_DONE].Done) = 1;
-            Command_AXSTS_DONE++;
-            if (Command_AXSTS_DONE == AXSTS_CMD_LIST_SIZE)
-                Command_AXSTS_DONE = 0;
-#ifdef DEBUG_AXSTS
-            printf("fin loop\n");
-#endif
-            AXSTS_Loop_State = 0;
-            break;
-            
-        default:
-#ifdef DEBUG_AXSTS
-            printf("AXSTS_Loop Error\r\n");
-#endif
-            AXSTS_Loop_State = 0;
-            break;
-    }
-}
-
-
-void AXSTS_Cmd_Send(AXSTS_Command *Cmd) {
-    uint8_t i, val8;
-    // preparation de la trame
-    AXSTS_Transmit_Tab [0] = 0xFF;
-    AXSTS_Transmit_Tab [1] = 0xFF;
-    AXSTS_Transmit_Tab [2] = Cmd->AXSTS_Addr;
-    // la longueur du packet, dans le 3, apr�s :
-
-    AXSTS_Transmit_Tab [4] = Cmd->Command;
-    AXSTS_Transmit_Tab [5] = Cmd->Reg_Addr;
-
-    if (Cmd->Command == AXSTS_INST_WRITE_DATA) {
-        uint32_t Data_To_Send = Cmd->Data_To_Send;
-        for (i = 0; i < Cmd->Nb_Data; i++) {
-            AXSTS_Transmit_Tab [6 + i] = Data_To_Send & 0xFF;
-            Data_To_Send = Data_To_Send >> 8;
-        }
-        AXSTS_Transmit_Tab [3] = Cmd->Nb_Data + 3; // ID + CMD + REG + x*datas
-    } else if (Cmd->Command == AXSTS_INST_READ_DATA) {
-        AXSTS_Transmit_Tab [6] = Cmd->Nb_Data;
-        AXSTS_Transmit_Tab [3] = 4; // ID + CMD + Addr_Reg + Nb data to read
-    }
-    
-    AXSTS_Transmit_Goal = AXSTS_Transmit_Tab [3] + 4; //  2*FF + Len + [] + chksum
-    
-    // calcul du checksum
-    val8 = 0;
-    for (i = 2; i <= (AXSTS_Transmit_Tab [3] + 2); i++) {
-        val8 += AXSTS_Transmit_Tab[i];
-    }
-    AXSTS_Transmit_Tab[AXSTS_Transmit_Goal - 1] = ~val8;
-    
-//    printf("Must Send");
-//    for (i = 0; i < AXSTS_Transmit_Goal; i++) {
-//        printf(" %02X", AXSTS_Transmit_Tab[i]);
-//    }
-//    printf("\r\n");
-    
-    AXSTS_Transmit_Ptr = 0;
-    AXSTS_Receive_Ptr = 0;
-    
-    AXSTS_BUS_EN = 1;
-    AXSTS_BUS_TX_RX_RP_REG = _RPOUT_U2TX;
-    
-    _U2RXR = 0x1F;  // desactivtation de la partie RX
-    //_U2RXR = AXBUS2_RX_RP_NB;
-    
-    // parametre et rallume l'uart
-    IFS1bits.U2RXIF = 0;
-    IFS1bits.U2TXIF = 0;
-    IEC1bits.U2RXIE = 0;
-    IEC1bits.U2TXIE = 0;
-    U2BRG = Cmd->Uart_Brg;
-//    printf("BRG : %04X\r\n", U2BRG);
-    Com_AXSTS_Maxtime = 20;      // a adapter en focntion de la vitesse de transmission
-    U2MODEbits.UARTEN = 1;      // rallume le module uart
-    U2STAbits.UTXEN = 1;        // enable TX  (apres UARTEN, sinon marche pas)
-        
-    // purge buffer r�cepetion
-    uint8_t poubelle;
-    while (U2STAbits.URXDA) {
-        poubelle = U2RXREG;
-    }
-#ifdef DEBUG_AXSTS
-    printf("fin command send \n");
-#endif
-    Com_AXSTS_Status = COM_AXSTS_SENDING;
-    Time_Of_Last_AXSTS_Received = Timer_ms1;
-    
 }
