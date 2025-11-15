@@ -44,6 +44,7 @@ uint8_t etat_ID=0;
 uint8_t done_ID=0;
 uint16_t ID_return=0;
 uint16_t ID_test=0;
+uint8_t ID_Search_Status=0; 
 
 void FEETECH_Search_ID_Loop(void)
 {
@@ -60,30 +61,26 @@ void FEETECH_Search_ID_Loop(void)
             break;
 
         case 1:
-            if (ID_test < 255) {
-                GetFEETECH_Ext_Done(ID_test, FEETECH_ID, &ID_return, &done_ID);
-                printf("testing ID %d\n", ID_test);
-                t0 = Timer_ms1;          // remember start time
-                etat_ID = 2;             // wait for reply or timeout
-            } else {
-                printf("done research\n");
-                etat_ID = 0;
+            if(FEETECH_All_Cmd_Done()){
+                if (ID_test <= 253) {
+                    done_ID = 0;
+                    ID_Search_Status = 0;
+
+                    GetFEETECH_Ext_Done_With_Status(ID_test, FEETECH_PRESENT_POSITION_L, &ID_return, &done_ID, &ID_Search_Status);
+                    printf("Testing ID: %d\n", ID_test);
+                    etat_ID = 2;
+                } else {
+                    printf("ID Search Complete\n");
+                    etat_ID = 0;
+                }
             }
             break;
-
         case 2:
             // wait for reply
             if (done_ID) {
-                done_ID = 0;
-                if (ID_return != 0) {
-                    printf("ID return: %d\n", ID_return);
+                if(ID_Search_Status == FEETECH_STATUS_OK){
+                    printf("  --> Found FEETECH ID: %d\n", ID_test);
                 }
-                ID_return = 0;
-                ID_test++;
-                etat_ID = 1;
-            }
-            // or timeout (no reply)
-            else if ((Timer_ms1 - t0) > 10) { // 10 ms timeout per ID
                 ID_test++;
                 etat_ID = 1;
             }
