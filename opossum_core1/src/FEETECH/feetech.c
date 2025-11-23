@@ -121,6 +121,10 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     feetech_tx_done = 0;
     feetech_ignore_echo = 1;
 
+    // wait for 20 us settle time - clk is at 667MHz
+    volatile uint32_t wait;
+    for (wait = 0; wait < 13340; wait++);
+
     /* send buffer via your wrapper */
     Send_Uart1_Buff_Cmd(FEETECH_Transmit_Tab, FEETECH_Transmit_Goal);
 
