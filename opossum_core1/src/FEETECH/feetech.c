@@ -214,6 +214,8 @@ void FEETECH_Loop(void){
                     for (wait = 0; wait < 1000; wait++);
 
                     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
+                    
+                    for (wait = 0; wait < 1000; wait++);
 
                     u8 DummyByte;
                     while(Get_Uart1_Cmd(&DummyByte));
@@ -253,11 +255,13 @@ void FEETECH_Loop(void){
                 FEETECH_Loop_State = 100;
             } else if ((FEETECH_Receive_Ptr > 3)){
                 if((FEETECH_Receive_Tab[3] == (FEETECH_Receive_Ptr - 4)) ) {
+                    printf("FEETECH complete packet received\n");
                     #ifdef DEBUG
                         printf("FEETECH complete packet received\n");
                     #endif
                     FEETECH_Loop_State = 30;
                 }else if((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime){
+                    printf("FEETECH incomplete packet timeout\n");
                     #ifdef DEBUG
                         printf("FEETECH incomplete packet timeout\n");
                     #endif
@@ -270,6 +274,7 @@ void FEETECH_Loop(void){
                 #ifdef DEBUG
                     printf("FEETECH no packet timeout\n");
                 #endif
+                printf("FEETECH no packet timeout\n");
                 // xil_printf("FEETECH ID %d timeout\n", Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr);
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
                 FEETECH_Loop_State = 90;
