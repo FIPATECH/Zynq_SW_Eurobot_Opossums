@@ -126,7 +126,7 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     }
 
     uint8_t calculate_chk = (uint8_t)(~checksum_sum);
-    printf("Calculate chk %d \n", calculate_chk);
+    // printf("Calculate chk %d \n", calculate_chk);
 
     FEETECH_Transmit_Goal = (uint8_t)(FEETECH_Transmit_Tab [3] + 4); // total length
 
@@ -135,7 +135,8 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     FEETECH_Transmit_Ptr = 0;
     FEETECH_Receive_Ptr = 0;
 
-    
+    // flush cache to ensure data coherency
+    Xil_DCacheFlushRange((UINTPTR)FEETECH_Transmit_Tab, FEETECH_Transmit_Goal);
     /* Put bus in TX mode */
     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_TX);
 
@@ -208,6 +209,10 @@ void FEETECH_Loop(void){
             {
                 if (XUartPs_IsTransmitEmpty(&Uart1_Instance)) // make sure all data is sent
                 {
+
+                    volatile uint32_t wait;
+                    for (wait = 0; wait < 1000; wait++);
+
                     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
 
                     u8 DummyByte;

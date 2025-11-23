@@ -24,6 +24,7 @@
 #include "xscugic.h"
 #include "xuartps.h"
 #include "xplatform_info.h"
+#include "xil_cache.h"
 
 
 #include "xuartlite.h"
