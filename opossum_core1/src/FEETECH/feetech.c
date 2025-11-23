@@ -80,50 +80,71 @@ void FEETECH_Uart_EventHandler(unsigned int Event, unsigned int EventData)
 
 /* Send a prepared command buffer using your XUartPs wrapper */
 void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
-    uint8_t i, val8;
+    uint8_t i;
+    unsigned int checksum_sum = 0;
     /* build frame (same as original) */
     FEETECH_Transmit_Tab [0] = 0xFF;
     FEETECH_Transmit_Tab [1] = 0xFF;
     FEETECH_Transmit_Tab [2] = Cmd->FEETECH_Addr;
-    FEETECH_Transmit_Tab [4] = Cmd->Command;
-    FEETECH_Transmit_Tab [5] = Cmd->Reg_Addr;
+    checksum_sum += Cmd->FEETECH_Addr;
+    // printf("Add id %d ", checksum_sum);
 
-    if (Cmd->Command == FEETECH_INST_WRITE_DATA) {
+    if(Cmd->Command == FEETECH_INST_WRITE_DATA) {
+        //instruction 
+        FEETECH_Transmit_Tab [4] = Cmd->Command;
+        checksum_sum += Cmd->Command;
+        // printf("Add cmd %d ", checksum_sum);
+        //register address
+        FEETECH_Transmit_Tab [5] = Cmd->Reg_Addr;
+        checksum_sum += Cmd->Reg_Addr;
+        // printf("Add reg %d ", checksum_sum);
+
+        // parameters
         uint32_t Data_To_Send = Cmd->Data_To_Send;
         for (i = 0; i < Cmd->Nb_Data; i++) {
             FEETECH_Transmit_Tab [6 + i] = (uint8_t)(Data_To_Send & 0xFF);
+            checksum_sum += (uint8_t)(Data_To_Send & 0xFF);
+            // printf("Add data %d ", checksum_sum);
             Data_To_Send = (Data_To_Send >> 8);
         }
         FEETECH_Transmit_Tab [3] = Cmd->Nb_Data + 3; // Len
-    } else if (Cmd->Command == FEETECH_INST_READ_DATA) {
+        checksum_sum += Cmd->Nb_Data + 3;
+        // printf("Add len %d ", checksum_sum);
+
+    } else if(Cmd->Command == FEETECH_INST_READ_DATA) {
+        FEETECH_Transmit_Tab [4] = FEETECH_INST_READ_DATA;
+        checksum_sum += FEETECH_INST_READ_DATA;
+        // printf("Add cmd %d ", checksum_sum);
+        FEETECH_Transmit_Tab [5] = Cmd->Reg_Addr;
+        checksum_sum += Cmd->Reg_Addr;
+        // printf("Add reg %d ", checksum_sum);
         FEETECH_Transmit_Tab [6] = Cmd->Nb_Data;
+        checksum_sum += Cmd->Nb_Data;
+        // printf("Add nb data %d ", checksum_sum);
         FEETECH_Transmit_Tab [3] = 4; // ID + CMD + Addr + Nb
+        checksum_sum += 4;
     }
 
+    uint8_t calculate_chk = (uint8_t)(~checksum_sum);
+    printf("Calculate chk %d \n", calculate_chk);
+
     FEETECH_Transmit_Goal = (uint8_t)(FEETECH_Transmit_Tab [3] + 4); // total length
-    /* checksum */
-    val8 = 0;
-    for (i = 2; i <= (FEETECH_Transmit_Tab [3] + 2); i++) {
-        val8 += FEETECH_Transmit_Tab[i];
-    }
-    FEETECH_Transmit_Tab[FEETECH_Transmit_Goal - 1] = (uint8_t)(~val8);
+
+    FEETECH_Transmit_Tab[FEETECH_Transmit_Goal - 1] = calculate_chk;
 
     FEETECH_Transmit_Ptr = 0;
     FEETECH_Receive_Ptr = 0;
 
-    /* === Update UART baudrate live if different === */
-    // if (Cmd->Uart_Brg > 0) {
-    //     XUartPs_SetBaudRate(&Uart1_Instance, Cmd->Uart_Brg);
-    // }
-
+    
     /* Put bus in TX mode */
     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_TX);
-    feetech_tx_done = 0;
-    feetech_ignore_echo = 1;
 
     // wait for 20 us settle time - clk is at 667MHz
     volatile uint32_t wait;
     for (wait = 0; wait < 13340; wait++);
+
+    feetech_tx_done = 0;
+    feetech_ignore_echo = 1;
 
     /* send buffer via your wrapper */
     Send_Uart1_Buff_Cmd(FEETECH_Transmit_Tab, FEETECH_Transmit_Goal);
