@@ -12,7 +12,7 @@ extern XUartPs Uart1_Instance; // from your uart code (you had this variable)
 
 uint8_t Com_FEETECH_Status = COM_FEETECH_IDDLE;
 uint16_t Time_Of_Last_FEETECH_Received = 0;
-uint32_t Com_FEETECH_Maxtime = 5;
+uint32_t Com_FEETECH_Maxtime = 10;
 
 uint8_t FEETECH_Loop_State = 0;
 
@@ -163,14 +163,31 @@ void FEETECH_Loop(void){
     uint8_t b;
     while (Get_Uart1_Cmd(&b)) {
         if (feetech_ignore_echo == 0){
-            #ifdef DEBUG
-                xil_printf("RX: %02X\n", b);
-            #endif
-            FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
-            if(FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
+            if(FEETECH_Receive_Ptr == 0){
+                if(b == 0xFF){
+                    FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
+                    FEETECH_Receive_Ptr++;
+                    Time_Of_Last_FEETECH_Received = Timer_ms1;
+                }
+            }
+            else if (FEETECH_Receive_Ptr == 1){
+                if(b == 0xFF){
+                    FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
+                    FEETECH_Receive_Ptr++;
+                    Time_Of_Last_FEETECH_Received = Timer_ms1;
+                } else {
+                    FEETECH_Receive_Ptr = 0;
+                }
+            }
+            else {
+                FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
                 FEETECH_Receive_Ptr++;
-
-            Time_Of_Last_FEETECH_Received = Timer_ms1;
+                Time_Of_Last_FEETECH_Received = Timer_ms1;
+                if(FEETECH_Receive_Ptr >= FEETECH_CMD_BUFF_LENGTH){
+                    // overflow, reset
+                    FEETECH_Receive_Ptr = 0;
+                }
+            }
         }
     }
 
@@ -307,6 +324,12 @@ void FEETECH_Loop(void){
 
         case 90:
             FEETECH_Cmd_Nb_Try ++;
+
+            u8 Garbage;
+            while(Get_Uart1_Cmd(&Garbage));
+
+            FEETECH_Receive_Ptr = 0; // reset receive pointer
+
             if (FEETECH_Cmd_Nb_Try < FEETECH_CMD_NB_MAX_TRY_SEND) {
                 FEETECH_Loop_State = 10;
                 Com_FEETECH_Status = COM_FEETECH_IDDLE;
