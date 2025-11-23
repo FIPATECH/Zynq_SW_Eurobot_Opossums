@@ -109,7 +109,7 @@ int main()
 
         FEETECH_Loop();
         FEETECH_Search_ID_Loop();
-        // FEETECH_action_loop();
+        FEETECH_action_loop();
 
         // AU_Loop();
         // LED_loop();

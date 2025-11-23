@@ -120,31 +120,9 @@ void UART1_Handler(void *CallBackRef, u32 Event, unsigned int EventData)
 		}
 	}
 	
-	/*
-	 * Data was received with an error, keep the data but determine
-	 * what kind of errors occurred
-	 */
-	if (Event == XUARTPS_EVENT_RECV_ERROR) {
-		TotalReceivedCount = EventData;
-		TotalErrorCount++;
-	}
-
-	/*
-	 * Data was received with an parity or frame or break error, keep the data
-	 * but determine what kind of errors occurred. Specific to Zynq Ultrascale+
-	 * MP.
-	 */
-	if (Event == XUARTPS_EVENT_PARE_FRAME_BRKE) {
-		TotalReceivedCount = EventData;
-		TotalErrorCount++;
-	}
-
-	/*
-	 * Data was received with an overrun error, keep the data but determine
-	 * what kind of errors occurred. Specific to Zynq Ultrascale+ MP.
-	 */
-	if (Event == XUARTPS_EVENT_RECV_ORERR) {
-		TotalReceivedCount = EventData;
+	if (Event == XUARTPS_EVENT_RECV_ERROR || 
+			Event == XUARTPS_EVENT_PARE_FRAME_BRKE ||
+			Event == XUARTPS_EVENT_RECV_ORERR ) {
 		TotalErrorCount++;
 	}
 }

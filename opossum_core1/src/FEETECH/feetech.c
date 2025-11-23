@@ -8,11 +8,11 @@
 
 extern XUartPs Uart1_Instance; // from your uart code (you had this variable)
 
-#define RX_TIMEOUT_MS_DEFAULT 50
+#define RX_TIMEOUT_MS_DEFAULT 20
 
 uint8_t Com_FEETECH_Status = COM_FEETECH_IDDLE;
 uint16_t Time_Of_Last_FEETECH_Received = 0;
-uint32_t Com_FEETECH_Maxtime = 10;
+uint32_t Com_FEETECH_Maxtime = 5;
 
 uint8_t FEETECH_Loop_State = 0;
 
@@ -144,9 +144,6 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
 
     /* Put bus in TX mode */
     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_TX);
-
-    // wait for 20 us settle time - clk is at 667MHz
-    usleep(20);
 
     feetech_tx_done = 0;
     // feetech_ignore_echo = 1;
@@ -307,14 +304,10 @@ void FEETECH_Loop(void){
             break;
 
         case 90:
-            /* flush remaining bytes in RX FIFO */
-            while (XUartPs_IsReceiveData(Uart1_Instance.Config.BaseAddress)) {
-                volatile uint8_t discard = XUartPs_ReadReg(Uart1_Instance.Config.BaseAddress, XUARTPS_FIFO_OFFSET);
-                (void)discard;
-            }
-
+            {
             u8 Garbage;
             while(Get_Uart1_Cmd(&Garbage));
+            }
 
             FEETECH_Receive_Ptr = 0;
             FEETECH_Bytes_To_Ignore = 0;
