@@ -1,6 +1,6 @@
 #include "../main.h" // keep original defines and FEETECH_* constants
 
-#define DEBUG
+// #define DEBUG
 
 #define COM_FEETECH_IDDLE           0x00
 #define COM_FEETECH_SENDING         0x01
@@ -136,19 +136,16 @@ void FEETECH_Loop(void){
     
     uint8_t b;
     while (Get_Uart1_Cmd(&b)) {
-
-        // Si on est en phase d’écho, on ignore tout ce qui revient
         if (feetech_ignore_echo == 0){
             #ifdef DEBUG
-                printf("FEETECH RX byte: 0x%02X\n", b);
+                xil_printf("RX: %02X\n", b);
             #endif
             FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
-            if (FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
+            if(FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1))
                 FEETECH_Receive_Ptr++;
 
             Time_Of_Last_FEETECH_Received = Timer_ms1;
         }
-
     }
 
     switch(FEETECH_Loop_State) {
@@ -186,25 +183,25 @@ void FEETECH_Loop(void){
             {
                 if (XUartPs_IsTransmitEmpty(&Uart1_Instance)) // make sure all data is sent
                 {
+                    XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
 
                     u8 DummyByte;
-                    while(XUartPs_IsReceiveData(Uart1_Instance.Config.BaseAddress)) {
-                        XUartPs_Recv(&Uart1_Instance, &DummyByte, 1); // flush any received echo bytes
-                    }
-                    (void)DummyByte; // avoid compiler warning
+                    while(Get_Uart1_Cmd(&DummyByte));
 
                     #ifdef DEBUG
-                        printf("FEETECH command sent, switching to RX mode\n");
+                        printf("TX Done, Echo Flushed\n");
                     #endif
 
                     /* Safe to switch bus to RX */
-                    XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
+                    
 
                     /* Clear echo ignore and mark waiting for response */
                     feetech_ignore_echo = 0;
 
                     /* Reset TX flag */
                     feetech_tx_done = 0;
+
+                    FEETECH_Receive_Ptr = 0;
 
                     /* small settle time before we actually start waiting for bytes */
                     Time_Of_Last_FEETECH_Received = Timer_ms1;
@@ -214,41 +211,41 @@ void FEETECH_Loop(void){
             break;
 
         case 20:
-             /* Wait one millisecond to let the line/PL direction settle, then start answer wait */
-            if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) >= 1) {
-                #ifdef DEBUG
-                    printf("FEETECH now waiting for answer\n");
-                #endif
-                /* Now officially in 'waiting for answer' */
-                Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
-                /* refresh timestamp for RX timeout calculation */
-                Time_Of_Last_FEETECH_Received = Timer_ms1;
-                FEETECH_Loop_State = 21;
-            }
+            /* Now officially in 'waiting for answer' */
+            Com_FEETECH_Status = COM_FEETECH_WAIT_ANSWER;
+            Time_Of_Last_FEETECH_Received = Timer_ms1;
+            FEETECH_Loop_State = 21;
             break;
+            
         case 21:
             if (Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr == FEETECH_BROADCAST) {
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_OK;
                 FEETECH_Loop_State = 100;
             } else if ((FEETECH_Receive_Ptr > 3)){
                 if((FEETECH_Receive_Tab[3] == (FEETECH_Receive_Ptr - 4)) ) {
-                    if((Timer_ms1 - Time_Of_Last_FEETECH_Received) > 2) {
-                        // complete packet received and 1 ms silence after that
-                        FEETECH_Loop_State = 30;
-                    }
+                    #ifdef DEBUG
+                        printf("FEETECH complete packet received\n");
+                    #endif
+                    FEETECH_Loop_State = 30;
                 }else if((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime){
+                    #ifdef DEBUG
+                        printf("FEETECH incomplete packet timeout\n");
+                    #endif
                     // incomplete packet and timeout
                     // xil_printf("FEETECH ID %d incomplete packet timeout\n", Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr);
                     *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
                     FEETECH_Loop_State = 90;
                 }
-
             } else if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime) {
+                #ifdef DEBUG
+                    printf("FEETECH no packet timeout\n");
+                #endif
                 // xil_printf("FEETECH ID %d timeout\n", Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr);
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
                 FEETECH_Loop_State = 90;
             }
             break;
+
         case 30:
             val8 = 0;
             for (i = 2; i <= (FEETECH_Receive_Tab[3] + 2); i++)

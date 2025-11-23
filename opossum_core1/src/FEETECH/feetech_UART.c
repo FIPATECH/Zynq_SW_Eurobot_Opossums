@@ -34,6 +34,9 @@ int UART1_Init(void) {
         UART1_SendBuffer[Index] = 0;
         UART1_RecvBuffer[Index] = 0;
     }
+	i_RX1_CMD_Buff_TODO = 0;
+	i_RX1_CMD_Buff_DONE = 0;
+
 
 	// Initialize the UART driver
     ConfigPtr = XUartPs_LookupConfig(UART1_DEVICE_ID);
@@ -53,9 +56,16 @@ int UART1_Init(void) {
 		xil_printf("UART device initialized\r\n");
 	}
 
+	/* Set Baud Rate*/
     XUartPs_SetBaudRate(UartInstPtr, BAUDRATE_UART1);
+
+	/* Set FIFO Trigger level (8 bytes)*/
+	XUartPs_SetFifoThreshold(UartInstPtr, 8);
     
+	/* Set receiver Timeout (wait 8 bit-tmes before triggering timeout interrupt)*/
 	XUartPs_SetRecvTimeout(UartInstPtr, 8);
+
+	/* Set Handler */
 	XUartPs_SetHandler(UartInstPtr, (XUartPs_Handler)UART1_Handler, UartInstPtr); 
 
     /*
@@ -112,6 +122,7 @@ void UART1_Handler(void *CallBackRef, u32 Event, unsigned int EventData)
 
 		// xil_printf("Data received\r\n");
 		u16 i = i_RX1_CMD_Buff_TODO;
+		
 		while (XUartPs_IsReceiveData(Uart1_InstancePtr->Config.BaseAddress)) {
             UART1_RecvBuffer[i] = XUartPs_ReadReg(Uart1_InstancePtr->Config.BaseAddress, XUARTPS_FIFO_OFFSET);
 			i++;
