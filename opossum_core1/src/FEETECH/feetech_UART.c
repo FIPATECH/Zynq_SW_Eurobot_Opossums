@@ -59,8 +59,8 @@ int UART1_Init(void) {
 	/* Set Baud Rate*/
     XUartPs_SetBaudRate(UartInstPtr, BAUDRATE_UART1);
 
-	/* Set FIFO Trigger level (8 bytes)*/
-	XUartPs_SetFifoThreshold(UartInstPtr, 8);
+	/* Set FIFO Trigger level (1 bytes)*/
+	XUartPs_SetFifoThreshold(UartInstPtr, 1);
     
 	/* Set receiver Timeout (wait 8 bit-tmes before triggering timeout interrupt)*/
 	XUartPs_SetRecvTimeout(UartInstPtr, 8);
@@ -111,36 +111,15 @@ void UART1_Handler(void *CallBackRef, u32 Event, unsigned int EventData)
 	/* forward to FEETECH module so it can handle TX-complete and RX-timeout */
 	FEETECH_Uart_EventHandler(Event, EventData);
 	XUartPs *Uart1_InstancePtr = (XUartPs *)CallBackRef;
-	/* All of the data has been sent */
-	if (Event == XUARTPS_EVENT_SENT_DATA) {
-		
-		// xil_printf("Data sent\r\n");
+
+	while (XUartPs_IsReceiveData(Uart1_InstancePtr->Config.BaseAddress)) {
+		UART1_RecvBuffer[i_RX1_CMD_Buff_TODO] = XUartPs_ReadReg(Uart1_InstancePtr->Config.BaseAddress, XUARTPS_FIFO_OFFSET);
+		i_RX1_CMD_Buff_TODO++;
+		if (i_RX1_CMD_Buff_TODO == UART1_BUFFER_SIZE) {  // Check buffer overflow
+			i_RX1_CMD_Buff_TODO = 0;
+		}
 	}
-
-	/* All of the data has been received */
-	if ((Event == XUARTPS_EVENT_RECV_DATA) || (Event == XUARTPS_EVENT_RECV_TOUT)) {
-
-		// xil_printf("Data received\r\n");
-		u16 i = i_RX1_CMD_Buff_TODO;
-		
-		while (XUartPs_IsReceiveData(Uart1_InstancePtr->Config.BaseAddress)) {
-            UART1_RecvBuffer[i] = XUartPs_ReadReg(Uart1_InstancePtr->Config.BaseAddress, XUARTPS_FIFO_OFFSET);
-			i++;
-            if (i == UART_BUFFER_SIZE) {  // Check buffer overflow
-                i = 0;
-            }
-        }
-		i_RX1_CMD_Buff_TODO = i;
-	}
-
-	/*
-	 * Data was received, but not the expected number of bytes, a
-	 * timeout just indicates the data stopped for 8 character times
-	 */
-	if (Event == XUARTPS_EVENT_RECV_TOUT) {
-		TotalReceivedCount = EventData;
-	}
-
+	
 	/*
 	 * Data was received with an error, keep the data but determine
 	 * what kind of errors occurred

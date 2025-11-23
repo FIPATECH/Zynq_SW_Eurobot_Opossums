@@ -8,4 +8,6 @@ uint8_t Get_FEETECH_Cmd(void);
 void FEETECH_Search_ID_Loop(void);
 uint8_t Test_ID_FEETECH_Cmd(void);
 
+void FEETECH_action_loop(void);
+
 #endif // FEETECH_ACTION_H

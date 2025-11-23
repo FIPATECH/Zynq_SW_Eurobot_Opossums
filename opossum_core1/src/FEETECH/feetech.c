@@ -21,6 +21,8 @@ uint8_t FEETECH_Transmit_Goal = 0, FEETECH_Transmit_Ptr = 0;
 uint8_t FEETECH_Receive_Tab[FEETECH_CMD_BUFF_LENGTH];
 uint8_t FEETECH_Receive_Ptr = 0;
 
+uint8_t FEETECH_Bytes_To_Ignore = 0;
+
 FEETECH_Command Liste_Command_FEETECH[FEETECH_CMD_LIST_SIZE];
 uint8_t Command_FEETECH_TODO = 0;
 uint8_t Command_FEETECH_DONE = 0;
@@ -78,6 +80,14 @@ void FEETECH_Uart_EventHandler(unsigned int Event, unsigned int EventData)
     }
 }
 
+void usleep(uint32_t usec) {
+    volatile uint32_t wait;
+    uint32_t iterations = (usec * 667) / 10; // assuming 667 MHz clock, adjust as needed
+    for (wait = 0; wait < iterations; wait++){
+        __asm__ __volatile__ ("");
+    }
+}
+
 /* Send a prepared command buffer using your XUartPs wrapper */
 void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     uint8_t i;
@@ -93,59 +103,53 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
         //instruction 
         FEETECH_Transmit_Tab [4] = Cmd->Command;
         checksum_sum += Cmd->Command;
-        // printf("Add cmd %d ", checksum_sum);
         //register address
         FEETECH_Transmit_Tab [5] = Cmd->Reg_Addr;
         checksum_sum += Cmd->Reg_Addr;
-        // printf("Add reg %d ", checksum_sum);
-
         // parameters
         uint32_t Data_To_Send = Cmd->Data_To_Send;
         for (i = 0; i < Cmd->Nb_Data; i++) {
             FEETECH_Transmit_Tab [6 + i] = (uint8_t)(Data_To_Send & 0xFF);
             checksum_sum += (uint8_t)(Data_To_Send & 0xFF);
-            // printf("Add data %d ", checksum_sum);
             Data_To_Send = (Data_To_Send >> 8);
         }
         FEETECH_Transmit_Tab [3] = Cmd->Nb_Data + 3; // Len
         checksum_sum += Cmd->Nb_Data + 3;
-        // printf("Add len %d ", checksum_sum);
 
     } else if(Cmd->Command == FEETECH_INST_READ_DATA) {
         FEETECH_Transmit_Tab [4] = FEETECH_INST_READ_DATA;
         checksum_sum += FEETECH_INST_READ_DATA;
-        // printf("Add cmd %d ", checksum_sum);
+
         FEETECH_Transmit_Tab [5] = Cmd->Reg_Addr;
         checksum_sum += Cmd->Reg_Addr;
-        // printf("Add reg %d ", checksum_sum);
+
         FEETECH_Transmit_Tab [6] = Cmd->Nb_Data;
         checksum_sum += Cmd->Nb_Data;
-        // printf("Add nb data %d ", checksum_sum);
+
         FEETECH_Transmit_Tab [3] = 4; // ID + CMD + Addr + Nb
         checksum_sum += 4;
     }
 
     uint8_t calculate_chk = (uint8_t)(~checksum_sum);
-    // printf("Calculate chk %d \n", calculate_chk);
-
     FEETECH_Transmit_Goal = (uint8_t)(FEETECH_Transmit_Tab [3] + 4); // total length
-
     FEETECH_Transmit_Tab[FEETECH_Transmit_Goal - 1] = calculate_chk;
 
     FEETECH_Transmit_Ptr = 0;
     FEETECH_Receive_Ptr = 0;
 
+    FEETECH_Bytes_To_Ignore = FEETECH_Transmit_Goal; // ignore echo bytes
+
     // flush cache to ensure data coherency
     Xil_DCacheFlushRange((UINTPTR)FEETECH_Transmit_Tab, FEETECH_Transmit_Goal);
+
     /* Put bus in TX mode */
     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_TX);
 
     // wait for 20 us settle time - clk is at 667MHz
-    volatile uint32_t wait;
-    for (wait = 0; wait < 13340; wait++);
+    usleep(20);
 
     feetech_tx_done = 0;
-    feetech_ignore_echo = 1;
+    // feetech_ignore_echo = 1;
 
     /* send buffer via your wrapper */
     Send_Uart1_Buff_Cmd(FEETECH_Transmit_Tab, FEETECH_Transmit_Goal);
@@ -163,6 +167,15 @@ void FEETECH_Loop(void){
     uint8_t b;
     while (Get_Uart1_Cmd(&b)) {
         if (feetech_ignore_echo == 0){
+            /* 1 - ECHO CANCELATION */
+            /* Ignore echoed bytes from the command we just sent */
+            if (FEETECH_Bytes_To_Ignore > 0) {
+                FEETECH_Bytes_To_Ignore--;
+                continue; // skip this byte
+            }
+
+            /* 2 - NORMAL RECEIVING */
+            /* if we are here, 'b' is a byte from the servo */
             if(FEETECH_Receive_Ptr == 0){
                 if(b == 0xFF){
                     FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
@@ -170,6 +183,7 @@ void FEETECH_Loop(void){
                     Time_Of_Last_FEETECH_Received = Timer_ms1;
                 }
             }
+            // wait for the second 0xFF
             else if (FEETECH_Receive_Ptr == 1){
                 if(b == 0xFF){
                     FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
@@ -179,11 +193,13 @@ void FEETECH_Loop(void){
                     FEETECH_Receive_Ptr = 0;
                 }
             }
+            // data payload
             else {
                 FEETECH_Receive_Tab[FEETECH_Receive_Ptr] = b;
-                FEETECH_Receive_Ptr++;
                 Time_Of_Last_FEETECH_Received = Timer_ms1;
-                if(FEETECH_Receive_Ptr >= FEETECH_CMD_BUFF_LENGTH){
+                if(FEETECH_Receive_Ptr < (FEETECH_CMD_BUFF_LENGTH - 1)){
+                    FEETECH_Receive_Ptr++;
+                } else {
                     // overflow, reset
                     FEETECH_Receive_Ptr = 0;
                 }
@@ -194,9 +210,6 @@ void FEETECH_Loop(void){
     switch(FEETECH_Loop_State) {
         case 0:
             if (Command_FEETECH_TODO != Command_FEETECH_DONE){
-                #ifdef DEBUG
-                    printf("New command to process\n");
-                #endif
                 FEETECH_Loop_State++;
             }
             break;
@@ -214,9 +227,6 @@ void FEETECH_Loop(void){
             break;
 
         case 10:
-            #ifdef DEBUG
-                printf("Sending FEETECH command\n");
-            #endif
             FEETECH_Cmd_Send(&Liste_Command_FEETECH[Command_FEETECH_DONE]);
             FEETECH_Loop_State++;
             break;
@@ -226,28 +236,12 @@ void FEETECH_Loop(void){
             {
                 if (XUartPs_IsTransmitEmpty(&Uart1_Instance)) // make sure all data is sent
                 {
+                    usleep(10); // stop bit guard time
 
-                    volatile uint32_t wait;
-                    for (wait = 0; wait < 1000; wait++);
-
+                    /* Switch to RX */
                     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
-                    
-                    for (wait = 0; wait < 1000; wait++);
 
-                    u8 DummyByte;
-                    while(Get_Uart1_Cmd(&DummyByte));
-
-                    #ifdef DEBUG
-                        printf("TX Done, Echo Flushed\n");
-                    #endif
-
-                    /* Safe to switch bus to RX */
-                    
-
-                    /* Clear echo ignore and mark waiting for response */
-                    feetech_ignore_echo = 0;
-
-                    /* Reset TX flag */
+                    /* Reset flag */
                     feetech_tx_done = 0;
 
                     FEETECH_Receive_Ptr = 0;
@@ -272,27 +266,16 @@ void FEETECH_Loop(void){
                 FEETECH_Loop_State = 100;
             } else if ((FEETECH_Receive_Ptr > 3)){
                 if((FEETECH_Receive_Tab[3] == (FEETECH_Receive_Ptr - 4)) ) {
-                    printf("FEETECH complete packet received\n");
-                    #ifdef DEBUG
-                        printf("FEETECH complete packet received\n");
-                    #endif
+                    // printf("FEETECH complete packet received\n");
                     FEETECH_Loop_State = 30;
                 }else if((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime){
                     printf("FEETECH incomplete packet timeout\n");
-                    #ifdef DEBUG
-                        printf("FEETECH incomplete packet timeout\n");
-                    #endif
                     // incomplete packet and timeout
-                    // xil_printf("FEETECH ID %d incomplete packet timeout\n", Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr);
                     *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
                     FEETECH_Loop_State = 90;
                 }
             } else if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime) {
-                #ifdef DEBUG
-                    printf("FEETECH no packet timeout\n");
-                #endif
                 printf("FEETECH no packet timeout\n");
-                // xil_printf("FEETECH ID %d timeout\n", Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr);
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
                 FEETECH_Loop_State = 90;
             }
@@ -311,6 +294,7 @@ void FEETECH_Loop(void){
                 FEETECH_Loop_State = 90;
             }
             break;
+
         case 31:
             if ((Liste_Command_FEETECH[Command_FEETECH_DONE].Command == FEETECH_INST_READ_DATA) &&
                 (Liste_Command_FEETECH[Command_FEETECH_DONE].Data_Answer != NULL) ) {
@@ -323,12 +307,19 @@ void FEETECH_Loop(void){
             break;
 
         case 90:
-            FEETECH_Cmd_Nb_Try ++;
+            /* flush remaining bytes in RX FIFO */
+            while (XUartPs_IsReceiveData(Uart1_Instance.Config.BaseAddress)) {
+                volatile uint8_t discard = XUartPs_ReadReg(Uart1_Instance.Config.BaseAddress, XUARTPS_FIFO_OFFSET);
+                (void)discard;
+            }
 
             u8 Garbage;
             while(Get_Uart1_Cmd(&Garbage));
 
-            FEETECH_Receive_Ptr = 0; // reset receive pointer
+            FEETECH_Receive_Ptr = 0;
+            FEETECH_Bytes_To_Ignore = 0;
+
+            FEETECH_Cmd_Nb_Try ++;
 
             if (FEETECH_Cmd_Nb_Try < FEETECH_CMD_NB_MAX_TRY_SEND) {
                 FEETECH_Loop_State = 10;
@@ -353,7 +344,6 @@ void FEETECH_Loop(void){
     }
 }
 
-/* same helper functions as your dsPIC code (RegisterLen etc.) */
 uint8_t RegisterLenFEETECH(uint8_t address) {
     switch (address) {
         case FEETECH_MODEL_L: case FEETECH_MODEL_H: case FEETECH_ID: case FEETECH_BAUD_RATE: case FEETECH_DELAY_TIME_RETURN: case FEETECH_LEVEL_RETURN: case FEETECH_MAX_TEMP_LIMIT: case FEETECH_MAX_INPUT_VOLT:
@@ -370,7 +360,6 @@ uint8_t RegisterLenFEETECH(uint8_t address) {
     }
 }
 
-/* Command queue helpers (same as original) */
 void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t Command, uint8_t Reg_Addr, uint32_t Data_To_Send, void *Data_Answer, uint8_t Nb_Data, uint8_t *Status, void *Done) {
     Liste_Command_FEETECH[Command_FEETECH_TODO].Uart_Brg = Uart_Brg;
     Liste_Command_FEETECH[Command_FEETECH_TODO].FEETECH_Addr = FEETECH_Addr;
@@ -426,3 +415,5 @@ uint8_t FEETECH_All_Cmd_Done(void) {
 void GetFEETECH_Ext_Done_With_Status(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done, uint8_t *Status) {
     Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_READ_DATA, Reg, 0, Data_Answer, RegisterLenFEETECH(Reg), Status, Done);
 }
+
+

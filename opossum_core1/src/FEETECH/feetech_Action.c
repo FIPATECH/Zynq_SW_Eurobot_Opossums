@@ -95,3 +95,28 @@ uint8_t Test_ID_FEETECH_Cmd(void){
     return 0;
 }
 
+
+
+uint8_t feetech_action_state=0;
+uint32_t feetech_action_timer=0;
+uint8_t feetech_action_done=0;
+uint32_t feetech_action_position=0;
+uint32_t feetech_test_ctnr=0;
+
+void FEETECH_action_loop(void){
+    if(Timer_ms1 - feetech_action_timer >= 1000){
+        feetech_action_timer = Timer_ms1;
+        feetech_test_ctnr++;
+        printf("FEETECH action loop %d\r\n", feetech_test_ctnr);
+        switch(feetech_action_state){
+            case 0:
+                PutFEETECH(1, FEETECH_GOAL_POSITION_L, 100);
+                feetech_action_state = 1;
+                break;
+            case 1:
+                PutFEETECH(1, FEETECH_GOAL_POSITION_L, 0);
+                feetech_action_state = 0;
+                break;
+        }
+    }
+}
