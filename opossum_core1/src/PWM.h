@@ -2,9 +2,10 @@
 #ifndef PWM_H
 #define PWM_H
 
-#define AXI_PWM_BASEADDR 0x41220000
+#ifdef PWM
+#define AXI_PWM_BASEADDR XPAR_PWM_AXI_SLAVE_0_BASEADDR
 
-#define NBR_SERVO 16
+#define NBR_SERVO 8
 
 #define DEFAULT_ANGLE_MIN 0
 #define DEFAULT_ANGLE_MAX 180
@@ -19,14 +20,13 @@
 #define SERVO_2_ANGLE_MAX 180
 
 typedef struct{
-    int axi_id;
+    int axi_addr;
     int default_pos;
     int current_pos;
     int min_pos;
     int max_pos;
     int pos;
     int step;
-    XGpio gpio;
     int to_do;
 } Servo;
 
@@ -38,5 +38,7 @@ void write_servo(int id, int angle);
 
 // interpreter functions
 uint8_t Servo_cmd(void);
+
+#endif // PWM
 
 #endif // PWM_H

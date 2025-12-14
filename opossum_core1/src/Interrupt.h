@@ -5,6 +5,8 @@
 
 #define TIMER_IRPT_INTR         XPAR_SCUTIMER_INTR
 #define UART_IRPT_INTR		    XPAR_XUARTPS_0_INTR
+#define UART1_IRPT_INTR		    XPAR_XUARTPS_1_INTR
+#define UARTLITE_IRPT_INTR      XPAR_FABRIC_UARTLITE_0_VEC_ID
 
 extern XScuGic InterruptController;
 

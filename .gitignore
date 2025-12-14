@@ -27,3 +27,9 @@ Zynq_block_design_wrapper/
 **/opossum_core2/opossum_core2.project
 **/opossum_core2/.gitignore
 **/opossum_core2/opossum_core2.prj
+
+**/opossum_core1/.cproject
+**/opossum_core1/.project
+**/opossum_core1/opossum_core1.project
+**/opossum_core1/.gitignore
+**/opossum_core1/opossum_core1.prj

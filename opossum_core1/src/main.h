@@ -1,6 +1,12 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+// #define PWM
+#define FEETECH
+
+
+
+
 #include <stdio.h>
 #include <sleep.h>
 #include <xil_io.h>
@@ -18,6 +24,10 @@
 #include "xscugic.h"
 #include "xuartps.h"
 #include "xplatform_info.h"
+#include "xil_cache.h"
+
+
+#include "xuartlite.h"
 
 // driver part 
 #include "Timer.h"
@@ -50,5 +60,12 @@
 #include "shared_memory_structure.h"
 //#define DEBUG
 
+//feetech part
+#include "FEETECH/feetech_UART.h"
+#include "FEETECH/feetech.h"
+#include "FEETECH/feetech_Action.h"
+// uart pl
+#include "UART_PL.h"
 
+#include "ld19.h"
 #endif // MAIN_H

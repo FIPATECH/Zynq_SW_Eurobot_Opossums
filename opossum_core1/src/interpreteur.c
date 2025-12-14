@@ -12,26 +12,34 @@ const Command Command_List[] = {
     { "VERSION", Version_cmd},
 
     //pump command
-    { "PUMP", Pump_cmd},
+//    { "PUMP", Pump_cmd},
 
     // valve command
-    { "VALVE", Valve_cmd},
+//    { "VALVE", Valve_cmd},
 
     // Asserv print
     { "SETLIDAR", Set_Lidar_Cmd},
     { "ENKALMAN", Enable_Kalman_Cmd},
 
-    { "SERVO", Servo_cmd},
-    { "LED", LED_cmd},
+    #ifdef FEETECH
+        { "FEETECHSEND", Send_FEETECH_Cmd},
+        { "FEETECHGET", Get_FEETECH_Cmd},
+        { "FEETECHSEARCHID", Test_ID_FEETECH_Cmd},
+    #endif
+
+    #ifdef PWM
+        { "SERVO", Servo_cmd},
+    #endif
+//    { "LED", LED_cmd},
 
     { "ODOSPACING", Set_Odo_Spacing_Cmd},
 
     { "PDE", Activate_Position_Sending_Func},
 
     // Stepper command
-    { "STEPPER", Stepper_cmd},
-    { "STEPPER1", Stepper_1_cmd},
-    { "HELP_STEPPER", Stepper_help_cmd},
+//    { "STEPPER", Stepper_cmd},
+//    { "STEPPER1", Stepper_1_cmd},
+//    { "HELP_STEPPER", Stepper_help_cmd},
 
     //odometry command
     { "SET", SET_Cmd},
