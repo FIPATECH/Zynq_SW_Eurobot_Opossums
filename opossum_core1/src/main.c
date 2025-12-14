@@ -114,7 +114,7 @@ int main()
         // AU_Loop();
         // LED_loop();
         Std_Com_Loop();
-        // Print_Position_loop();
+        Print_Position_loop();
         // if(AU_state == 1){
         //     LED_AU();
         //     Init_Pump();

@@ -219,16 +219,20 @@ void Print_Position_loop(void) {
         if ((Timer_ms1 - Last_Timer_print_pos) >= auto_printpos_delay) {
             Last_Timer_print_pos = Timer_ms1;
             if (CHECK_FIELD(&local_data, kalman_out) && CHECK_FIELD(&local_data, speed_robot)) {
-                // printf("POS ");
+                // printf("ROBOTDATA ");
                 // printf("%.4f ", (double)(local_data.kalman_out.x));
                 // printf("%.4f ", (double)(local_data.kalman_out.y));
                 // printf("%.4f\n", (double)(local_data.kalman_out.t));
-                printf(">posx:%.4f\n", 
-                    (double)(local_data.kalman_out.x));
-                printf(">posy:%.4f\n", 
-                    (double)(local_data.kalman_out.y));
-                printf(">post:%.4f\n", 
-                    (double)(local_data.kalman_out.t));
+                float speed_linear = sqrtf(local_data.speed_robot.vx * local_data.speed_robot.vx + local_data.speed_robot.vy * local_data.speed_robot.vy);
+                float speed_direction = atan2f(local_data.speed_robot.vy, local_data.speed_robot.vx);
+                printf("ROBOTDATA %0.4f %0.4f %0.4f %0.2f %0.2f %0.2f\n", local_data.kalman_out.x, local_data.kalman_out.y, local_data.kalman_out.t, speed_linear, speed_direction, local_data.speed_robot.vt);          
+
+                // printf(">posx:%.4f\n", 
+                //     (double)(local_data.kalman_out.x));
+                // printf(">posy:%.4f\n", 
+                //     (double)(local_data.kalman_out.y));
+                // printf(">post:%.4f\n", 
+                //     (double)(local_data.kalman_out.t));
                 // printf(">vx:%.4f\n", 
                 //     (double)(local_data.speed_robot.vx));
                 // printf(">vy:%.4f\n",
