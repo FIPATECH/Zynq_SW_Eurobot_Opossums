@@ -49,7 +49,7 @@ int main()
     }
 
     // feetech init
-    Init_Com_FEETECH();
+    // Init_Com_FEETECH();
     Status = UART1_Init();
     if (Status != XST_SUCCESS) {
         xil_printf("UART1 init failed\n\r");
@@ -85,10 +85,9 @@ int main()
     // init_switch();
     // Init_Pump();
     // Init_Valve();
-    // Init_Asserv();
     // Init_Stepper();
 
-    LD19_init(&LD19);
+    // LD19_init(&LD19);
 
     init_shared_memory();
 
@@ -99,17 +98,17 @@ int main()
             old_timer_ms1 = Timer_ms1;
         }
 
-        if (LD19_readScan(&LD19, &UartLite)) {
-            // LD19_printScanTeleplot(&LD19);
-        }
+        // if (LD19_readScan(&LD19, &UartLite)) {
+        //     // LD19_printScanTeleplot(&LD19);
+        // }
 
         if (Get_Std_In(&c)) {
             Interp(c);
         }
 
-        FEETECH_Loop();
-        FEETECH_Search_ID_Loop();
-        FEETECH_action_loop();
+        // FEETECH_Loop();
+        // FEETECH_Search_ID_Loop();
+        // FEETECH_action_loop();
 
         // AU_Loop();
         // LED_loop();

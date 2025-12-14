@@ -48,15 +48,15 @@ int main()
             old_timer_ms1 = Timer_ms1;
         }
 
-        // AU_Loop();
-        // check_for_cmd_loop();
-        // if(AU_state == 1){
-        //     motion_free();
-        //     Init_CAN_MOTOR_variables();
-        //     Init_Asserv();
-        // }else{
-        //     Asserv_Loop();
-        // }
+        AU_Loop();
+        check_for_cmd_loop();
+        if(AU_state == 1){
+            motion_free();
+            Init_CAN_MOTOR_variables();
+            Init_Asserv();
+        }else{
+            Asserv_Loop();
+        }
     }
 
     cleanup_platform();
