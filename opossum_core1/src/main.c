@@ -80,11 +80,12 @@ int main()
     // init_QEI();
     // PWM_Init();
     Std_Com_Init();
-    // init_AU();
+    init_AU();
     // ws2812b_init();
     // init_switch();
     // Init_Pump();
     // Init_Valve();
+    // Init_Asserv();
     // Init_Stepper();
 
     // LD19_init(&LD19);
