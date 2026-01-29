@@ -46,7 +46,7 @@ int main()
 
         AU_Loop();
         check_for_cmd_loop();
-        if(AU_state == 1){
+        if(AU_state == 0){
             xil_printf("AU activated, stopping asserv\n\r");
             motion_free();
             Init_CAN_MOTOR_variables();

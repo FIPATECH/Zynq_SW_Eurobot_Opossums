@@ -252,6 +252,9 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
         return; // erreur
     }
 
+    if(!AU_state){
+        return; // ne pas mettre à jour le kalman si l'AU est
+    }
     Position position_lidar;
     position_lidar.x = set_lidar.lidar_position_x;
     position_lidar.y = set_lidar.lidar_position_y;
@@ -281,6 +284,6 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
         }
     }
     int tampon2 = Timer_us1 - tampon;
-    printf("timer : %d\n", tampon2);
+    // printf("timer : %d\n", tampon2);
 }
 
