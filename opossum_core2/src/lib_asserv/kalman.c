@@ -32,105 +32,56 @@ void kalman_init(KalmanState* state) {
 }
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
-    // 1) calcul des vitesses monde à partir des vitesses robot (au theta courant)
+    // 1. State Prediction (Algebraic integration)
     float theta = principal_angle(state->x[2]);
     float cos_t = cosf(theta);
     float sin_t = sinf(theta);
 
-    // v_dx, v_dy : vitesse dans le repère monde (instantanée, provenant de la commande/odom)
     float v_dx = speed->vx * cos_t - speed->vy * sin_t;
     float v_dy = speed->vx * sin_t + speed->vy * cos_t;
     float v_ang = speed->vt;
 
-    // 2) mise à jour d'état (intégration simple)
     state->x[0] += v_dx * dt;
     state->x[1] += v_dy * dt;
     state->x[2] = principal_angle(state->x[2] + v_ang * dt);
-
-    // Optionnel : garder les vitesses "observable" dans l'état (utile pour debug/asserv)
     state->x[3] = v_dx;
     state->x[4] = v_dy;
     state->x[5] = v_ang;
 
-    // 3) Jacobienne F : on utilise un modèle constant-velocity simple et robuste
-    //    x' = x + dt * vx_world
-    //    y' = y + dt * vy_world
-    //    theta' = theta + dt * vtheta
-    //    vx', vy', vtheta' = identités (on suppose pas de dynamique complexe des vitesses)
-    //
-    //    F =
-    //    [1 0 0 dt 0 0]
-    //    [0 1 0 0 dt 0]
-    //    [0 0 1 0 0 dt]
-    //    [0 0 0 1 0 0]
-    //    [0 0 0 0 1 0]
-    //    [0 0 0 0 0 1]
+    // 2. Covariance Prediction: P = F*P*F' + Q
+    // Since F is [I, dt*I; 0, I], we compute only the upper triangle 
+    // and mirror it, saving roughly 50% of the math.
+    float dt2 = dt * dt;
 
-    // 4) Calcul P = F * P * F^T + Q
-    // On effectue l'opération en deux étapes optimisées : P_temp = F * P, puis P = P_temp * F^T + Q
-    // Vu la forme de F, on peut optimiser fortement.
+    // Temporary capture of necessary P values to avoid "polluting" calculations mid-way
+    // Focusing on the Position block (0,1,2) and Velocity block (3,4,5)
+    
+    // Diagonal Elements
+    state->P[0][0] += dt * (state->P[0][3] + state->P[3][0]) + dt2 * state->P[3][3] + Q[0][0];
+    state->P[1][1] += dt * (state->P[1][4] + state->P[4][1]) + dt2 * state->P[4][4] + Q[1][1];
+    state->P[2][2] += dt * (state->P[2][5] + state->P[5][2]) + dt2 * state->P[5][5] + Q[2][2];
 
-    float P0[6][6];
-    // P_temp = F * P
-    // ligne 0 : F[0] = [1 0 0 dt 0 0] => row0 = row0_old + dt * row3_old
-    for (int j = 0; j < 6; ++j) {
-        P0[0][j] = state->P[0][j] + dt * state->P[3][j];
-    }
-    // ligne 1 : [0 1 0 0 dt 0] => row1 = row1_old + dt * row4_old
-    for (int j = 0; j < 6; ++j) {
-        P0[1][j] = state->P[1][j] + dt * state->P[4][j];
-    }
-    // ligne 2 : [0 0 1 0 0 dt] => row2 = row2_old + dt * row5_old
-    for (int j = 0; j < 6; ++j) {
-        P0[2][j] = state->P[2][j] + dt * state->P[5][j];
-    }
-    // ligne 3..5 : identités
-    for (int j = 0; j < 6; ++j) {
-        P0[3][j] = state->P[3][j];
-        P0[4][j] = state->P[4][j];
-        P0[5][j] = state->P[5][j];
-    }
+    // Off-diagonal Position/Position
+    state->P[0][1] += dt * (state->P[0][4] + state->P[3][1]) + dt2 * state->P[3][4];
+    state->P[0][2] += dt * (state->P[0][5] + state->P[3][2]) + dt2 * state->P[3][5];
+    state->P[1][2] += dt * (state->P[1][5] + state->P[4][2]) + dt2 * state->P[4][5];
 
-    // P = P_temp * F^T + Q
-    // Par la forme de F^T, les colonnes s'obtiennent simplement :
-    // col0 = col0_old + dt * col3_old, etc.
-    float P_next[6][6];
+    // Position/Velocity Covariances (Top-Right 3x3)
+    state->P[0][3] += dt * state->P[3][3]; state->P[0][4] += dt * state->P[3][4]; state->P[0][5] += dt * state->P[3][5];
+    state->P[1][3] += dt * state->P[4][3]; state->P[1][4] += dt * state->P[4][4]; state->P[1][5] += dt * state->P[4][5];
+    state->P[2][3] += dt * state->P[5][3]; state->P[2][4] += dt * state->P[5][4]; state->P[2][5] += dt * state->P[5][5];
 
-    // col 0
-    for (int i = 0; i < 6; ++i) {
-        P_next[i][0] = P0[i][0] + dt * P0[i][3] + Q[i][0];
-    }
-    // col 1
-    for (int i = 0; i < 6; ++i) {
-        P_next[i][1] = P0[i][1] + dt * P0[i][4] + Q[i][1];
-    }
-    // col 2
-    for (int i = 0; i < 6; ++i) {
-        P_next[i][2] = P0[i][2] + dt * P0[i][5] + Q[i][2];
-    }
-    // col 3 (F^T col3 is [dt,0,0,1,0,0]^T)
-    for (int i = 0; i < 6; ++i) {
-        P_next[i][3] = dt * P0[i][0] + P0[i][3] + Q[i][3];
-    }
-    // col 4
-    for (int i = 0; i < 6; ++i) {
-        P_next[i][4] = dt * P0[i][1] + P0[i][4] + Q[i][4];
-    }
-    // col 5
-    for (int i = 0; i < 6; ++i) {
-        P_next[i][5] = dt * P0[i][2] + P0[i][5] + Q[i][5];
-    }
+    // Velocity block (Bottom-Right 3x3) - Only add Q
+    state->P[3][3] += Q[3][3]; state->P[3][4] += Q[3][4]; state->P[3][5] += Q[3][5];
+    state->P[4][4] += Q[4][4]; state->P[4][5] += Q[4][5];
+    state->P[5][5] += Q[5][5];
 
-    // 5) Forcer la symétrie (pratique et sécurise la stabilité numérique)
-    for (int i = 0; i < 6; ++i) {
-        for (int j = i; j < 6; ++j) {
-            float sym = 0.5f * (P_next[i][j] + P_next[j][i]);
-            state->P[i][j] = sym;
-            state->P[j][i] = sym;
-        }
-    }
-
-    // Fin predict
+    // Mirror to Lower Triangle (Ensure perfect symmetry)
+    state->P[1][0] = state->P[0][1];
+    state->P[2][0] = state->P[0][2]; state->P[2][1] = state->P[1][2];
+    state->P[3][0] = state->P[0][3]; state->P[3][1] = state->P[1][3]; state->P[3][2] = state->P[2][3];
+    state->P[4][0] = state->P[0][4]; state->P[4][1] = state->P[1][4]; state->P[4][2] = state->P[2][4]; state->P[4][3] = state->P[3][4];
+    state->P[5][0] = state->P[0][5]; state->P[5][1] = state->P[1][5]; state->P[5][2] = state->P[2][5]; state->P[5][3] = state->P[3][5]; state->P[5][4] = state->P[4][5];
 }
 
 

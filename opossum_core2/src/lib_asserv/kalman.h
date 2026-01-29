@@ -22,8 +22,8 @@
 
 
 typedef struct {
-    float x[STATE_SIZE];                 // état X[x, y, theta, vx, vy, vtheta]
-    float P[STATE_SIZE][STATE_SIZE];     // covariance
+    float x[STATE_SIZE] __attribute__((aligned(16)));                 // état X[x, y, theta, vx, vy, vtheta]
+    float P[STATE_SIZE][STATE_SIZE] __attribute__((aligned(16)));     // covariance
 } KalmanState;
 
 extern KalmanState kalman_current_state;

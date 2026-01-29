@@ -1,9 +1,6 @@
 #include "main.h"
 #include "lib_asserv/Lib_Asserv.h"
 
-u32 Last_Timer_print_pos = 0;
-
-uint8_t auto_printpos_en = 1;
 uint16_t auto_printpos_delay = 100;
 
 uint8_t Debug_Timing = 0;
@@ -52,6 +49,8 @@ float dx, dy, dt = 0;
 int lidar_delay = 0; // délai de la dernière mesure lidar
 
 int tampon;
+int tampon3;
+int tampon4 = 0;
 
 void Init_Asserv(void) {
     Consigne.command1 = 0;
@@ -82,15 +81,17 @@ void Asserv_Loop(void)
         // - calcul de la vitesse du robot 
         //-----------------------------------
         if ((Timer_ms1 - Last_Timer_Asserv) > ODO_EVERY_MS) {
+            
                         #ifdef DEBUG_TIMING
-                        tampon = Timer_us1;
+                        tampon3 = Timer_us1;
                         #endif
             Last_Timer_Asserv += ODO_EVERY_MS;
             odo_speed_step(speed_motor_1, speed_motor_2, speed_motor_3, speed_motor_4);       
             Asserv_State = 2;
                         #ifdef DEBUG_TIMING
-                        local_data.asserv_step_timing.odo_step_1 = Timer_us1 - tampon;
+                        tampon4 += Timer_us1 - tampon3;
                         #endif
+            
         }
 
     } else if (Asserv_State == 2) {
@@ -99,14 +100,13 @@ void Asserv_Loop(void)
         // - calcul du kalman + history
         // -----------------------------------
                         #ifdef DEBUG_TIMING
-                        tampon = Timer_us1;
+                        tampon3 = Timer_us1;
                         #endif
         kalman_predict(&kalman_current_state, &speed_robot_odom, ODO_EVERY_MS*0.001f);
         kalman_fifo_push(&kalman_fifo, &kalman_current_state, &speed_robot_odom);
         Asserv_Odo_Count ++;
                         #ifdef DEBUG_TIMING
-                        local_data.asserv_step_timing.odo_step_2 = Timer_us1 - tampon;
-                        // printf("Timer_us1: %d, %d\n\r", tampon, Timer_us1);
+                        tampon4 += Timer_us1 - tampon3;
                         #endif
 
         if (Asserv_Odo_Count >= ASSERV_EVERY){
@@ -122,11 +122,11 @@ void Asserv_Loop(void)
         // - calcul de la vitesse du robot
         // -----------------------------------
                         #ifdef DEBUG_TIMING
-                        tampon = Timer_us1;
+                        tampon3 = Timer_us1;
                         #endif
         odo_speed_cumulate_step(ASSERV_EVERY);
                         #ifdef DEBUG_TIMING
-                        local_data.asserv_step_timing.odo_step_3 = Timer_us1 - tampon;
+                        tampon4 += Timer_us1 - tampon3;
                         #endif
         Asserv_State = 4;
 
@@ -151,11 +151,11 @@ void Asserv_Loop(void)
         // motion step
         //-----------------------------------
                         #ifdef DEBUG_TIMING
-                        tampon = Timer_us1;
+                        tampon3 = Timer_us1;
                         #endif
         motion_step();
                         #ifdef DEBUG_TIMING
-                        local_data.asserv_step_timing.motion_step = Timer_us1 - tampon;
+                        tampon4 += Timer_us1 - tampon3;
                         #endif
         Asserv_State = 20;
 
@@ -164,11 +164,11 @@ void Asserv_Loop(void)
         // spped constrain
         //-----------------------------------
                         #ifdef DEBUG_TIMING
-                        tampon = Timer_us1;
+                        tampon3 = Timer_us1;
                         #endif
         constrain_speed_order();
                         #ifdef DEBUG_TIMING
-                        local_data.asserv_step_timing.speed_constrain_step = Timer_us1 - tampon;
+                        tampon4 += Timer_us1 - tampon3;
                         #endif
         Asserv_State = 21;
 
@@ -177,11 +177,11 @@ void Asserv_Loop(void)
         // acceleration constrain
         //-----------------------------------
                         #ifdef DEBUG_TIMING
-                        tampon = Timer_us1;
+                        tampon3 = Timer_us1;
                         #endif
         constrain_acceleration_order(ASSERV_EVERY*ODO_EVERY_MS*0.001f);
                         #ifdef DEBUG_TIMING
-                        local_data.asserv_step_timing.acceleration_constrain_step = Timer_us1 - tampon;
+                        tampon4 += Timer_us1 - tampon3;
                         #endif
         Asserv_State = 30;
 
@@ -190,11 +190,11 @@ void Asserv_Loop(void)
         // consigne
         //-----------------------------------
                         #ifdef DEBUG_TIMING
-                        tampon = Timer_us1;
+                        tampon3 = Timer_us1;
                         #endif
         Asserv_PWM_calculator(&Consigne);
                         #ifdef DEBUG_TIMING
-                        local_data.asserv_step_timing.consigne_step = Timer_us1 - tampon;
+                        tampon4 += Timer_us1 - tampon3;
                         #endif
         Asserv_State = 40;
 
@@ -238,6 +238,13 @@ void Asserv_Loop(void)
         }
         CAN_transmit_motor(motor1_current_order, motor2_current_order, motor3_current_order, motor4_current_order);
         Asserv_State = 0;
+            #ifdef DEBUG_TIMING
+            printf("Long asserv time: %d us\n\r", tampon4);
+            tampon4 = 0;
+            #endif
+
+        
+        
 
     } else {
         Asserv_State = 0;
@@ -245,14 +252,16 @@ void Asserv_Loop(void)
 }
 
 void Set_Lidar_Cmd(Set_lidar set_lidar) {
-    tampon = Timer_us1;
+    #ifdef DEBUG_TIMING
+        int tampon2 = Timer_us1;
+    #endif
     // Vérification de la cohérence des données LIDAR
     if(set_lidar.delay < 0 || set_lidar.delay > 200) {
         printf("ERROR: Lidar delay out of range\n");
         return; // erreur
     }
 
-    if(!AU_state){
+    if(AU_state){
         return; // ne pas mettre à jour le kalman si l'AU est
     }
     Position position_lidar;
@@ -283,7 +292,8 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
         }
     }
-    int tampon2 = Timer_us1 - tampon;
-    // printf("timer : %d\n", tampon2);
+    #ifdef DEBUG_TIMING
+        printf("Lidar Kalman update time: %d us\n\r", Timer_us1 - tampon2);
+    #endif
 }
 
