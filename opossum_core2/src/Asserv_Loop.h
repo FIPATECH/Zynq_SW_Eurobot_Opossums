@@ -1,7 +1,7 @@
 #ifndef __ASSERV_MASTER_H
 #define __ASSERV_MASTER_H
 
-#define DEBUG_TIMING 1
+// #define DEBUG_TIMING 1
 
 // calcul d'un step d'odometrie toutes les 2 ms
 #define ODO_EVERY_MS 1

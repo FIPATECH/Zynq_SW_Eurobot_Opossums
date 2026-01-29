@@ -82,7 +82,7 @@ int main()
     Std_Com_Init();
     init_AU();
     // ws2812b_init();
-    // init_switch();
+    init_switch();
     // Init_Pump();
     // Init_Valve();
     // Init_Asserv();
@@ -133,7 +133,7 @@ int main()
         //     Pump_Loop();
         //     Valve_Loop();
         // }
-        // IHM_loop();
+        IHM_loop();
 
     }
     cleanup_platform();
