@@ -81,7 +81,7 @@ int main()
     // PWM_Init();
     Std_Com_Init();
     init_AU();
-    // ws2812b_init();
+    ws2812b_init();
     init_switch();
     // Init_Pump();
     // Init_Valve();
@@ -111,11 +111,17 @@ int main()
         // FEETECH_Search_ID_Loop();
         // FEETECH_action_loop();
 
-        // AU_Loop();
-        // LED_loop();
+        AU_Loop();
+        LED_loop();
         Std_Com_Loop();
         Print_Position_loop();
 
+        if(AU_state == 1){
+            // printf("AU activated\n\r");
+            LED_AU();
+        }else{
+            LED_CLASSIC_MODE();
+        }
         // if(AU_state == 1){
         //     LED_AU();
         //     Init_Pump();

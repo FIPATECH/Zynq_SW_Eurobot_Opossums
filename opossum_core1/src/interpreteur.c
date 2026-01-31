@@ -41,6 +41,8 @@ const Command Command_List[] = {
 //    { "STEPPER1", Stepper_1_cmd},
 //    { "HELP_STEPPER", Stepper_help_cmd},
 
+    { "LED", LED_cmd},
+
     //odometry command
     { "SET", SET_Cmd},
     { "SET0", SET0_Cmd},

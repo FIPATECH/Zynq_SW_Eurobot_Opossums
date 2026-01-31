@@ -7,6 +7,8 @@ extern u32 MMUTable;
 int old_timer_us1 = 0;
 int old_timer_ms1 = 0;
 
+int old_timer_AU = 0;
+
 int main()
 {
     Xil_SetTlbAttributes(0xFFFF0000,0x14de2); 
@@ -47,7 +49,10 @@ int main()
         AU_Loop();
         check_for_cmd_loop();
         if(AU_state == 1){
-            xil_printf("AU activated, stopping asserv\n\r");
+            if(Timer_ms1 - old_timer_AU >= 100) {
+                xil_printf("AU activated, stopping asserv\n\r");
+                old_timer_AU = Timer_ms1;
+            }
             motion_free();
             Init_CAN_MOTOR_variables();
             Init_Asserv();

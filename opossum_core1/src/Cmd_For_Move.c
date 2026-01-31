@@ -135,10 +135,10 @@ uint8_t Set_Lidar_Cmd(void) {
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_y))     return PARAM_ERROR_CODE;
     if (Get_Param_Float(&local_data.set_lidar.lidar_position_t))     return PARAM_ERROR_CODE; 
     if (Get_Param_u32(&local_data.set_lidar.delay))                  return PARAM_ERROR_CODE;
-    printf("lidar pos: %f %f %f\n", 
-            (double)(local_data.set_lidar.lidar_position_x), 
-            (double)(local_data.set_lidar.lidar_position_y), 
-            (double)(local_data.set_lidar.lidar_position_t));
+    // printf("lidar pos: %f %f %f\n", 
+    //         (double)(local_data.set_lidar.lidar_position_x), 
+    //         (double)(local_data.set_lidar.lidar_position_y), 
+    //         (double)(local_data.set_lidar.lidar_position_t));
     // ecriture dans la mémoire partagée
     SEND_FIELD(&local_data, set_lidar);
     return 0;
