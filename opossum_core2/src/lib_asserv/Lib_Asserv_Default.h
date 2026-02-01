@@ -36,7 +36,7 @@
 /*############################################################################*/
 // PID dre la vitesse de chaque roue
 #define DEFAULT_PID_V_LIN_KP 9000 // kp
-#define DEFAULT_PID_V_LIN_KI 0   //ki
+#define DEFAULT_PID_V_LIN_KI 100   //ki
 #define DEFAULT_PID_V_LIN_KD 0   //kd   
 
 #endif // _LIB_ASSERV_DEFAULT_H_
