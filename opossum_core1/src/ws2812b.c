@@ -18,7 +18,7 @@ void ws2812b_init(){
    for (int i = 0; i < NBR_LED; i++){
        led[i].red = 0;
        led[i].green = 0;
-       led[i].blue = 100;
+       led[i].blue = 0;
    }
 }
 
@@ -60,213 +60,208 @@ int validation_state = 0;
 int cpt2 =  NBR_LED/2;
 
 void LED_MODE(){
-    for (int i = 0; i < NBR_LED-1; i++){
-               led[i].red = 255;
+   switch(led_animation_mode){
+       case 0: // default color
+           for (int i = 0; i < NBR_LED-1; i++){
+               led[i].red = 0;
                led[i].green = 0;
                led[i].blue = 0;
            }
-//    switch(led_animation_mode){
-//        case 0: // default color
-//            for (int i = 0; i < NBR_LED-1; i++){
-//                led[i].red = 0;
-//                led[i].green = 0;
-//                led[i].blue = 0;
-//            }
-//            break;
-//        case 1: //waiting for color choice
-//            if(Timer_ms1 - led_mode_timer_old > 20){
-//                led_mode_timer_old = Timer_ms1;
-//                for (int i = 0; i < NBR_LED-1; i++){
-//                    if (sens_animation_au == 0){
-//                        if(i < cpt){ // yellow
-//                            led[i].red = 0x10;
-//                            led[i].green = 0x10;
-//                            led[i].blue = 0;
-//                        }else{
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0x10;
-//                        }
-//                    }else{
-//                        if(i < cpt){
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0x10;
-//                        }else{
-//                            led[i].red = 0x10;
-//                            led[i].green = 0x10;
-//                            led[i].blue = 0;
-//                        }
-//                    }
-//                }
-//                cpt++;
-//                if(cpt > NBR_LED-1){
-//                    cpt = 0;
-//                    sens_animation_au = !sens_animation_au;
-//                }
-//            }
-//            break;
-//        case 10: // validation with green color
-//            if(Timer_ms1 - led_mode_timer_old > 20){
-//                led_mode_timer_old = Timer_ms1;
-//                for (int i = 0; i < NBR_LED-1; i++){
-//                    if(i < cpt){
-//                        led[i].red = 0;
-//                        led[i].green = 0x10;
-//                        led[i].blue = 0;
-//                    }else{
-//                        led[i].red = 0;
-//                        led[i].green = 0;
-//                        led[i].blue = 0;
-//                    }
-//                }
-//                if (cpt < NBR_LED){
-//                    cpt++;
-//                }else{
-//                    validation_state = 1;
-//                }
-//            }
-//            break;
-//        case 20: // team color yellow
-//            if (chargement_jaune == 0){
-//                if(Timer_ms1 - led_mode_timer_old > 20){
-//                    led_mode_timer_old = Timer_ms1;
-//                    for (int i = 0; i < NBR_LED-1; i++){
-//                        if(i < cpt){
-//                            led[i].red = 0x10;
-//                            led[i].green = 0x10;
-//                            led[i].blue = 0;
-//                        }else{
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0;
-//                        }
-//                    }
-//                    cpt++;
-//                    if(cpt > NBR_LED){
-//                        cpt = 0;
-//                        chargement_jaune = 1;
-//                    }
-//                }
-//            }else{
-//                if(Timer_ms1 - led_mode_timer_old > 20){
-//                    led_mode_timer_old = Timer_ms1;
-//                    for (int i = 0; i < NBR_LED-1; i++){
-//                        if(i == cpt){
-//                            led[i].red = 0xFF;
-//                            led[i].green = 0xFF;
-//                            led[i].blue = 0;
-//                        }else{
-//                            led[i].red = 0x10;
-//                            led[i].green = 0x10;
-//                            led[i].blue = 0;
-//                        }
+           break;
+    //    case 1: //waiting for color choice
+    //        if(Timer_ms1 - led_mode_timer_old > 20){
+    //            led_mode_timer_old = Timer_ms1;
+    //            for (int i = 0; i < NBR_LED-1; i++){
+    //                if (sens_animation_au == 0){
+    //                    if(i < cpt){ // yellow
+    //                        led[i].red = 0x10;
+    //                        led[i].green = 0x10;
+    //                        led[i].blue = 0;
+    //                    }else{
+    //                        led[i].red = 0;
+    //                        led[i].green = 0;
+    //                        led[i].blue = 0x10;
+    //                    }
+    //                }else{
+    //                    if(i < cpt){
+    //                        led[i].red = 0;
+    //                        led[i].green = 0;
+    //                        led[i].blue = 0x10;
+    //                    }else{
+    //                        led[i].red = 0x10;
+    //                        led[i].green = 0x10;
+    //                        led[i].blue = 0;
+    //                    }
+    //                }
+    //            }
+    //            cpt++;
+    //            if(cpt > NBR_LED-1){
+    //                cpt = 0;
+    //                sens_animation_au = !sens_animation_au;
+    //            }
+    //        }
+    //        break;
+    //    case 10: // validation with green color
+    //        if(Timer_ms1 - led_mode_timer_old > 20){
+    //            led_mode_timer_old = Timer_ms1;
+    //            for (int i = 0; i < NBR_LED-1; i++){
+    //                if(i < cpt){
+    //                    led[i].red = 0;
+    //                    led[i].green = 0x10;
+    //                    led[i].blue = 0;
+    //                }else{
+    //                    led[i].red = 0;
+    //                    led[i].green = 0;
+    //                    led[i].blue = 0;
+    //                }
+    //            }
+    //            if (cpt < NBR_LED){
+    //                cpt++;
+    //            }else{
+    //                validation_state = 1;
+    //            }
+    //        }
+    //        break;
+    //    case 20: // team color yellow
+    //        if (chargement_jaune == 0){
+    //            if(Timer_ms1 - led_mode_timer_old > 20){
+    //                led_mode_timer_old = Timer_ms1;
+    //                for (int i = 0; i < NBR_LED-1; i++){
+    //                    if(i < cpt){
+    //                        led[i].red = 0x10;
+    //                        led[i].green = 0x10;
+    //                        led[i].blue = 0;
+    //                    }else{
+    //                        led[i].red = 0;
+    //                        led[i].green = 0;
+    //                        led[i].blue = 0;
+    //                    }
+    //                }
+    //                cpt++;
+    //                if(cpt > NBR_LED){
+    //                    cpt = 0;
+    //                    chargement_jaune = 1;
+    //                }
+    //            }
+    //        }else{
+    //            if(Timer_ms1 - led_mode_timer_old > 20){
+    //                led_mode_timer_old = Timer_ms1;
+    //                for (int i = 0; i < NBR_LED-1; i++){
+    //                    if(i == cpt){
+    //                        led[i].red = 0xFF;
+    //                        led[i].green = 0xFF;
+    //                        led[i].blue = 0;
+    //                    }else{
+    //                        led[i].red = 0x10;
+    //                        led[i].green = 0x10;
+    //                        led[i].blue = 0;
+    //                    }
 
-//                    }
-//                    cpt++;
-//                    if(cpt > NBR_LED){
-//                        cpt = 0;
-//                    }
-//                }
-//            }
-//            break;
-//        case 30: // team color blue
-//            if (chargement_blue == 0){
-//                if(Timer_ms1 - led_mode_timer_old > 20){
-//                    led_mode_timer_old = Timer_ms1;
-//                    for (int i = 0; i < NBR_LED-1; i++){
-//                        if(i < cpt){
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0x10;
-//                        }else{
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0;
-//                        }
-//                    }
-//                    cpt++;
-//                    if(cpt > NBR_LED){
-//                        cpt = 0;
-//                        chargement_blue = 1;
-//                    }
-//                }
-//            }else{
-//                if(Timer_ms1 - led_mode_timer_old > 20){
-//                    led_mode_timer_old = Timer_ms1;
-//                    for (int i = 0; i < NBR_LED-1; i++){
-//                        if(i == cpt){
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0xFF;
-//                        }else{
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0x10;
-//                        }
+    //                }
+    //                cpt++;
+    //                if(cpt > NBR_LED){
+    //                    cpt = 0;
+    //                }
+    //            }
+    //        }
+    //        break;
+    //    case 30: // team color blue
+    //        if (chargement_blue == 0){
+    //            if(Timer_ms1 - led_mode_timer_old > 20){
+    //                led_mode_timer_old = Timer_ms1;
+    //                for (int i = 0; i < NBR_LED-1; i++){
+    //                    if(i < cpt){
+    //                        led[i].red = 0;
+    //                        led[i].green = 0;
+    //                        led[i].blue = 0x10;
+    //                    }else{
+    //                        led[i].red = 0;
+    //                        led[i].green = 0;
+    //                        led[i].blue = 0;
+    //                    }
+    //                }
+    //                cpt++;
+    //                if(cpt > NBR_LED){
+    //                    cpt = 0;
+    //                    chargement_blue = 1;
+    //                }
+    //            }
+    //        }else{
+    //            if(Timer_ms1 - led_mode_timer_old > 20){
+    //                led_mode_timer_old = Timer_ms1;
+    //                for (int i = 0; i < NBR_LED-1; i++){
+    //                    if(i == cpt){
+    //                        led[i].red = 0;
+    //                        led[i].green = 0;
+    //                        led[i].blue = 0xFF;
+    //                    }else{
+    //                        led[i].red = 0;
+    //                        led[i].green = 0;
+    //                        led[i].blue = 0x10;
+    //                    }
 
-//                    }
-//                    cpt++;
-//                    if(cpt > NBR_LED){
-//                        cpt = 0;
-//                    }
-//                }
-//            }
-//            break;
-//        case 40: // case of AU
-//            if(Timer_ms1 - led_mode_timer_old > 10){
-//                led_mode_timer_old = Timer_ms1;
-//                for (int i = 0; i < NBR_LED-1; i++){
-//                    if (sens_animation_au == 0){
-//                        if(i < cpt){
-//                            led[i].red = 0xFF;
-//                            led[i].green = 0;
-//                            led[i].blue = 0;
-//                        }else{
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0;
-//                        }
-//                    }else{
-//                        if(i < cpt){
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0;
-//                        }else{
-//                            led[i].red = 0xFF;
-//                            led[i].green = 0;
-//                            led[i].blue = 0;
-//                        }
-//                    }
-//                }
-//                cpt++;
-//                if(cpt > NBR_LED){
-//                    cpt = 0;
-//                    sens_animation_au = !sens_animation_au;
-//                }
-//            }
-//            break;
-//        case 60: // leash
-//            if(Timer_ms1 - led_mode_timer_old > 20){
-//                led_mode_timer_old = Timer_ms1;
-//                cpt = (timer_match*44)/100000;
-//                if (cpt < NBR_LED-1){
-//                    for (int i = 0; i < NBR_LED-1; i++){
-//                        if(i < cpt){
-//                            led[i].red = 0x10;
-//                            led[i].green = 0x10;
-//                            led[i].blue = 0x10;
-//                        }else{
-//                            led[i].red = 0;
-//                            led[i].green = 0;
-//                            led[i].blue = 0;
-//                        }
-//                    }
-//                }
-//            }
-//            break;
+    //                }
+    //                cpt++;
+    //                if(cpt > NBR_LED){
+    //                    cpt = 0;
+    //                }
+    //            }
+    //        }
+    //        break;
+       case 40: // case of AU
+           if(Timer_ms1 - led_mode_timer_old > 10){
+               led_mode_timer_old = Timer_ms1;
+               for (int i = 0; i < NBR_LED-1; i++){
+                   if (sens_animation_au == 0){
+                       if(i < cpt){
+                           led[i].red = 0xFF;
+                           led[i].green = 0;
+                           led[i].blue = 0;
+                       }else{
+                           led[i].red = 0;
+                           led[i].green = 0;
+                           led[i].blue = 0;
+                       }
+                   }else{
+                       if(i < cpt){
+                           led[i].red = 0;
+                           led[i].green = 0;
+                           led[i].blue = 0;
+                       }else{
+                           led[i].red = 0xFF;
+                           led[i].green = 0;
+                           led[i].blue = 0;
+                       }
+                   }
+               }
+               cpt++;
+               if(cpt > NBR_LED){
+                   cpt = 0;
+                   sens_animation_au = !sens_animation_au;
+               }
+           }
+           break;
+       case 60: // leash
+           if(Timer_ms1 - led_mode_timer_old > 20){
+               led_mode_timer_old = Timer_ms1;
+               cpt = (timer_match*44)/100000;
+               if (cpt < NBR_LED-1){
+                   for (int i = 0; i < NBR_LED-1; i++){
+                       if(i < cpt){
+                           led[i].red = 0x10;
+                           led[i].green = 0x10;
+                           led[i].blue = 0x10;
+                       }else{
+                           led[i].red = 0;
+                           led[i].green = 0;
+                           led[i].blue = 0;
+                       }
+                   }
+               }
+           }
+           break;
 
-//    }
+   }
 }
 
 
