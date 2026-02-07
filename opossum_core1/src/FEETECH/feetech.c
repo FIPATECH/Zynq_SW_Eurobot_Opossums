@@ -430,3 +430,7 @@ uint8_t FEETECH_All_Cmd_Done(void) {
 void GetFEETECH_Ext_Done_With_Status(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done, uint8_t *Status) {
     Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_READ_DATA, Reg, 0, Data_Answer, RegisterLenFEETECH(Reg), Status, Done, FEETECH_PROTO_STS);
 }
+
+void PutFEETECH_Ext_Done_SCS(uint8_t id, uint8_t Reg, uint32_t Data, void *Done) {
+    Add_FEETECH_Cmd(id, (uint16_t)BRGVALFEETECH, FEETECH_INST_WRITE_DATA, Reg, Data, NULL, RegisterLenFEETECH(Reg), &FEETECH_Dumy, Done, FEETECH_PROTO_SCS);
+}

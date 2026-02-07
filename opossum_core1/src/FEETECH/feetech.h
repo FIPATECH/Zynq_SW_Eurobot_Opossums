@@ -139,6 +139,7 @@ void usleep(uint32_t usec);
 
 void PutFEETECH_SCS(uint8_t id, uint8_t Reg, uint32_t Data);
 void PutFEETECH_Wait_SCS(uint8_t id, uint8_t Reg, uint32_t Data);
+void PutFEETECH_Ext_Done_SCS(uint8_t id, uint8_t Reg, uint32_t Data, void *Done);
 uint32_t GetFEETECH_Wait_SCS(uint8_t id, uint8_t Reg);
 void GetFEETECH_Ext_Done_SCS(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done);
 #endif // FEETECH_H

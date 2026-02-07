@@ -169,15 +169,15 @@ uint32_t pince_action_position = 0;
 // ----- STS3215 SERVO ----- //
 #define PINCE_1_GROS_ID 11
 #define PINCE_POS_BASSE 3600
-#define PINCE_POS_HAUTE 2300
+#define PINCE_POS_HAUTE 2200
 
 //------ SCS0009 SERVO -----//
 #define PINCE_1_DROITE_ID 12
-#define PINCE_1_DROITE_POS_SORTIE 300
+#define PINCE_1_DROITE_POS_SORTIE 350
 #define PINCE_1_DROITE_POS_RETRAIT 512
 
 #define PINCE_1_GAUCHE_ID 13
-#define PINCE_1_GAUCHE_POS_SORTIE 700
+#define PINCE_1_GAUCHE_POS_SORTIE 650
 #define PINCE_1_GAUCHE_POS_RETRAIT 512
 
 void pince_action_loop(void){
@@ -242,45 +242,14 @@ void pince_action_loop(void){
             PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 255);
             PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 255);
             pince_action_timer = Timer_ms1;
-            pince_action_step ++;
-            break;
-        case 31: //alumer les pompes 
-            if (Timer_ms1 - pince_action_timer >= 100){
-                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 255);
-                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 255);
-                pince_action_timer = Timer_ms1;
-                pince_action_step ++;
-            }
+            pince_action_step = 0;
             break;
             
-        case 32: //alumer les pompes 
-            if (Timer_ms1 - pince_action_timer >= 100){
-                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 255);
-                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 255);
-                pince_action_step = 0;
-            }
-            break;
-            
-
         case 35: // eteindre les pompes
             PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 0);
             PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 0);
             pince_action_timer = Timer_ms1;
-            pince_action_step++;
-            break;
-        case 36:
-            if (Timer_ms1 - pince_action_timer >= 100){
-                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 0);
-                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 0);
-                pince_action_step++;
-            }
-            break;
-        case 37:
-            if (Timer_ms1 - pince_action_timer >= 100){
-                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 0);
-                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 0);
-                pince_action_step = 0;
-            }
+            pince_action_step = 0;
             break;
 
         case 40: //activate valves
@@ -290,13 +259,26 @@ void pince_action_loop(void){
             break;
 
         case 50: //sortir clapet
-            PutFEETECH_Ext_Done(PINCE_1_DROITE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_DROITE_POS_SORTIE, &pince_action_done);
-            PutFEETECH_Ext_Done(PINCE_1_GAUCHE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_GAUCHE_POS_SORTIE, &pince_action_done);
+            PutFEETECH_Ext_Done_SCS(PINCE_1_DROITE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_DROITE_POS_SORTIE, &pince_action_done);
+            PutFEETECH_Ext_Done_SCS(PINCE_1_GAUCHE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_GAUCHE_POS_SORTIE, &pince_action_done);
             pince_action_step = 51;
             break;
         case 51:
             if(pince_action_done){
                 printf("Clapet sortie done\n");
+                pince_action_done = 0;
+                pince_action_step = 0;
+            }
+            break;
+
+        case 60: //ranger clapet
+            PutFEETECH_Ext_Done_SCS(PINCE_1_DROITE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_DROITE_POS_RETRAIT, &pince_action_done);
+            PutFEETECH_Ext_Done_SCS(PINCE_1_GAUCHE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_GAUCHE_POS_RETRAIT, &pince_action_done);
+            pince_action_step = 61;
+            break;
+        case 61:
+            if(pince_action_done){
+                printf("Clapet rentré done\n");
                 pince_action_done = 0;
                 pince_action_step = 0;
             }
@@ -348,45 +330,45 @@ void Test_pince_action_loop(void){
                 Test_pince_action_step = 1;
             }
             break;
-        case 1:
+        case 1: // aspirer
             if(Timer_ms1 - Test_pince_action_timer >= 1000){
                 pince_action_step = 30;
                 Test_pince_action_timer = Timer_ms1;
                 Test_pince_action_step = 2;
             }
             break;
-        case 2:
+        case 2: // monter la pince
             if(Timer_ms1 - Test_pince_action_timer >= 500){
                 pince_action_step = 20; 
                 Test_pince_action_timer = Timer_ms1;
                 Test_pince_action_step = 3;
             }
             break;
-        case 3:
+        case 3: // sortir les clapets   
             if(Timer_ms1 - Test_pince_action_timer >= 1000){
-                pince_action_step = 10; //baisser la pince
+                pince_action_step = 50; 
                 Test_pince_action_timer = Timer_ms1;
                 Test_pince_action_step = 4;
             }
             break;
 
-        case 4:
+        case 4: // ouvrir les valves
             if(Timer_ms1 - Test_pince_action_timer >= 1000){
-                pince_action_step = 35;
+                pince_action_step = 40;
                 Test_pince_action_timer = Timer_ms1;
                 Test_pince_action_step = 5;
             }
             break;
-        case 5:
+        case 5: // etteindre les pompes
             if(Timer_ms1 - Test_pince_action_timer >= 200){
-                pince_action_step = 40;
+                pince_action_step = 35;
                 Test_pince_action_timer = Timer_ms1;
                 Test_pince_action_step = 6;
             }
             break;
-        case 6:
+        case 6: // ranger les clapets
             if(Timer_ms1 - Test_pince_action_timer >= 500){
-                pince_action_step = 20;
+                pince_action_step = 60;
                 Test_pince_action_timer = Timer_ms1;
                 Test_pince_action_step = 0;
             }
