@@ -35,6 +35,41 @@ uint8_t Get_FEETECH_Cmd(void){
     return 0;
 }
 
+uint8_t Send_FEETECH_SCS_Cmd(void){
+    uint32_t val32;
+    uint8_t Id;
+    uint8_t Reg;
+    uint16_t Consigne;
+    if (Get_Param_u32(&val32))
+        return PARAM_ERROR_CODE;
+    Id = val32;
+    if (Get_Param_u32(&val32))
+        return PARAM_ERROR_CODE;
+    Reg = val32;
+    if (Get_Param_u32(&val32))
+        return PARAM_ERROR_CODE;
+    Consigne = val32;
+
+    PutFEETECH_SCS(Id, Reg, Consigne);
+    return 0;
+}
+
+uint8_t Get_FEETECH_SCS_Cmd(void){
+    uint32_t val32;
+    uint8_t Id;
+    uint8_t Reg;
+
+    if (Get_Param_u32(&val32))
+        return PARAM_ERROR_CODE;
+    Id = val32;
+    if (Get_Param_u32(&val32))
+        return PARAM_ERROR_CODE;
+    Reg = val32;
+    xil_printf("Get FEETECH Id=%d Reg=%d\r\n", Id, Reg);
+    xil_printf("  Value=%d\r\n", GetFEETECH_Wait_SCS(Id, Reg));
+    return 0;
+}
+
 //-------------------------------------------------------------------------------
 // Fonctions Search ID return all id detected
 //-------------------------------------------------------------------------------
@@ -110,13 +145,261 @@ void FEETECH_action_loop(void){
         printf("FEETECH action loop %d\r\n", feetech_test_ctnr);
         switch(feetech_action_state){
             case 0:
-                PutFEETECH(1, FEETECH_GOAL_POSITION_L, 100);
+                PutFEETECH(10, PUMP_CMD_2, 255);
                 feetech_action_state = 1;
                 break;
             case 1:
-                PutFEETECH(1, FEETECH_GOAL_POSITION_L, 0);
+                PutFEETECH(10, PUMP_CMD_2, 0);
                 feetech_action_state = 0;
                 break;
         }
     }
+}
+
+uint8_t pince_action_step = 0;
+uint8_t pince_action_done = 0;
+int pince_action_timer = 0;
+
+uint32_t pince_action_position = 0;
+
+/////////////////////// PINCE 1 DEFINE //////////////////////
+// ----- PUMP -----//
+#define PINCE_PUMP_ID 10
+
+// ----- STS3215 SERVO ----- //
+#define PINCE_1_GROS_ID 11
+#define PINCE_POS_BASSE 3600
+#define PINCE_POS_HAUTE 2300
+
+//------ SCS0009 SERVO -----//
+#define PINCE_1_DROITE_ID 12
+#define PINCE_1_DROITE_POS_SORTIE 300
+#define PINCE_1_DROITE_POS_RETRAIT 512
+
+#define PINCE_1_GAUCHE_ID 13
+#define PINCE_1_GAUCHE_POS_SORTIE 700
+#define PINCE_1_GAUCHE_POS_RETRAIT 512
+
+void pince_action_loop(void){
+    switch(pince_action_step){
+        case 0:
+            break;
+        case 10: // baisser la pince
+            PutFEETECH_Ext_Done(PINCE_1_GROS_ID, FEETECH_GOAL_POSITION_L, PINCE_POS_BASSE, &pince_action_done);
+            pince_action_timer = Timer_ms1;
+            pince_action_step = 11;
+            break;
+        case 11:
+            if(pince_action_done){
+                pince_action_done = 0;
+                GetFEETECH_Ext_Done(PINCE_1_GROS_ID, FEETECH_PRESENT_POSITION_L, &pince_action_position, &pince_action_done);
+                pince_action_step = 12;
+            }
+            break;
+        case 12:
+            if(pince_action_done){
+                if((PINCE_POS_BASSE - 100) <= pince_action_position && pince_action_position <= (PINCE_POS_BASSE + 100)){
+                    printf("Pince action done at position %d\n", pince_action_position);
+                    pince_action_done = 0;
+                    pince_action_step = 0;
+                } else if (Timer_ms1 - pince_action_timer >= 3000){
+                    printf("Pince action timeout at position %d\n", pince_action_position);
+                    pince_action_step = 0;
+                } else {
+                    pince_action_step = 11; // keep waiting
+                }
+            }
+            break;
+
+        case 20: // monter la pince
+            PutFEETECH_Ext_Done(PINCE_1_GROS_ID, FEETECH_GOAL_POSITION_L, PINCE_POS_HAUTE, &pince_action_done);
+            pince_action_timer = Timer_ms1;
+            pince_action_step = 21;
+            break;
+        case 21:
+            if(pince_action_done){
+                pince_action_done = 0;
+                GetFEETECH_Ext_Done(PINCE_1_GROS_ID, FEETECH_PRESENT_POSITION_L, &pince_action_position, &pince_action_done);
+                pince_action_step = 22;
+            }
+            break;
+        case 22:
+            if(pince_action_done){
+                if((PINCE_POS_HAUTE - 100) <= pince_action_position && pince_action_position <= (PINCE_POS_HAUTE + 100)){
+                    printf("Pince action done at position %d\n", pince_action_position);
+                    pince_action_done = 0;
+                    pince_action_step = 0;
+                } else if (Timer_ms1 - pince_action_timer >= 3000){
+                    printf("Pince action timeout at position %d\n", pince_action_position);
+                    pince_action_step = 0;
+                } else {
+                    pince_action_step = 21; // keep waiting
+                }
+            }
+            break;
+
+        case 30: //alumer les pompes 
+            PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 255);
+            PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 255);
+            pince_action_timer = Timer_ms1;
+            pince_action_step ++;
+            break;
+        case 31: //alumer les pompes 
+            if (Timer_ms1 - pince_action_timer >= 100){
+                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 255);
+                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 255);
+                pince_action_timer = Timer_ms1;
+                pince_action_step ++;
+            }
+            break;
+            
+        case 32: //alumer les pompes 
+            if (Timer_ms1 - pince_action_timer >= 100){
+                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 255);
+                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 255);
+                pince_action_step = 0;
+            }
+            break;
+            
+
+        case 35: // eteindre les pompes
+            PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 0);
+            PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 0);
+            pince_action_timer = Timer_ms1;
+            pince_action_step++;
+            break;
+        case 36:
+            if (Timer_ms1 - pince_action_timer >= 100){
+                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 0);
+                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 0);
+                pince_action_step++;
+            }
+            break;
+        case 37:
+            if (Timer_ms1 - pince_action_timer >= 100){
+                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 0);
+                PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 0);
+                pince_action_step = 0;
+            }
+            break;
+
+        case 40: //activate valves
+            PutFEETECH(PINCE_PUMP_ID, VALVE_CMD_1, 1);
+            PutFEETECH(PINCE_PUMP_ID, VALVE_CMD_2, 1);
+            pince_action_step = 0;
+            break;
+
+        case 50: //sortir clapet
+            PutFEETECH_Ext_Done(PINCE_1_DROITE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_DROITE_POS_SORTIE, &pince_action_done);
+            PutFEETECH_Ext_Done(PINCE_1_GAUCHE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_GAUCHE_POS_SORTIE, &pince_action_done);
+            pince_action_step = 51;
+            break;
+        case 51:
+            if(pince_action_done){
+                printf("Clapet sortie done\n");
+                pince_action_done = 0;
+                pince_action_step = 0;
+            }
+            break;
+    }
+}
+
+uint8_t Monter_pince_cmd(void){
+    pince_action_step = 20;
+    return 0;
+}
+
+uint8_t Baisser_pince_cmd(void){
+    pince_action_step = 10;
+    return 0;
+}
+
+uint8_t Allumer_pompes_cmd(void){
+    pince_action_step = 30;
+    return 0;
+}
+
+uint8_t Eteindre_pompes_cmd(void){
+    pince_action_step = 35;
+    return 0;
+}
+
+uint8_t Activate_Valves_cmd(void){
+    pince_action_step = 40;
+    return 0;
+}
+
+uint8_t Ouvrir_clapet_cmd(void){
+    pince_action_step = 50;
+    return 0;
+}
+
+uint8_t start_pince = 0;
+int Test_pince_action_step = 0;
+int Test_pince_action_timer = 0;
+
+void Test_pince_action_loop(void){
+    switch(Test_pince_action_step){
+        case 0:
+            if(start_pince){
+                start_pince = 0;
+                pince_action_step = 10; //baisser la pince
+                Test_pince_action_timer = Timer_ms1;
+                Test_pince_action_step = 1;
+            }
+            break;
+        case 1:
+            if(Timer_ms1 - Test_pince_action_timer >= 1000){
+                pince_action_step = 30;
+                Test_pince_action_timer = Timer_ms1;
+                Test_pince_action_step = 2;
+            }
+            break;
+        case 2:
+            if(Timer_ms1 - Test_pince_action_timer >= 500){
+                pince_action_step = 20; 
+                Test_pince_action_timer = Timer_ms1;
+                Test_pince_action_step = 3;
+            }
+            break;
+        case 3:
+            if(Timer_ms1 - Test_pince_action_timer >= 1000){
+                pince_action_step = 10; //baisser la pince
+                Test_pince_action_timer = Timer_ms1;
+                Test_pince_action_step = 4;
+            }
+            break;
+
+        case 4:
+            if(Timer_ms1 - Test_pince_action_timer >= 1000){
+                pince_action_step = 35;
+                Test_pince_action_timer = Timer_ms1;
+                Test_pince_action_step = 5;
+            }
+            break;
+        case 5:
+            if(Timer_ms1 - Test_pince_action_timer >= 200){
+                pince_action_step = 40;
+                Test_pince_action_timer = Timer_ms1;
+                Test_pince_action_step = 6;
+            }
+            break;
+        case 6:
+            if(Timer_ms1 - Test_pince_action_timer >= 500){
+                pince_action_step = 20;
+                Test_pince_action_timer = Timer_ms1;
+                Test_pince_action_step = 0;
+            }
+            break;
+        default:
+            break;
+                
+    }
+}
+
+
+uint8_t Test_pince_cmd(void){
+    start_pince = 1;
+    Test_pince_action_step = 0;
+    return 0;
 }

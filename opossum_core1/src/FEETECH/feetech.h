@@ -91,6 +91,11 @@ typedef unsigned char byte;
 #define  FEETECH_PRESENT_CURRENT_L 69
 #define  FEETECH_PRESENT_CURRENT_H 70
 
+#define PUMP_CMD_1 80
+#define PUMP_CMD_2 81
+#define VALVE_CMD_1 82
+#define VALVE_CMD_2 83
+
   
 typedef struct {
     uint16_t Uart_Brg;  // vitesse 
@@ -102,6 +107,7 @@ typedef struct {
     uint8_t Nb_Data; // Max 4 en send
     uint8_t *Status;
     void *Done;
+    uint8_t Protocol;
 } FEETECH_Command;
 
 
@@ -113,7 +119,7 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd);
 
 uint8_t RegisterLenFEETECH(uint8_t address);
 
-void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t Command, uint8_t Reg_Addr, uint32_t Data_To_Send, void *Data_Answer, uint8_t Nb_Data, uint8_t *Status, void *Done);
+void Add_FEETECH_Cmd(uint8_t FEETECH_Addr, uint16_t Uart_Brg, uint8_t Command, uint8_t Reg_Addr, uint32_t Data_To_Send, void *Data_Answer, uint8_t Nb_Data, uint8_t *Status, void *Done, uint8_t Protocol);
 
 void PutFEETECH(uint8_t id, uint8_t Reg, uint32_t Data);
 void PutFEETECH_Wait(uint8_t id, uint8_t Reg, uint32_t Data); // interdit dans le robot, sauf pour debug !!!
@@ -130,4 +136,9 @@ void FEETECH_Uart_EventHandler(unsigned int Event, unsigned int EventData);
 void GetFEETECH_Ext_Done_With_Status(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done, uint8_t *Status);
 
 void usleep(uint32_t usec);
+
+void PutFEETECH_SCS(uint8_t id, uint8_t Reg, uint32_t Data);
+void PutFEETECH_Wait_SCS(uint8_t id, uint8_t Reg, uint32_t Data);
+uint32_t GetFEETECH_Wait_SCS(uint8_t id, uint8_t Reg);
+void GetFEETECH_Ext_Done_SCS(uint8_t id, uint8_t Reg, void *Data_Answer, void *Done);
 #endif // FEETECH_H

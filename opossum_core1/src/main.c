@@ -49,7 +49,7 @@ int main()
     }
 
     // feetech init
-    // Init_Com_FEETECH();
+    Init_Com_FEETECH();
     Status = UART1_Init();
     if (Status != XST_SUCCESS) {
         xil_printf("UART1 init failed\n\r");
@@ -107,9 +107,11 @@ int main()
             Interp(c);
         }
 
-        // FEETECH_Loop();
+        FEETECH_Loop();
         // FEETECH_Search_ID_Loop();
         // FEETECH_action_loop();
+        pince_action_loop();
+        Test_pince_action_loop();
 
         AU_Loop();
         LED_loop();

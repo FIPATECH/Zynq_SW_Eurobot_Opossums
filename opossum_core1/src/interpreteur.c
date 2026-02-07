@@ -22,9 +22,20 @@ const Command Command_List[] = {
     { "ENKALMAN", Enable_Kalman_Cmd},
 
     #ifdef FEETECH
-        { "FEETECHSEND", Send_FEETECH_Cmd},
-        { "FEETECHGET", Get_FEETECH_Cmd},
+        { "STSSEND", Send_FEETECH_Cmd},
+        { "STSGET", Get_FEETECH_Cmd},
+        { "SCSSEND", Send_FEETECH_SCS_Cmd},
+        { "SCSGET", Get_FEETECH_SCS_Cmd},
         { "FEETECHSEARCHID", Test_ID_FEETECH_Cmd},
+
+        { "MONTERPINCE", Monter_pince_cmd},
+        { "BAISSERPINCE", Baisser_pince_cmd},
+        { "ALLUMERPOMPES", Allumer_pompes_cmd},
+        { "ETEINDREPOMPES", Eteindre_pompes_cmd},
+        { "VALVES", Activate_Valves_cmd},
+        { "OUVRIRCLAPET", Ouvrir_clapet_cmd},
+
+        { "TESTPINCE", Test_pince_cmd},
     #endif
 
     #ifdef PWM
