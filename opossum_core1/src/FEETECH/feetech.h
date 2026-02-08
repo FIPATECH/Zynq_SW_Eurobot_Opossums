@@ -96,6 +96,11 @@ typedef unsigned char byte;
 #define VALVE_CMD_1 82
 #define VALVE_CMD_2 83
 
+#define ADDR_CURRENT_1_L 84
+#define ADDR_CURRENT_1_H 85
+#define ADDR_CURRENT_2_L 86
+#define ADDR_CURRENT_2_H 87
+
   
 typedef struct {
     uint16_t Uart_Brg;  // vitesse 
