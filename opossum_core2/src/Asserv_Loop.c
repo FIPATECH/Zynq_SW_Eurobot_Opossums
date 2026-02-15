@@ -251,19 +251,26 @@ void Asserv_Loop(void)
     }
 }
 
+uint8_t count_lidar_cycle = 0;
+
 void Set_Lidar_Cmd(Set_lidar set_lidar) {
     #ifdef DEBUG_TIMING
         int tampon2 = Timer_us1;
     #endif
+
+    
+    if(AU_state){
+        count_lidar_cycle = 0;
+        return; // ne pas mettre à jour le kalman si l'AU est
+    }
+
+
     // Vérification de la cohérence des données LIDAR
     if(set_lidar.delay < 0 || set_lidar.delay > 200) {
         printf("ERROR: Lidar delay out of range\n");
         return; // erreur
     }
 
-    if(AU_state){
-        return; // ne pas mettre à jour le kalman si l'AU est
-    }
     Position position_lidar;
     position_lidar.x = set_lidar.lidar_position_x;
     position_lidar.y = set_lidar.lidar_position_y;
@@ -271,6 +278,10 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
 
     if(en_kalman) {
         if(!kalman_initialized){
+            if(count_lidar_cycle < 10) { // attendre quelques cycles pour laisser le temps au kalman de se stabiliser avant d'initialiser avec le lidar
+                count_lidar_cycle++;
+                return;
+            }
             // Initialisation du filtre de Kalman avec les données LIDAR
             kalman_init_with_lidar(&kalman_fifo, &position_lidar);
             kalman_initialized = 1;
