@@ -5,10 +5,18 @@
 #include "Asserv_type.h"
 
 #define KALMAN_FIFO_LEN 200
+typedef struct {
+    uint8_t has_lidar;        // Flag : y a-t-il eu un lidar à cet instant ?
+    float z_lidar[3];         // La mesure lidar
+
+    uint8_t has_camera;       // Flag : y a-t-il eu une caméra à cet instant ?
+    float z_camera[3];        // La mesure caméra
+} Observations;
 
 typedef struct {
     KalmanState buffer[KALMAN_FIFO_LEN];
     Speed speed_robot[KALMAN_FIFO_LEN];
+    Observations observations[KALMAN_FIFO_LEN];
     int head; // index de la tête de la FIFO
     int count; // nombre d'éléments dans la FIFO actuellement valides
 } KalmanFIFO;
@@ -25,6 +33,7 @@ void kalman_fifo_init(KalmanFIFO* fifo);
  * 
  * @param fifo La structure FIFO.
  * @param state L'état à ajouter.
+ * @param speed_robot La vitesse du robot à ajouter (pour la prédiction).
  */
 void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot);
 
@@ -46,8 +55,10 @@ int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms);
  * @param fifo La structure FIFO.
  * @param delay_index L’index de l’état corrigé dans la FIFO.
  * @param dt_s Le pas de temps (s).
+ * @param R_lidar Les profils de bruit lidar.
+ * @param R_camera Les profils de bruit caméra.
  */
-void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s);
+void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, float R_lidar[3], float R_camera[3]);
 
 /**
  * @brief Initialise la kalman avec les valeurs du lidar

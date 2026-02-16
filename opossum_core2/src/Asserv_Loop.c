@@ -300,13 +300,18 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             if (delay_index < 0) {
                 return; // erreur
             }
+
+            kalman_fifo.observations[delay_index].has_lidar = 1;
+            kalman_fifo.observations[delay_index].z_lidar[0] = position_lidar.x;
+            kalman_fifo.observations[delay_index].z_lidar[1] = position_lidar.y;
+            kalman_fifo.observations[delay_index].z_lidar[2] = position_lidar.t;
             
             // Correction de l’état dans la FIFO
             float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
             kalman_update(&kalman_fifo.buffer[delay_index], z, R_lidar);
 
             // Repropagation depuis l’état corrigé
-            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
+            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar, R_camera);
 
             // Mise à jour de l’état courant
             kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
@@ -337,6 +342,11 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         
         int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
         if (delay_index < 0) return; 
+
+        kalman_fifo.observations[delay_index].has_camera = 1;
+        kalman_fifo.observations[delay_index].z_camera[0] = position_camera.x;
+        kalman_fifo.observations[delay_index].z_camera[1] = position_camera.y;
+        kalman_fifo.observations[delay_index].z_camera[2] = position_camera.t;
         
         float z[3] = {position_camera.x, position_camera.y, position_camera.t};
         
@@ -344,7 +354,7 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         kalman_update(&kalman_fifo.buffer[delay_index], z, R_camera);
 
         // Repropagation
-        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
+        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar, R_camera);
         kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
     }
 }
