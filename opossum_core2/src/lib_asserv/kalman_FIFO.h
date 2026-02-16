@@ -11,6 +11,7 @@ typedef struct {
 
     uint8_t has_camera[3];       // Flag : y a-t-il eu une caméra à cet instant ?
     float z_camera[3][3];        // La mesure caméra
+    float r_camera[3][3];        // Le bruit de la caméra
 } Observations;
 
 typedef struct {
@@ -56,9 +57,8 @@ int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms);
  * @param delay_index L’index de l’état corrigé dans la FIFO.
  * @param dt_s Le pas de temps (s).
  * @param R_lidar Les profils de bruit lidar.
- * @param R_camera Les profils de bruit caméra.
  */
-void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, float R_lidar[3], float R_camera[3]);
+void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, float R_lidar[3]);
 
 /**
  * @brief Initialise la kalman avec les valeurs du lidar

@@ -71,7 +71,7 @@ int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms) {
     return index;
 }
 
-void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, float R_lidar[3], float R_camera[3]) {
+void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, float R_lidar[3]) {
     int i = delay_index;
     int next_i;
 
@@ -99,7 +99,7 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, floa
         // 3. CORRECTION : Si une mesure Caméra avait eu lieu à 'next_i', on la réapplique ! 
         for(int cam_id = 0; cam_id < 3; cam_id++) {
             if (fifo->observations[next_i].has_camera[cam_id]) {
-                kalman_update(next, fifo->observations[next_i].z_camera[cam_id], R_camera, 0);
+                kalman_update(next, fifo->observations[next_i].z_camera[cam_id], fifo->observations[next_i].r_camera[cam_id], 0);
             }
         }
 

@@ -150,6 +150,9 @@ uint8_t Set_Camera_1_Cmd(void) {
     if (Get_Param_Float(&local_data.set_camera_1.camera_position_y))     return PARAM_ERROR_CODE;
     if (Get_Param_Float(&local_data.set_camera_1.camera_position_t))     return PARAM_ERROR_CODE; 
     if (Get_Param_u32(&local_data.set_camera_1.delay))                  return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_1.noise_x))                 return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_1.noise_y))                 return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_1.noise_t))                 return PARAM_ERROR_CODE;
     // ecriture dans la mémoire partagée
     SEND_FIELD(&local_data, set_camera_1);
     return 0;
@@ -161,6 +164,10 @@ uint8_t Set_Camera_2_Cmd(void) {
     if (Get_Param_Float(&local_data.set_camera_2.camera_position_y))     return PARAM_ERROR_CODE;
     if (Get_Param_Float(&local_data.set_camera_2.camera_position_t))     return PARAM_ERROR_CODE; 
     if (Get_Param_u32(&local_data.set_camera_2.delay))                  return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_2.noise_x))                 return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_2.noise_y))                 return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_2.noise_t))                 return PARAM_ERROR_CODE;
+
     // ecriture dans la mémoire partagée
     SEND_FIELD(&local_data, set_camera_2);
     return 0;
@@ -172,6 +179,9 @@ uint8_t Set_Camera_3_Cmd(void) {
     if (Get_Param_Float(&local_data.set_camera_3.camera_position_y))     return PARAM_ERROR_CODE;
     if (Get_Param_Float(&local_data.set_camera_3.camera_position_t))     return PARAM_ERROR_CODE; 
     if (Get_Param_u32(&local_data.set_camera_3.delay))                  return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_3.noise_x))                 return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_3.noise_y))                 return PARAM_ERROR_CODE;
+    if(Get_Param_Float(&local_data.set_camera_3.noise_t))                 return PARAM_ERROR_CODE;
     // ecriture dans la mémoire partagée
     SEND_FIELD(&local_data, set_camera_3);
     return 0;

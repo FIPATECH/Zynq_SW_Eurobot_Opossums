@@ -320,7 +320,7 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             }
 
             // Repropagation depuis l’état corrigé
-            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar, R_camera);
+            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
 
             // Mise à jour de l’état courant
             kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
@@ -346,6 +346,10 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
     position_camera.y = set_camera.camera_position_y;
     position_camera.t = set_camera.camera_position_t;
 
+    float R_diag_dynamic[3]= {set_camera.noise_x * set_camera.noise_x, 
+                                set_camera.noise_y * set_camera.noise_y, 
+                                set_camera.noise_t * set_camera.noise_t};
+
     if(en_kalman && kalman_initialized) {
         // Les caméras n'initialisent pas le kalman, on attend que le lidar l'ait fait
         
@@ -356,14 +360,18 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         kalman_fifo.observations[delay_index].z_camera[camera_id][0] = position_camera.x;
         kalman_fifo.observations[delay_index].z_camera[camera_id][1] = position_camera.y;
         kalman_fifo.observations[delay_index].z_camera[camera_id][2] = position_camera.t;
+
+        kalman_fifo.observations[delay_index].r_camera[camera_id][0] = R_diag_dynamic[0];
+        kalman_fifo.observations[delay_index].r_camera[camera_id][1] = R_diag_dynamic[1];
+        kalman_fifo.observations[delay_index].r_camera[camera_id][2] = R_diag_dynamic[2];
         
         float z[3] = {position_camera.x, position_camera.y, position_camera.t};
         
         // On met à jour avec le bruit spécifique aux caméras
-        kalman_update(&kalman_fifo.buffer[delay_index], z, R_camera, 0);
+        kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag_dynamic, 0);
 
         // Repropagation
-        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar, R_camera);
+        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
         kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
     }
 }

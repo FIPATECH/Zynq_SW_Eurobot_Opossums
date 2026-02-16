@@ -97,6 +97,9 @@ typedef struct {
     float camera_position_y; // position of the robot according to the camera
     float camera_position_t; // position of the robot according to the camera
     int delay; // calculation delay in ms 
+    float noise_x; // estimation of the noise on the x measurement (standard deviation in m)
+    float noise_y; // estimation of the noise on the y measurement (standard deviation in m)
+    float noise_t; // estimation of the noise on the theta measurement (standard deviation in rad)
 } Set_camera;
 
 #endif
