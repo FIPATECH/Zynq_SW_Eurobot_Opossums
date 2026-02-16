@@ -84,8 +84,10 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     state->P[5][0] = state->P[0][5]; state->P[5][1] = state->P[1][5]; state->P[5][2] = state->P[2][5]; state->P[5][3] = state->P[3][5]; state->P[5][4] = state->P[4][5];
 }
 
+// Seuil de la loi du Chi-Carré pour 3 degrés de liberté (x, y, theta) à 99% de confiance
+#define CHI2_THRESHOLD_99 11.34f
 
-void kalman_update(KalmanState* state, float z[3], float R_diag[3]) {
+void kalman_update(KalmanState* state, float z[3], float R_diag[3], uint8_t bypass_outlier_rejection) {
     // Vérifs NaN
     for (int i = 0; i < 3; ++i) {
         if (isnan(z[i]) || isnan(state->x[i])) return;
@@ -142,6 +144,17 @@ void kalman_update(KalmanState* state, float z[3], float R_diag[3]) {
     S_inv[2][0] =  (S[1][0]*S[2][1] - S[1][1]*S[2][0]) * invDet;
     S_inv[2][1] = -(S[0][0]*S[2][1] - S[0][1]*S[2][0]) * invDet;
     S_inv[2][2] =  (S[0][0]*S[1][1] - S[0][1]*S[1][0]) * invDet;
+
+
+    // distance de Mahalanobis au carré pour rejection d'outliers
+    float mahalanobis_sq = y0 * (y0*S_inv[0][0] + y1*S_inv[1][0] + y2*S_inv[2][0]) +
+                           y1 * (y0*S_inv[0][1] + y1*S_inv[1][1] + y2*S_inv[2][1]) +
+                           y2 * (y0*S_inv[0][2] + y1*S_inv[1][2] + y2*S_inv[2][2]);
+
+    // Rejection d'outliers basée sur la distance de Mahalanobis : y^T S^-1 y > seuil chi2
+    if (!bypass_outlier_rejection && mahalanobis_sq > CHI2_THRESHOLD_99) {
+        return; // abandonner update
+    }
 
     // Gain K = P * H^T * S_inv
     // H^T = [ I3; 0 ] => K rows 0..5, cols 0..2:

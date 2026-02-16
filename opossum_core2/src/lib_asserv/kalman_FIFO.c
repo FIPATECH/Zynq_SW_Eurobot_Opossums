@@ -93,13 +93,13 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, floa
 
         // 2. CORRECTION : Si une mesure Lidar avait eu lieu à 'next_i', on la réapplique !
         if (fifo->observations[next_i].has_lidar) {
-            kalman_update(next, fifo->observations[next_i].z_lidar, R_lidar);
+            kalman_update(next, fifo->observations[next_i].z_lidar, R_lidar, 0);
         }
 
         // 3. CORRECTION : Si une mesure Caméra avait eu lieu à 'next_i', on la réapplique ! 
         for(int cam_id = 0; cam_id < 3; cam_id++) {
             if (fifo->observations[next_i].has_camera[cam_id]) {
-                kalman_update(next, fifo->observations[next_i].z_camera[cam_id], R_camera);
+                kalman_update(next, fifo->observations[next_i].z_camera[cam_id], R_camera, 0);
             }
         }
 

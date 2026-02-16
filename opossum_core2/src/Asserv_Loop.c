@@ -305,10 +305,12 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             kalman_fifo.observations[delay_index].z_lidar[0] = position_lidar.x;
             kalman_fifo.observations[delay_index].z_lidar[1] = position_lidar.y;
             kalman_fifo.observations[delay_index].z_lidar[2] = position_lidar.t;
+
+            uint8_t bypass_rejection = (Timer_ms1 < 3000);
             
             // Correction de l’état dans la FIFO
             float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
-            kalman_update(&kalman_fifo.buffer[delay_index], z, R_lidar);
+            kalman_update(&kalman_fifo.buffer[delay_index], z, R_lidar, bypass_rejection);
 
             // Repropagation depuis l’état corrigé
             kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar, R_camera);
@@ -351,7 +353,7 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         float z[3] = {position_camera.x, position_camera.y, position_camera.t};
         
         // On met à jour avec le bruit spécifique aux caméras
-        kalman_update(&kalman_fifo.buffer[delay_index], z, R_camera);
+        kalman_update(&kalman_fifo.buffer[delay_index], z, R_camera, 0);
 
         // Repropagation
         kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar, R_camera);
