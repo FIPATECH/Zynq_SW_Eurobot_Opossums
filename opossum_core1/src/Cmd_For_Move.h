@@ -109,7 +109,9 @@ uint8_t Set_Lidar_Cmd(void);
  * 
  * @return uint8_t 
  */
-uint8_t Set_Camera_Cmd(void);
+uint8_t Set_Camera_1_Cmd(void);
+uint8_t Set_Camera_2_Cmd(void);
+uint8_t Set_Camera_3_Cmd(void);
 
 /**
  * @brief Interpreter function for the Set Position X command.

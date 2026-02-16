@@ -343,10 +343,10 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
         if (delay_index < 0) return; 
 
-        kalman_fifo.observations[delay_index].has_camera = 1;
-        kalman_fifo.observations[delay_index].z_camera[0] = position_camera.x;
-        kalman_fifo.observations[delay_index].z_camera[1] = position_camera.y;
-        kalman_fifo.observations[delay_index].z_camera[2] = position_camera.t;
+        kalman_fifo.observations[delay_index].has_camera[camera_id] = 1;
+        kalman_fifo.observations[delay_index].z_camera[camera_id][0] = position_camera.x;
+        kalman_fifo.observations[delay_index].z_camera[camera_id][1] = position_camera.y;
+        kalman_fifo.observations[delay_index].z_camera[camera_id][2] = position_camera.t;
         
         float z[3] = {position_camera.x, position_camera.y, position_camera.t};
         

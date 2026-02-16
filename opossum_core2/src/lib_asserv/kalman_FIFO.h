@@ -9,8 +9,8 @@ typedef struct {
     uint8_t has_lidar;        // Flag : y a-t-il eu un lidar à cet instant ?
     float z_lidar[3];         // La mesure lidar
 
-    uint8_t has_camera;       // Flag : y a-t-il eu une caméra à cet instant ?
-    float z_camera[3];        // La mesure caméra
+    uint8_t has_camera[3];       // Flag : y a-t-il eu une caméra à cet instant ?
+    float z_camera[3][3];        // La mesure caméra
 } Observations;
 
 typedef struct {

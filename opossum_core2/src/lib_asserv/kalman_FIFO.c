@@ -27,10 +27,12 @@ void kalman_fifo_init(KalmanFIFO* fifo) {
         fifo->observations[i].z_lidar[1] = 0.0f;
         fifo->observations[i].z_lidar[2] = 0.0f;
 
-        fifo->observations[i].has_camera = 0;
-        fifo->observations[i].z_camera[0] = 0.0f;   
-        fifo->observations[i].z_camera[1] = 0.0f;
-        fifo->observations[i].z_camera[2] = 0.0f;
+        for (int cam_id = 0; cam_id < 3; cam_id++) {
+            fifo->observations[i].has_camera[cam_id] = 0;
+            fifo->observations[i].z_camera[cam_id][0] = 0.0f;
+            fifo->observations[i].z_camera[cam_id][1] = 0.0f;
+            fifo->observations[i].z_camera[cam_id][2] = 0.0f;
+        }
     }
 }
 
@@ -41,8 +43,11 @@ void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) 
     // Stocke la vitesse du robot à l'emplacement courant
     memcpy(&fifo->speed_robot[fifo->head], speed_robot, sizeof(Speed));
 
-    fifo->observations[fifo->head].has_lidar = 0;
-    fifo->observations[fifo->head].has_camera = 0;
+    fifo->observations[fifo->head].has_lidar = 0; // Par défaut, pas d'observation associée à ce nouvel état
+
+    for(int cam_id = 0; cam_id < 3; cam_id++) {
+        fifo->observations[fifo->head].has_camera[cam_id] = 0; // Par défaut, pas d'observation associée à ce nouvel état
+    }
     
     // Incrémente la tête de la FIFO en la ramenant dans les bornes
     fifo->head = (fifo->head + 1) % KALMAN_FIFO_LEN;
@@ -91,9 +96,11 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, floa
             kalman_update(next, fifo->observations[next_i].z_lidar, R_lidar);
         }
 
-        // 3. CORRECTION : Si une mesure Caméra avait eu lieu à 'next_i', on la réapplique !
-        if (fifo->observations[next_i].has_camera) {
-            kalman_update(next, fifo->observations[next_i].z_camera, R_camera);
+        // 3. CORRECTION : Si une mesure Caméra avait eu lieu à 'next_i', on la réapplique ! 
+        for(int cam_id = 0; cam_id < 3; cam_id++) {
+            if (fifo->observations[next_i].has_camera[cam_id]) {
+                kalman_update(next, fifo->observations[next_i].z_camera[cam_id], R_camera);
+            }
         }
 
         i = next_i;

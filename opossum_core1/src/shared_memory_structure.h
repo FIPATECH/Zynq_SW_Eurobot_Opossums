@@ -35,9 +35,17 @@ typedef struct {
     volatile uint32_t flag_set_lidar_ack;   // CORE1 -> CORE0: 1 new lidar data taken into account, 0 otherwise
     Set_lidar set_lidar;
 
-    volatile uint32_t flag_set_camera_valid; // CORE0 -> CORE1: 1 if camera data is valid, 0 otherwise
-    volatile uint32_t flag_set_camera_ack;   // CORE1 -> CORE0: 1 new camera data taken into account, 0 otherwise
-    Set_camera set_camera;
+    volatile uint32_t flag_set_camera_1_valid; // CORE0 -> CORE1: 1 if camera data is valid, 0 otherwise
+    volatile uint32_t flag_set_camera_1_ack;   // CORE1 -> CORE0: 1 new camera data taken into account, 0 otherwise
+    Set_camera set_camera_1; // camera 1
+
+    volatile uint32_t flag_set_camera_2_valid; // CORE0 -> CORE1: 1 if camera data is valid, 0 otherwise
+    volatile uint32_t flag_set_camera_2_ack;   // CORE1 -> CORE0: 1 new camera data taken into account, 0 otherwise
+    Set_camera set_camera_2; // camera 2
+
+    volatile uint32_t flag_set_camera_3_valid; // CORE0 -> CORE1: 1 if camera data is valid, 0 otherwise
+    volatile uint32_t flag_set_camera_3_ack;   // CORE1 -> CORE0: 1 new camera data taken into account, 0 otherwise
+    Set_camera set_camera_3; // camera 3
 
     volatile uint32_t flag_asserv_mode_valid; // CORE0 -> CORE1: 1 if asserv mode is valid, 0 otherwise
     volatile uint32_t flag_asserv_mode_ack;   // CORE1 -> CORE0: 1 new asserv mode taken into account, 0 otherwise

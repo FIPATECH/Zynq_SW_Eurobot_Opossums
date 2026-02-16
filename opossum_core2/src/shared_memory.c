@@ -25,8 +25,14 @@ void init_shared_memory() {
     shared_mem->flag_set_lidar_valid = 0;
     shared_mem->flag_set_lidar_ack = 0;
 
-    shared_mem->flag_set_camera_valid = 0;
-    shared_mem->flag_set_camera_ack = 0;
+    shared_mem->flag_set_camera_1_valid = 0;
+    shared_mem->flag_set_camera_1_ack = 0;
+
+    shared_mem->flag_set_camera_2_valid = 0;
+    shared_mem->flag_set_camera_2_ack = 0;
+
+    shared_mem->flag_set_camera_3_valid = 0;
+    shared_mem->flag_set_camera_3_ack = 0;
 
     shared_mem->flag_asserv_mode_valid = 0;
     shared_mem->flag_asserv_mode_ack = 0;
@@ -231,8 +237,20 @@ void check_for_cmd_loop(void){
                 check_for_cmd_state++; 
                 break;
             case 12: 
-                if(CHECK_FIELD(&local_data, set_camera)){
-                    Set_Camera_Cmd(local_data.set_camera);                        
+                if(CHECK_FIELD(&local_data, set_camera_1)){
+                    Set_Camera_Cmd(local_data.set_camera_1);                        
+                }
+                check_for_cmd_state++;
+                break;
+            case 13: 
+                if(CHECK_FIELD(&local_data, set_camera_2)){
+                    Set_Camera_Cmd(local_data.set_camera_2);                        
+                }
+                check_for_cmd_state++;
+                break;
+            case 14: 
+                if(CHECK_FIELD(&local_data, set_camera_3)){
+                    Set_Camera_Cmd(local_data.set_camera_3);                        
                 }
                 check_for_cmd_state = 0; //return to the first command for the next loop
                 break;
