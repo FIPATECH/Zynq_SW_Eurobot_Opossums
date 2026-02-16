@@ -40,6 +40,9 @@ void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) 
 
     // Stocke la vitesse du robot à l'emplacement courant
     memcpy(&fifo->speed_robot[fifo->head], speed_robot, sizeof(Speed));
+
+    fifo->observations[fifo->head].has_lidar = 0;
+    fifo->observations[fifo->head].has_camera = 0;
     
     // Incrémente la tête de la FIFO en la ramenant dans les bornes
     fifo->head = (fifo->head + 1) % KALMAN_FIFO_LEN;
