@@ -56,6 +56,12 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt);
  * @param R_diag Diagonale de la matrice de bruit de mesure. 3 éléments : [R_x, R_y, R_theta].
  * @param bypass_outlier_rejection Si à 1, bypass la rejection d’outliers basée sur la distance de Mahalanobis.
  * 
+ * @return Plusieurs returns possibles :
+ *     - 0 : update réussi
+ *     - 1 : erreur de mesure : mahalanobis trop grand (outlier)
+ *     - 2 : erreur d’état (NaN)
+ *     - 3 : matrice S singulière (non inversible)
+ * 
  * @note plusieurs returns possibles :
  *      - 1 : erreur de mesure (NaN)
  *      - 2 : erreur d’état (NaN)
@@ -63,6 +69,6 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt);
  *      - 4 : Clamp de sécurité post update
  *      - 5 : Clamp de sécurité post update
  */
-void kalman_update(KalmanState* state, float z[STATE_SIZE], float R_diag[3], uint8_t bypass_outlier_rejection);
+uint8_t kalman_update(KalmanState* state, float z[STATE_SIZE], float R_diag[3], uint8_t bypass_outlier_rejection);
 
 #endif // __KALMAN_H_

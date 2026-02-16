@@ -261,6 +261,7 @@ void Asserv_Loop(void)
 }
 
 uint8_t count_lidar_cycle = 0;
+uint8_t lidar_consecutive_rejections = 0;
 
 void Set_Lidar_Cmd(Set_lidar set_lidar) {
     #ifdef DEBUG_TIMING
@@ -306,11 +307,17 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             kalman_fifo.observations[delay_index].z_lidar[1] = position_lidar.y;
             kalman_fifo.observations[delay_index].z_lidar[2] = position_lidar.t;
 
-            uint8_t bypass_rejection = (Timer_ms1 < 3000);
+            uint8_t bypass_rejection = (lidar_consecutive_rejections > 10); // si plus de 10 rejets consécutifs, on considère que le lidar est devenu fiable et on bypass la rejection d'outliers
             
             // Correction de l’état dans la FIFO
             float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
-            kalman_update(&kalman_fifo.buffer[delay_index], z, R_lidar, bypass_rejection);
+            uint8_t accepted = kalman_update(&kalman_fifo.buffer[delay_index], z, R_lidar, bypass_rejection);
+
+            if(accepted == 1) {
+                lidar_consecutive_rejections++;
+            } else {
+                lidar_consecutive_rejections = 0;
+            }
 
             // Repropagation depuis l’état corrigé
             kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar, R_camera);
