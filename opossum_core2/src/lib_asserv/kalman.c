@@ -14,9 +14,9 @@ float Q[STATE_SIZE][STATE_SIZE] = {
     {0, 0, 0, 0, 0, PROCESS_NOISE_ODOM_VTHETA * PROCESS_NOISE_ODOM_VTHETA}
 };
 
-float R_diag[3] = {PROCESS_NOISE_LIDAR_X * PROCESS_NOISE_LIDAR_X,
-                    PROCESS_NOISE_LIDAR_Y * PROCESS_NOISE_LIDAR_Y, 
-                    PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA}; // Bruit de mesure lidar
+// float R_diag[3] = {PROCESS_NOISE_LIDAR_X * PROCESS_NOISE_LIDAR_X,
+//                     PROCESS_NOISE_LIDAR_Y * PROCESS_NOISE_LIDAR_Y, 
+//                     PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA}; // Bruit de mesure lidar
 
 
 void kalman_init(KalmanState* state) {
@@ -85,7 +85,7 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
 }
 
 
-void kalman_update(KalmanState* state, float z[3]) {
+void kalman_update(KalmanState* state, float z[3], float R_diag[3]) {
     // Vérifs NaN
     for (int i = 0; i < 3; ++i) {
         if (isnan(z[i]) || isnan(state->x[i])) return;

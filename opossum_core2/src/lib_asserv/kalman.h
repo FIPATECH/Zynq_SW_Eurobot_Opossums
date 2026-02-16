@@ -18,6 +18,10 @@
 #define PROCESS_NOISE_LIDAR_Y 2.0f
 #define PROCESS_NOISE_LIDAR_THETA 1.5f
 
+#define PROCESS_NOISE_CAMERA_X 5.0f
+#define PROCESS_NOISE_CAMERA_Y 5.0f
+#define PROCESS_NOISE_CAMERA_THETA 2.5f
+
 #define S_INV_EPS 1e-6f
 
 
@@ -49,6 +53,7 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt);
  * 
  * @param state L’état à corriger (potentiellement un état passé issu du FIFO).
  * @param z Mesure du LiDAR : position et angle absolus.
+ * @param R_diag Diagonale de la matrice de bruit de mesure. 3 éléments : [R_x, R_y, R_theta].
  * 
  * @note plusieurs returns possibles :
  *      - 1 : erreur de mesure (NaN)
@@ -57,6 +62,6 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt);
  *      - 4 : Clamp de sécurité post update
  *      - 5 : Clamp de sécurité post update
  */
-void kalman_update(KalmanState* state, float z[STATE_SIZE]);
+void kalman_update(KalmanState* state, float z[STATE_SIZE], float R_diag[3]);
 
 #endif // __KALMAN_H_

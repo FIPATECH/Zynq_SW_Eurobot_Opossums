@@ -103,6 +103,15 @@ uint8_t SET0_Cmd(void);
 uint8_t Set_Lidar_Cmd(void);
 
 /**
+ * @brief Interpreter function for the Set Camera command.
+ * 
+ * @note This function takes 3 parameters: camera_position_x, camera_position_y, camera_position_t, and a delay.
+ * 
+ * @return uint8_t 
+ */
+uint8_t Set_Camera_Cmd(void);
+
+/**
  * @brief Interpreter function for the Set Position X command.
  * 
  * @return uint8_t 

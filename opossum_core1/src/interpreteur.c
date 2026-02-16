@@ -19,6 +19,7 @@ const Command Command_List[] = {
 
     // Asserv print
     { "SETLIDAR", Set_Lidar_Cmd},
+    { "SETCAMERA", Set_Camera_Cmd},
     { "ENKALMAN", Enable_Kalman_Cmd},
 
     #ifdef FEETECH

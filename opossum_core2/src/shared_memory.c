@@ -25,6 +25,9 @@ void init_shared_memory() {
     shared_mem->flag_set_lidar_valid = 0;
     shared_mem->flag_set_lidar_ack = 0;
 
+    shared_mem->flag_set_camera_valid = 0;
+    shared_mem->flag_set_camera_ack = 0;
+
     shared_mem->flag_asserv_mode_valid = 0;
     shared_mem->flag_asserv_mode_ack = 0;
 
@@ -225,7 +228,13 @@ void check_for_cmd_loop(void){
                 if(CHECK_FIELD(&local_data, odo_spacing)){
                     odo_set_spacing(local_data.odo_spacing);
                 }
-                check_for_cmd_state = 0; // Reset to start over
+                check_for_cmd_state++; 
+                break;
+            case 12: 
+                if(CHECK_FIELD(&local_data, set_camera)){
+                    Set_Camera_Cmd(local_data.set_camera);                        
+                }
+                check_for_cmd_state = 0; //return to the first command for the next loop
                 break;
         }
     }

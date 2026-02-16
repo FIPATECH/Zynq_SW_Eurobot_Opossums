@@ -92,4 +92,11 @@ typedef struct {
     int delay; // calculation delay in ms 
 } Set_lidar;
 
+typedef struct {
+    float camera_position_x; // position of the robot according to the camera
+    float camera_position_y; // position of the robot according to the camera
+    float camera_position_t; // position of the robot according to the camera
+    int delay; // calculation delay in ms 
+} Set_camera;
+
 #endif

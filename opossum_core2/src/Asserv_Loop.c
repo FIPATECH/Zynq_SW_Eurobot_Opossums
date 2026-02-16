@@ -52,6 +52,15 @@ int tampon;
 int tampon3;
 int tampon4 = 0;
 
+// Définition des profils de bruit
+float R_lidar[3]  = {PROCESS_NOISE_LIDAR_X * PROCESS_NOISE_LIDAR_X,
+                     PROCESS_NOISE_LIDAR_Y * PROCESS_NOISE_LIDAR_Y, 
+                     PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA};
+
+float R_camera[3] = {PROCESS_NOISE_CAMERA_X * PROCESS_NOISE_CAMERA_X,
+                     PROCESS_NOISE_CAMERA_Y * PROCESS_NOISE_CAMERA_Y, 
+                     PROCESS_NOISE_CAMERA_THETA * PROCESS_NOISE_CAMERA_THETA};
+
 void Init_Asserv(void) {
     Consigne.command1 = 0;
     Consigne.command2 = 0;
@@ -294,7 +303,7 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             
             // Correction de l’état dans la FIFO
             float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};
-            kalman_update(&kalman_fifo.buffer[delay_index], z);
+            kalman_update(&kalman_fifo.buffer[delay_index], z, R_lidar);
 
             // Repropagation depuis l’état corrigé
             kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
@@ -308,3 +317,34 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
     #endif
 }
 
+void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
+    
+    if(AU_state) return; 
+
+    if(set_camera.delay < 0 || set_camera.delay > 200) {
+        // Optionnel : afficher quelle caméra pose problème
+        // printf("ERROR: Camera %d delay out of range\n", camera_id);
+        return; 
+    }
+
+    Position position_camera;
+    position_camera.x = set_camera.camera_position_x;
+    position_camera.y = set_camera.camera_position_y;
+    position_camera.t = set_camera.camera_position_t;
+
+    if(en_kalman && kalman_initialized) {
+        // Les caméras n'initialisent pas le kalman, on attend que le lidar l'ait fait
+        
+        int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
+        if (delay_index < 0) return; 
+        
+        float z[3] = {position_camera.x, position_camera.y, position_camera.t};
+        
+        // On met à jour avec le bruit spécifique aux caméras
+        kalman_update(&kalman_fifo.buffer[delay_index], z, R_camera);
+
+        // Repropagation
+        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f);
+        kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
+    }
+}
