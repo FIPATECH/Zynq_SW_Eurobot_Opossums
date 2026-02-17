@@ -27,5 +27,8 @@ void Init_Asserv(void);
 void Asserv_Loop(void);
 
 void Set_Lidar_Cmd(Set_lidar set_lidar);
+void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id);
+
+void Apply_Deadzone_Compensation(ESC_Command* cmd);
 
 #endif // __ASSERV_MASTER_H

@@ -215,6 +215,8 @@ void Asserv_Loop(void)
             (Wanted_Forced_Consigne.command4 != 0)) {
 
             Consigne = Wanted_Forced_Consigne;
+        } else {
+            Apply_Deadzone_Compensation(&Consigne);
         }
         
         float Abs_Consigne1 = Abs_Ternaire(Consigne.command1);
@@ -374,4 +376,26 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
         kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
     }
+}
+
+#define PWM_MIN_ACTIF 15 // seuil pour lequel on considère que la consigne est active (en dessous, on la met à 0 pour éviter de rester dans la zone morte du moteur)
+#define PWM_DEADZONE 200 // compensation à ajouter à la consigne pour compenser la zone morte du moteur (valeur à ajuster en fonction du moteur et de la batterie, à tester empiriquement)
+
+
+void Apply_Deadzone_Compensation(ESC_Command* cmd) {
+    if (cmd->command1 > PWM_MIN_ACTIF)      cmd->command1 += PWM_DEADZONE;
+    else if (cmd->command1 < -PWM_MIN_ACTIF) cmd->command1 -= PWM_DEADZONE;
+    else                                     cmd->command1 = 0;
+
+    if (cmd->command2 > PWM_MIN_ACTIF)      cmd->command2 += PWM_DEADZONE;
+    else if (cmd->command2 < -PWM_MIN_ACTIF) cmd->command2 -= PWM_DEADZONE;
+    else                                     cmd->command2 = 0;
+
+    if (cmd->command3 > PWM_MIN_ACTIF)      cmd->command3 += PWM_DEADZONE;
+    else if (cmd->command3 < -PWM_MIN_ACTIF) cmd->command3 -= PWM_DEADZONE;
+    else                                     cmd->command3 = 0;
+
+    if (cmd->command4 > PWM_MIN_ACTIF)      cmd->command4 += PWM_DEADZONE;
+    else if (cmd->command4 < -PWM_MIN_ACTIF) cmd->command4 -= PWM_DEADZONE;
+    else                                     cmd->command4 = 0;
 }
