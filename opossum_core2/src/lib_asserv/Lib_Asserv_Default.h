@@ -15,10 +15,10 @@
 /*############################################################################*/
 #define MAX_PHYSICAL_WHEEL_SPEED 1.5f
 #define DEFAULT_CONSTRAINT_V_MAX 1.5
-#define DEFAULT_CONSTRAINT_VT_MAX 5.0
+#define DEFAULT_CONSTRAINT_VT_MAX 3.0
 
 #define DEFAULT_CONSTRAINT_A_MAX 1.5
-#define DEFAULT_CONSTRAINT_AT_MAX 3.0
+#define DEFAULT_CONSTRAINT_AT_MAX 2.0
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 

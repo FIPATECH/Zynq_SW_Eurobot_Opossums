@@ -216,7 +216,7 @@ void Asserv_Loop(void)
 
             Consigne = Wanted_Forced_Consigne;
         } else {
-            Apply_Deadzone_Compensation(&Consigne);
+            // Apply_Deadzone_Compensation(&Consigne);
         }
         
         float Abs_Consigne1 = Abs_Ternaire(Consigne.command1);
@@ -286,7 +286,7 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
     Position position_lidar;
     position_lidar.x = set_lidar.lidar_position_x;
     position_lidar.y = set_lidar.lidar_position_y;
-    position_lidar.t = set_lidar.lidar_position_t;
+    position_lidar.t = set_lidar.lidar_position_t + 0.06;
 
     if(en_kalman) {
         if(!kalman_initialized){
@@ -379,7 +379,7 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
 }
 
 #define PWM_MIN_ACTIF 15 // seuil pour lequel on considère que la consigne est active (en dessous, on la met à 0 pour éviter de rester dans la zone morte du moteur)
-#define PWM_DEADZONE 200 // compensation à ajouter à la consigne pour compenser la zone morte du moteur (valeur à ajuster en fonction du moteur et de la batterie, à tester empiriquement)
+#define PWM_DEADZONE 300 // compensation à ajouter à la consigne pour compenser la zone morte du moteur (valeur à ajuster en fonction du moteur et de la batterie, à tester empiriquement)
 
 
 void Apply_Deadzone_Compensation(ESC_Command* cmd) {
