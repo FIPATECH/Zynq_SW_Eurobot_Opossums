@@ -322,7 +322,8 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             }
 
             // Repropagation depuis l’état corrigé
-            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
+            float Q_null[3] = {0.0f, 0.0f, 0.0f};
+            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, Q_null);
 
             // Mise à jour de l’état courant
             kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
@@ -373,13 +374,14 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag_dynamic, 0);
 
         // Repropagation
-        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
+        float Q_null[3] = {0.0f, 0.0f, 0.0f};
+        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, Q_null);
         kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
     }
 }
 
-#define PWM_MIN_ACTIF 15 // seuil pour lequel on considère que la consigne est active (en dessous, on la met à 0 pour éviter de rester dans la zone morte du moteur)
-#define PWM_DEADZONE 300 // compensation à ajouter à la consigne pour compenser la zone morte du moteur (valeur à ajuster en fonction du moteur et de la batterie, à tester empiriquement)
+#define PWM_MIN_ACTIF 30 // seuil pour lequel on considère que la consigne est active (en dessous, on la met à 0 pour éviter de rester dans la zone morte du moteur)
+#define PWM_DEADZONE 200 // compensation à ajouter à la consigne pour compenser la zone morte du moteur (valeur à ajuster en fonction du moteur et de la batterie, à tester empiriquement)
 
 
 void Apply_Deadzone_Compensation(ESC_Command* cmd) {
