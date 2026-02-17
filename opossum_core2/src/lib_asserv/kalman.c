@@ -18,11 +18,6 @@ void kalman_init(KalmanState* state) {
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     // 1. --- State Prediction (Algebraic integration) ---
-    // float theta = principal_angle(state->x[2]);
-    // methode euler simple, suffisant pour 10ms de dt et des vitesses modérées, et plus rapide que les méthodes plus complexes (runge-kutta, etc)
-    // float cos_t = cosf(theta);
-    // float sin_t = sinf(theta);
-
     // methode runge-kutta 2 pour une meilleure précision sur l'angle, qui est critique pour la prédiction de la position
     float angle_mid = principal_angle(state->x[2] + speed->vt * dt * 0.5f);
     float cos_t = cosf(angle_mid);
