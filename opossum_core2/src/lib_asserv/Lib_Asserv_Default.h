@@ -17,8 +17,8 @@
 #define DEFAULT_CONSTRAINT_V_MAX 1.5f
 #define DEFAULT_CONSTRAINT_VT_MAX 3.0f
 
-#define DEFAULT_CONSTRAINT_A_MAX 1.0f
-#define DEFAULT_CONSTRAINT_AT_MAX 1.5f
+#define DEFAULT_CONSTRAINT_A_MAX 1.5f
+#define DEFAULT_CONSTRAINT_AT_MAX 3.0f
 
 #define ASSERV_BLOCK_TIME_LIMIT 1   // 1s "blocké" avant de tout couper
 
@@ -29,8 +29,8 @@
 #define DEFAULT_STOP_DISTANCE 0.005 // +-5mm
 #define DEFAULT_STOP_ANGLE 0.01745// +-1deg  // en radian
 
-#define DEFAULT_SPEED_LIN_STOP 0.05 // 5cm/s
-#define DEFAULT_SPEED_ROT_STOP 0.05 // 5rad/s
+#define DEFAULT_SPEED_LIN_STOP 0.02 // 5cm/s
+#define DEFAULT_SPEED_ROT_STOP 0.02 // 5rad/s
 
 /*############################################################################*/
 /*                                   PID                                      */
