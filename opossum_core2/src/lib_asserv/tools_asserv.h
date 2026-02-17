@@ -1,6 +1,9 @@
 #ifndef __TOOLS_ASSERV_H_
 #define __TOOLS_ASSERV_H_
 
+#define MAX_DEUX(a, b)         (((a) > (b)) ? (a) : (b))
+#define Max_Quatre(a, b, c, d) MAX_DEUX(MAX_DEUX(a, b), MAX_DEUX(c, d))
+
 // constante pi
 #define PI 3.14159265359
 #define TWO_PI 6.28318530718

@@ -13,6 +13,7 @@
 /*############################################################################*/
 /*                                  Motion                                    */
 /*############################################################################*/
+#define MAX_PHYSICAL_WHEEL_SPEED 1.5f
 #define DEFAULT_CONSTRAINT_V_MAX 1.5
 #define DEFAULT_CONSTRAINT_VT_MAX 5.0
 
