@@ -10,6 +10,19 @@
 #define PROCESS_NOISE_ODOM_Y 0.02f
 #define PROCESS_NOISE_ODOM_THETA 0.03f
 
+// 1. Bruit de base (Robot à l'arrêt absolu)
+// Valeurs infimes, juste pour éviter que la matrice P ne devienne numériquement nulle
+#define PROCESS_NOISE_ODOM_BASE_X      0.0001f // m par pas de temps
+#define PROCESS_NOISE_ODOM_BASE_Y      0.0001f
+#define PROCESS_NOISE_ODOM_BASE_THETA  0.0001f // rad par pas de temps
+
+// 2. Facteur de patinage (Robot en mouvement)
+// Représente le pourcentage d'erreur généré par la vitesse.
+// Ex: 0.05f signifie que 5% de la vitesse se transforme en incertitude de position.
+#define PROCESS_NOISE_ODOM_VEL_X       0.05f   
+#define PROCESS_NOISE_ODOM_VEL_Y       0.05f
+#define PROCESS_NOISE_ODOM_VEL_THETA   0.05f
+
 #define PROCESS_NOISE_ODOM_VX 0.02f
 #define PROCESS_NOISE_ODOM_VY 0.02f
 #define PROCESS_NOISE_ODOM_VTHETA 0.05f

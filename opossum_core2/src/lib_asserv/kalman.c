@@ -4,18 +4,6 @@
 
 KalmanState kalman_current_state;
 
-// Bruit de processus Q (tunable) pour l'odométrie
-float Q[STATE_SIZE][STATE_SIZE] = {
-    {PROCESS_NOISE_ODOM_X * PROCESS_NOISE_ODOM_X, 0, 0, 0, 0, 0},
-    {0, PROCESS_NOISE_ODOM_Y * PROCESS_NOISE_ODOM_Y, 0, 0, 0, 0},
-    {0, 0, PROCESS_NOISE_ODOM_THETA * PROCESS_NOISE_ODOM_THETA, 0, 0, 0},
-    {0, 0, 0, PROCESS_NOISE_ODOM_VX * PROCESS_NOISE_ODOM_VX, 0, 0},
-    {0, 0, 0, 0, PROCESS_NOISE_ODOM_VY * PROCESS_NOISE_ODOM_VY, 0},
-    {0, 0, 0, 0, 0, PROCESS_NOISE_ODOM_VTHETA * PROCESS_NOISE_ODOM_VTHETA}
-};
-
-
-
 void kalman_init(KalmanState* state) {
     memset(state->x, 0, sizeof(state->x));
     memset(state->P, 0, sizeof(state->P));
@@ -29,7 +17,7 @@ void kalman_init(KalmanState* state) {
 }
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
-    // 1. State Prediction (Algebraic integration)
+    // 1. --- State Prediction (Algebraic integration) ---
     float theta = principal_angle(state->x[2]);
     float cos_t = cosf(theta);
     float sin_t = sinf(theta);
@@ -45,18 +33,36 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     state->x[4] = v_dy;
     state->x[5] = v_ang;
 
-    // 2. Covariance Prediction: P = F*P*F' + Q
+    // 2. --- Calcul Dynamique de la Matrice Q (Bruit de Processus) ---
+    // On calcule l'écart-type (std) dynamique en fonction du patinage (vitesse absolue)
+    float abs_vx = fabsf(speed->vx);
+    float abs_vy = fabsf(speed->vy);
+    float abs_vt = fabsf(speed->vt);
+
+    float q_std_x = PROCESS_NOISE_ODOM_BASE_X + (PROCESS_NOISE_ODOM_VEL_X * abs_vx);
+    float q_std_y = PROCESS_NOISE_ODOM_BASE_Y + (PROCESS_NOISE_ODOM_VEL_Y * abs_vy);
+    float q_std_t = PROCESS_NOISE_ODOM_BASE_THETA + (PROCESS_NOISE_ODOM_VEL_THETA * abs_vt);
+
+    // On élève au carré pour obtenir les variances (la diagonale de Q)
+    float q_var_x = q_std_x * q_std_x;
+    float q_var_y = q_std_y * q_std_y;
+    float q_var_t = q_std_t * q_std_t;
+
+    // Variances pour les vitesses (considérées statiques ici, mais modifiables)
+    float q_var_vx = PROCESS_NOISE_ODOM_VX * PROCESS_NOISE_ODOM_VX;
+    float q_var_vy = PROCESS_NOISE_ODOM_VY * PROCESS_NOISE_ODOM_VY;
+    float q_var_vt = PROCESS_NOISE_ODOM_VTHETA * PROCESS_NOISE_ODOM_VTHETA;
+
+
+    // 3. --- Covariance Prediction: P = F*P*F' + Q ---
     // Since F is [I, dt*I; 0, I], we compute only the upper triangle 
     // and mirror it, saving roughly 50% of the math.
     float dt2 = dt * dt;
 
-    // Temporary capture of necessary P values to avoid "polluting" calculations mid-way
-    // Focusing on the Position block (0,1,2) and Velocity block (3,4,5)
-    
-    // Diagonal Elements
-    state->P[0][0] += dt * (state->P[0][3] + state->P[3][0]) + dt2 * state->P[3][3] + Q[0][0];
-    state->P[1][1] += dt * (state->P[1][4] + state->P[4][1]) + dt2 * state->P[4][4] + Q[1][1];
-    state->P[2][2] += dt * (state->P[2][5] + state->P[5][2]) + dt2 * state->P[5][5] + Q[2][2];
+    // Diagonal Elements (On ajoute notre bruit dynamique q_var)
+    state->P[0][0] += dt * (state->P[0][3] + state->P[3][0]) + dt2 * state->P[3][3] + q_var_x;
+    state->P[1][1] += dt * (state->P[1][4] + state->P[4][1]) + dt2 * state->P[4][4] + q_var_y;
+    state->P[2][2] += dt * (state->P[2][5] + state->P[5][2]) + dt2 * state->P[5][5] + q_var_t;
 
     // Off-diagonal Position/Position
     state->P[0][1] += dt * (state->P[0][4] + state->P[3][1]) + dt2 * state->P[3][4];
@@ -68,10 +74,10 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     state->P[1][3] += dt * state->P[4][3]; state->P[1][4] += dt * state->P[4][4]; state->P[1][5] += dt * state->P[4][5];
     state->P[2][3] += dt * state->P[5][3]; state->P[2][4] += dt * state->P[5][4]; state->P[2][5] += dt * state->P[5][5];
 
-    // Velocity block (Bottom-Right 3x3) - Only add Q
-    state->P[3][3] += Q[3][3]; state->P[3][4] += Q[3][4]; state->P[3][5] += Q[3][5];
-    state->P[4][4] += Q[4][4]; state->P[4][5] += Q[4][5];
-    state->P[5][5] += Q[5][5];
+    // Velocity block (Bottom-Right 3x3) - Only add Q on diagonals
+    state->P[3][3] += q_var_vx; 
+    state->P[4][4] += q_var_vy; 
+    state->P[5][5] += q_var_vt; 
 
     // Mirror to Lower Triangle (Ensure perfect symmetry)
     state->P[1][0] = state->P[0][1];
