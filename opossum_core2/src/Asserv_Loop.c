@@ -286,7 +286,7 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
     Position position_lidar;
     position_lidar.x = set_lidar.lidar_position_x;
     position_lidar.y = set_lidar.lidar_position_y;
-    position_lidar.t = set_lidar.lidar_position_t + 0.06;
+    position_lidar.t = set_lidar.lidar_position_t + 0.08f;
 
     if(en_kalman) {
         if(!kalman_initialized){
