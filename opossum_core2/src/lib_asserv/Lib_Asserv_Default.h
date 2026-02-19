@@ -29,8 +29,8 @@
 #define DEFAULT_STOP_DISTANCE 0.005 // +-5mm
 #define DEFAULT_STOP_ANGLE 0.01745// +-1deg  // en radian
 
-#define DEFAULT_SPEED_LIN_STOP 0.02 // 5cm/s
-#define DEFAULT_SPEED_ROT_STOP 0.02 // 5rad/s
+#define DEFAULT_SPEED_LIN_STOP 0.05 // 5cm/s
+#define DEFAULT_SPEED_ROT_STOP 0.05 // 5rad/s
 
 /*############################################################################*/
 /*                                   PID                                      */
