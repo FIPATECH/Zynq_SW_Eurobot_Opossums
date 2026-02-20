@@ -233,8 +233,8 @@ uint8_t PWM_Func(void)
 }
 
 uint8_t Enable_Kalman_Cmd(void) {
-    if (Get_Param_u32(&local_data.enable_kalman))         return PARAM_ERROR_CODE;
-    
+    if (Get_Param_u32(&local_data.enable_kalman.enable_lidar_kalman))         return PARAM_ERROR_CODE;
+    if (Get_Param_u32(&local_data.enable_kalman.enable_camera_kalman))         return PARAM_ERROR_CODE;
     // ecriture dans la mémoire partagée
     SEND_FIELD(&local_data, enable_kalman);
     return 0;

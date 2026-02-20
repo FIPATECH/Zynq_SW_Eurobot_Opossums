@@ -226,7 +226,7 @@ void check_for_cmd_loop(void){
                 break;
             case 10: 
                 if(CHECK_FIELD(&local_data, enable_kalman)){
-                    en_kalman = local_data.enable_kalman;
+                    Set_Kalman_Enable_Cmd(local_data.enable_kalman);                        
                 }
                 check_for_cmd_state++;
                 break;

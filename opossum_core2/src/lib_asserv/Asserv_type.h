@@ -72,7 +72,6 @@ extern ESC_Command Wanted_Forced_Consigne;
 extern ESC_Command old_Consigne;
 
 
-
 typedef struct {
     int odo_step_1; // step 1: calcul de la vitesse du robot
     int odo_step_2; // step 2: calcul du kalman + history
@@ -108,4 +107,9 @@ typedef struct {
     float process_noise_lidar_t; // estimation of the process noise on the theta measurement from
 } Set_lidar_noise;
 
+
+typedef struct {
+    int enable_lidar_kalman; // 1 to take into account the lidar measurements in the kalman, 0 to ignore them
+    int enable_camera_kalman; // 1 to take into account the camera measurements in the kalman, 0 to ignore them
+} Enable_Kalman;
 #endif
