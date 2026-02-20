@@ -103,6 +103,10 @@ typedef struct {
     volatile uint32_t flag_asserv_step_timing_ack;   // CORE0 -> CORE1: 1 new timing taken into account, 0 otherwise
     Asserv_Step_Timing asserv_step_timing; // timing of the asserv steps 
 
+    volatile uint32_t flag_kalman_noise_lidar_valid; // CORE0 -> CORE1: 1 if kalman noise lidar is valid, 0 otherwise
+    volatile uint32_t flag_kalman_noise_lidar_ack;   // CORE1 -> CORE0: 1 new kalman noise lidar taken into account, 0 otherwise
+    Set_lidar_noise kalman_noise_lidar; // estimation of the process noise on the lidar measurement for the kalman filter (standard deviation in m for x and y, in rad for theta)
+
 } sharedCommand;
 
 #endif // SHARED_MEMORY_STRUCTURE_H

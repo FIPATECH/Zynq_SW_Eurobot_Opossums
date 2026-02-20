@@ -53,9 +53,7 @@ int tampon3;
 int tampon4 = 0;
 
 // Définition des profils de bruit
-float R_lidar[3]  = {PROCESS_NOISE_LIDAR_X * PROCESS_NOISE_LIDAR_X,
-                     PROCESS_NOISE_LIDAR_Y * PROCESS_NOISE_LIDAR_Y, 
-                     PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA};
+float R_lidar[3];
 
 float R_camera[3] = {PROCESS_NOISE_CAMERA_X * PROCESS_NOISE_CAMERA_X,
                      PROCESS_NOISE_CAMERA_Y * PROCESS_NOISE_CAMERA_Y, 
@@ -76,6 +74,10 @@ void Init_Asserv(void) {
     old_Consigne.command2 = 0;
     old_Consigne.command3 = 0;
     old_Consigne.command4 = 0;
+
+    R_lidar[0]  = PROCESS_NOISE_LIDAR_X * PROCESS_NOISE_LIDAR_X;
+    R_lidar[1]  = PROCESS_NOISE_LIDAR_Y * PROCESS_NOISE_LIDAR_Y;
+    R_lidar[2]  = PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA;
 
     en_kalman = 1;
 
@@ -400,4 +402,10 @@ void Apply_Deadzone_Compensation(ESC_Command* cmd) {
     if (cmd->command4 > PWM_MIN_ACTIF)      cmd->command4 += PWM_DEADZONE;
     else if (cmd->command4 < -PWM_MIN_ACTIF) cmd->command4 -= PWM_DEADZONE;
     else                                     cmd->command4 = 0;
+}
+
+void Set_Lidar_Noise_Cmd(Set_lidar_noise kalman_noise_lidar) {
+    R_lidar[0]  = kalman_noise_lidar.process_noise_lidar_x * kalman_noise_lidar.process_noise_lidar_x;
+    R_lidar[1]  = kalman_noise_lidar.process_noise_lidar_y * kalman_noise_lidar.process_noise_lidar_y;
+    R_lidar[2]  = kalman_noise_lidar.process_noise_lidar_t * kalman_noise_lidar.process_noise_lidar_t;
 }

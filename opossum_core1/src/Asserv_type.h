@@ -81,4 +81,10 @@ typedef struct {
     float noise_t; // estimation of the noise on the theta measurement (standard deviation in rad)
 } Set_camera;
 
+typedef struct {
+    float process_noise_lidar_x; // estimation of the process noise on the x measurement from the lidar (standard deviation in m)
+    float process_noise_lidar_y; // estimation of the process noise on the y measurement from the lidar (standard deviation in m)
+    float process_noise_lidar_t; // estimation of the process noise on the theta measurement from
+} Set_lidar_noise;
+
 #endif

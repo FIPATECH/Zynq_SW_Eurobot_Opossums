@@ -23,6 +23,7 @@ const Command Command_List[] = {
     { "SETCAMERA2", Set_Camera_2_Cmd},
     { "SETCAMERA3", Set_Camera_3_Cmd},
     { "ENKALMAN", Enable_Kalman_Cmd},
+    { "LIDARNOISE", Set_Lidar_Noise_Cmd},
 
     #ifdef FEETECH
         { "STSSEND", Send_FEETECH_Cmd},

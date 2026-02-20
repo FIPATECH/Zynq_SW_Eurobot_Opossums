@@ -252,6 +252,12 @@ void check_for_cmd_loop(void){
                 if(CHECK_FIELD(&local_data, set_camera_3)){
                     Set_Camera_Cmd(local_data.set_camera_3, 3);                        
                 }
+                check_for_cmd_state++;
+                break;
+            case 15: 
+                if(CHECK_FIELD(&local_data, kalman_noise_lidar)){
+                    Set_Lidar_Noise_Cmd(local_data.kalman_noise_lidar);                        
+                }
                 check_for_cmd_state = 0; //return to the first command for the next loop
                 break;
         }

@@ -102,6 +102,16 @@ uint8_t SET0_Cmd(void);
  */
 uint8_t Set_Lidar_Cmd(void);
 
+
+/**
+ * @brief Interpreter function for the Set Lidar Noise command.
+ * 
+ * @note This function takes 3 parameters: process_noise_lidar_x, process_noise_lidar_y, process_noise_lidar_t.
+ * 
+ * @return uint8_t 
+ */
+uint8_t Set_Lidar_Noise_Cmd(void);
+
 /**
  * @brief Interpreter function for the Set Camera command.
  * 
