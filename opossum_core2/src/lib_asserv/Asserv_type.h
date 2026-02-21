@@ -112,4 +112,6 @@ typedef struct {
     int enable_lidar_kalman; // 1 to take into account the lidar measurements in the kalman, 0 to ignore them
     int enable_camera_kalman; // 1 to take into account the camera measurements in the kalman, 0 to ignore them
 } Enable_Kalman;
+
+extern Enable_Kalman en_kalman;
 #endif

@@ -39,10 +39,9 @@ ESC_Command Consigne;
 ESC_Command Wanted_Forced_Consigne;
 ESC_Command old_Consigne;
 
-int Lidar_inconsistency_count = 0;
+Enable_Kalman en_kalman;
 
-int en_kalman_lidar = 1;
-int en_kalman_camera = 1;
+int Lidar_inconsistency_count = 0;
 
 int kalman_initialized = 0;
 
@@ -81,8 +80,8 @@ void Init_Asserv(void) {
     R_lidar[1]  = PROCESS_NOISE_LIDAR_Y * PROCESS_NOISE_LIDAR_Y;
     R_lidar[2]  = PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA;
 
-    en_kalman_lidar = 1;
-    en_kalman_camera = 1;
+    en_kalman.enable_lidar_kalman = 1;
+    en_kalman.enable_camera_kalman = 1;
 
     asserv_init();
 }
@@ -293,7 +292,7 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
     position_lidar.y = set_lidar.lidar_position_y;
     position_lidar.t = set_lidar.lidar_position_t + 0.08f;
 
-    if(en_kalman_lidar) {
+    if(en_kalman.enable_lidar_kalman) {
         if(!kalman_initialized){
             if(count_lidar_cycle < 10) { // attendre quelques cycles pour laisser le temps au kalman de se stabiliser avant d'initialiser avec le lidar
                 count_lidar_cycle++;
@@ -358,7 +357,7 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
                                 set_camera.noise_y * set_camera.noise_y, 
                                 set_camera.noise_t * set_camera.noise_t};
 
-    if(en_kalman_camera && kalman_initialized) {
+    if(en_kalman.enable_camera_kalman && kalman_initialized) {
         // Les caméras n'initialisent pas le kalman, on attend que le lidar l'ait fait
         
         int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
@@ -414,6 +413,6 @@ void Set_Lidar_Noise_Cmd(Set_lidar_noise kalman_noise_lidar) {
 }
 
 void Set_Kalman_Enable_Cmd(Enable_Kalman enable_kalman) {
-    en_kalman_lidar = enable_kalman.enable_lidar_kalman;
-    en_kalman_camera = enable_kalman.enable_camera_kalman;
+    en_kalman.enable_lidar_kalman = enable_kalman.enable_lidar_kalman;
+    en_kalman.enable_camera_kalman = enable_kalman.enable_camera_kalman;
 }
