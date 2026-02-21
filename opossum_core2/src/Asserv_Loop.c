@@ -221,7 +221,7 @@ void Asserv_Loop(void)
 
             Consigne = Wanted_Forced_Consigne;
         } else {
-            // Apply_Deadzone_Compensation(&Consigne);
+            Apply_Deadzone_Compensation(&Consigne);
         }
         
         float Abs_Consigne1 = Abs_Ternaire(Consigne.command1);
