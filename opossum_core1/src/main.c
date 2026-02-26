@@ -107,12 +107,6 @@ int main()
             Interp(c);
         }
 
-        FEETECH_Loop();
-        // FEETECH_Search_ID_Loop();
-        // FEETECH_action_loop();
-        pince_action_loop();
-        Test_pince_action_loop();
-
         AU_Loop();
         LED_loop();
         Std_Com_Loop();
@@ -123,26 +117,13 @@ int main()
             LED_AU();
         }else{
             LED_CLASSIC_MODE();
+
+            FEETECH_Loop();
+            // FEETECH_Search_ID_Loop();
+            // FEETECH_action_loop();
+            pince_loop();
         }
-        // if(AU_state == 1){
-        //     LED_AU();
-        //     Init_Pump();
-        //     PWM_Init();
-        // }else{
-        //     // stepper functions
-        //     Init_Stepper_Loop();
-        //     Stepper_Loop();
-
-        //     LED_CLASSIC_MODE();
-        #ifdef PWM
-            PWM_Loop();
-        #endif
-
-        //     Pump_Loop();
-        //     Valve_Loop();
-        // }
         IHM_loop();
-
     }
     cleanup_platform();
     return 0;

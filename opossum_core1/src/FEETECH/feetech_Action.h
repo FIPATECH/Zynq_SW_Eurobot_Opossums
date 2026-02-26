@@ -14,12 +14,24 @@ typedef struct {
     uint16_t idle_position;
     uint16_t ramasser_pos;
     uint16_t lacher_pos;
+
+    uint16_t current_position;
+    uint32_t cmd_timer;
 } Gros_Servo_Pos_t;
 
 typedef struct {
     uint16_t sortie_pos;
     uint16_t retrait_pos;
+
+    uint16_t current_position;
+    uint32_t cmd_timer;
 } Petit_Servo_Pos_t;
+
+typedef struct {
+    uint16_t pump_current;
+    uint32_t cmd_timer;
+} Pump_t;
+
 
 typedef struct {
     // -- ID matériel -- //
@@ -39,9 +51,18 @@ typedef struct {
     Petit_Servo_Pos_t petit_droite_pos;
     Petit_Servo_Pos_t petit_gauche_pos;
 
+    Pump_t pump_right;
+    Pump_t pump_left;
+
     // -- consignes -- //
     Pince_Command_t current_command;
 } Pince_t;
+
+// ------------------------------------------ //
+// -------------- defines pompes ------------ //
+#define PUMP_ON 255
+#define PUMP_OFF 0
+
 
 // ------------------------------------------ //
 // ---------- define des positions ---------- //
@@ -82,7 +103,7 @@ uint8_t Test_ID_FEETECH_Cmd(void);
 
 void FEETECH_action_loop(void);
 
-void pince_action_loop(void);
+void pince_action_loop(Pince_t *pince);
 uint8_t Monter_pince_cmd(void);
 uint8_t Baisser_pince_cmd(void);
 uint8_t Allumer_pompes_cmd(void);
@@ -93,6 +114,6 @@ uint8_t Ouvrir_clapet_cmd(void);
 void Test_pince_action_loop(void);
 uint8_t Test_pince_cmd(void);
 
-
+void pince_loop(void);
 void Init_Pinces_Loop(void);
 #endif // FEETECH_ACTION_H
