@@ -180,107 +180,107 @@ uint32_t pince_action_position = 0;
 #define PINCE_1_GAUCHE_POS_SORTIE 650
 #define PINCE_1_GAUCHE_POS_RETRAIT 512
 
-void pince_action_loop(void){
-    switch(pince_action_step){
+void pince_action_loop(Pince_t *pince){
+    switch(pince->action_step){
         case 0:
             break;
         case 10: // baisser la pince
-            PutFEETECH_Ext_Done(PINCE_1_GROS_ID, FEETECH_GOAL_POSITION_L, PINCE_POS_BASSE, &pince_action_done);
-            pince_action_timer = Timer_ms1;
-            pince_action_step = 11;
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, PINCE_POS_BASSE, &pince->action_done);
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 11;
             break;
         case 11:
-            if(pince_action_done){
-                pince_action_done = 0;
-                GetFEETECH_Ext_Done(PINCE_1_GROS_ID, FEETECH_PRESENT_POSITION_L, &pince_action_position, &pince_action_done);
-                pince_action_step = 12;
+            if(pince->action_done){
+                pince->action_done = 0;
+                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->action_position, &pince->action_done);
+                pince->action_step = 12;
             }
             break;
         case 12:
-            if(pince_action_done){
-                if((PINCE_POS_BASSE - 100) <= pince_action_position && pince_action_position <= (PINCE_POS_BASSE + 100)){
-                    printf("Pince action done at position %d\n", pince_action_position);
-                    pince_action_done = 0;
-                    pince_action_step = 0;
-                } else if (Timer_ms1 - pince_action_timer >= 3000){
-                    printf("Pince action timeout at position %d\n", pince_action_position);
-                    pince_action_step = 0;
+            if(pince->action_done){
+                if((PINCE_POS_BASSE - 100) <= pince->action_position && pince->action_position <= (PINCE_POS_BASSE + 100)){
+                    printf("Pince action done at position %d\n", pince->action_position);
+                    pince->action_done = 0;
+                    pince->action_step = 0;
+                } else if (Timer_ms1 - pince->action_timer >= 3000){
+                    printf("Pince action timeout at position %d\n", pince->action_position);
+                    pince->action_step = 0;
                 } else {
-                    pince_action_step = 11; // keep waiting
+                    pince->action_step = 11; // keep waiting
                 }
             }
             break;
 
         case 20: // monter la pince
-            PutFEETECH_Ext_Done(PINCE_1_GROS_ID, FEETECH_GOAL_POSITION_L, PINCE_POS_HAUTE, &pince_action_done);
-            pince_action_timer = Timer_ms1;
-            pince_action_step = 21;
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, PINCE_POS_HAUTE, &pince->action_done);
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 21;
             break;
         case 21:
-            if(pince_action_done){
-                pince_action_done = 0;
-                GetFEETECH_Ext_Done(PINCE_1_GROS_ID, FEETECH_PRESENT_POSITION_L, &pince_action_position, &pince_action_done);
-                pince_action_step = 22;
+            if(pince->action_done){
+                pince->action_done = 0;
+                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->action_position, &pince->action_done);
+                pince->action_step = 22;
             }
             break;
         case 22:
-            if(pince_action_done){
-                if((PINCE_POS_HAUTE - 100) <= pince_action_position && pince_action_position <= (PINCE_POS_HAUTE + 100)){
-                    printf("Pince action done at position %d\n", pince_action_position);
-                    pince_action_done = 0;
-                    pince_action_step = 0;
-                } else if (Timer_ms1 - pince_action_timer >= 3000){
-                    printf("Pince action timeout at position %d\n", pince_action_position);
-                    pince_action_step = 0;
+            if(pince->action_done){
+                if((PINCE_POS_HAUTE - 100) <= pince->action_position && pince->action_position <= (PINCE_POS_HAUTE + 100)){
+                    printf("Pince action done at position %d\n", pince->action_position);
+                    pince->action_done = 0;
+                    pince->action_step = 0;
+                } else if (Timer_ms1 - pince->action_timer >= 3000){
+                    printf("Pince action timeout at position %d\n", pince->action_position);
+                    pince->action_step = 0;
                 } else {
-                    pince_action_step = 21; // keep waiting
+                    pince->action_step = 21; // keep waiting
                 }
             }
             break;
 
         case 30: //alumer les pompes 
-            PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 255);
-            PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 255);
-            pince_action_timer = Timer_ms1;
-            pince_action_step = 0;
+            PutFEETECH(pince->id_pump, PUMP_CMD_1, 255);
+            PutFEETECH(pince->id_pump, PUMP_CMD_2, 255);
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 0;
             break;
             
         case 35: // eteindre les pompes
-            PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_1, 0);
-            PutFEETECH(PINCE_PUMP_ID, PUMP_CMD_2, 0);
-            pince_action_timer = Timer_ms1;
-            pince_action_step = 0;
+            PutFEETECH(pince->id_pump, PUMP_CMD_1, 0);
+            PutFEETECH(pince->id_pump, PUMP_CMD_2, 0);
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 0;
             break;
 
         case 40: //activate valves
-            PutFEETECH(PINCE_PUMP_ID, VALVE_CMD_1, 1);
-            PutFEETECH(PINCE_PUMP_ID, VALVE_CMD_2, 1);
-            pince_action_step = 0;
+            PutFEETECH(pince->id_pump, VALVE_CMD_1, 1);
+            PutFEETECH(pince->id_pump, VALVE_CMD_2, 1);
+            pince->action_step = 0;
             break;
 
         case 50: //sortir clapet
-            PutFEETECH_Ext_Done_SCS(PINCE_1_DROITE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_DROITE_POS_SORTIE, &pince_action_done);
-            PutFEETECH_Ext_Done_SCS(PINCE_1_GAUCHE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_GAUCHE_POS_SORTIE, &pince_action_done);
-            pince_action_step = 51;
+            PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.sortie_pos, &pince->action_done);
+            PutFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_GOAL_POSITION_L, pince->petit_gauche_pos.sortie_pos, &pince->action_done);
+            pince->action_step = 51;
             break;
         case 51:
-            if(pince_action_done){
+            if(pince->action_done){
                 printf("Clapet sortie done\n");
-                pince_action_done = 0;
-                pince_action_step = 0;
+                pince->action_done = 0;
+                pince->action_step = 0;
             }
             break;
 
         case 60: //ranger clapet
-            PutFEETECH_Ext_Done_SCS(PINCE_1_DROITE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_DROITE_POS_RETRAIT, &pince_action_done);
-            PutFEETECH_Ext_Done_SCS(PINCE_1_GAUCHE_ID, FEETECH_GOAL_POSITION_L, PINCE_1_GAUCHE_POS_RETRAIT, &pince_action_done);
-            pince_action_step = 61;
+            PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.retrait_pos, &pince->action_done);
+            PutFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_GOAL_POSITION_L, pince->petit_gauche_pos.retrait_pos, &pince->action_done);
+            pince->action_step = 61;
             break;
         case 61:
-            if(pince_action_done){
+            if(pince->action_done){
                 printf("Clapet rentré done\n");
-                pince_action_done = 0;
-                pince_action_step = 0;
+                pince->action_done = 0;
+                pince->action_step = 0;
             }
             break;
     }
@@ -385,3 +385,83 @@ uint8_t Test_pince_cmd(void){
     Test_pince_action_step = 0;
     return 0;
 }
+
+
+//// ACTION 2026 ////
+Pince_t robot_pinces[NBR_PINCES];
+
+uint8_t init_pince_state = 0;
+uint32_t init_pince_timer = 0;
+
+void Init_Pinces_Loop(void){
+
+    switch(init_pince_state){
+        case 0:
+            if (init_pince_state == 0){
+                init_pince_state = 1;
+            }
+            break;
+        case 1:
+            for (uint8_t i = 0; i < NBR_PINCES; i++){
+                robot_pinces[i].id_gros     = (i + 1)*10 + 1; 
+                robot_pinces[i].id_droite   = (i + 1)*10 + 3;
+                robot_pinces[i].id_gauche   = (i + 1)*10 + 2;
+                robot_pinces[i].id_pump     = (i + 1)*10;
+
+                robot_pinces[i].action_step = 0;
+                robot_pinces[i].action_done = 0;
+                robot_pinces[i].action_timer = 0;
+                robot_pinces[i].action_position = 0;
+
+                robot_pinces[i].current_command = CMD_IDLE;  
+            }
+            // PINCE_1
+            robot_pinces[0].gros_pos.idle_position = PINCE_1_GROS_IDLE_POS;
+            robot_pinces[0].gros_pos.ramasser_pos = PINCE_1_GROS_RAMASSER_POS;
+            robot_pinces[0].gros_pos.lacher_pos = PINCE_1_GROS_LACHER_POS;
+            robot_pinces[0].petit_droite_pos.sortie_pos = PINCE_1_DROITE_SORTIE_POS;
+            robot_pinces[0].petit_droite_pos.retrait_pos = PINCE_1_DROITE_RETRAIT_POS;
+            robot_pinces[0].petit_gauche_pos.sortie_pos = PINCE_1_GAUCHE_SORTIE_POS;
+            robot_pinces[0].petit_gauche_pos.retrait_pos = PINCE_1_GAUCHE_RETRAIT_POS;
+
+            // PINCE_2
+            robot_pinces[1].gros_pos.idle_position = PINCE_2_GROS_IDLE_POS;
+            robot_pinces[1].gros_pos.ramasser_pos = PINCE_2_GROS_RAMASSER_POS;
+            robot_pinces[1].gros_pos.lacher_pos = PINCE_2_GROS_LACHER_POS;
+            robot_pinces[1].petit_droite_pos.sortie_pos = PINCE_2_DROITE_SORTIE_POS;
+            robot_pinces[1].petit_droite_pos.retrait_pos = PINCE_2_DROITE_RETRAIT_POS;
+            robot_pinces[1].petit_gauche_pos.sortie_pos = PINCE_2_GAUCHE_SORTIE_POS;
+            robot_pinces[1].petit_gauche_pos.retrait_pos = PINCE_2_GAUCHE_RETRAIT_POS;
+
+            init_pince_state = 2;
+            break;
+        case 2:
+            for (uint8_t i = 0; i < NBR_PINCES; i++){
+                // move gros servo to IDLE position
+                PutFEETECH_Ext_Done(robot_pinces[i].id_gros, FEETECH_GOAL_POSITION_L, robot_pinces[i].gros_pos.idle_position, &robot_pinces[i].action_done);
+                // move petit servos to RETRAIT position
+                PutFEETECH_Ext_Done_SCS(robot_pinces[i].id_droite, FEETECH_GOAL_POSITION_L, robot_pinces[i].petit_droite_pos.retrait_pos, &robot_pinces[i].action_done);
+                PutFEETECH_Ext_Done_SCS(robot_pinces[i].id_gauche, FEETECH_GOAL_POSITION_L, robot_pinces[i].petit_gauche_pos.retrait_pos, &robot_pinces[i].action_done);
+            }
+            init_pince_timer = Timer_ms1;
+            init_pince_state = 3;
+            break;
+        case 3:
+            // wait for all servos to reach position
+            if (Timer_ms1 - init_pince_timer >= 3000){
+                for (uint8_t i = 0; i < NBR_PINCES; i++){
+                    robot_pinces[i].action_done = 0;
+                }
+                init_pince_state = 4;
+            }
+            break;
+        case 4:
+            printf("Pinces initialized\n");
+            init_pince_state = 0;
+            break;
+        default:
+            break;
+
+    }
+}
+
