@@ -581,106 +581,53 @@ void pince_action_loop(Pince_t *pince){
     }
 }
 
-uint8_t Monter_pince_cmd(void){
-    pince_action_step = 20;
-    return 0;
-}
+uint8_t pince_action_cmd(void){
+    uint32_t ID_pince;
+    if (Get_Param_u32(&ID_pince))
+        return PARAM_ERROR_CODE;
 
-uint8_t Baisser_pince_cmd(void){
-    pince_action_step = 10;
-    return 0;
-}
+    uint32_t command;
+    if (Get_Param_u32(&command))
+        return PARAM_ERROR_CODE;
+    
+    uint32_t param;
+    if (Get_Param_u32(&param))
+        return PARAM_ERROR_CODE;
 
-uint8_t Allumer_pompes_cmd(void){
-    pince_action_step = 30;
-    return 0;
-}
-
-uint8_t Eteindre_pompes_cmd(void){
-    pince_action_step = 35;
-    return 0;
-}
-
-uint8_t Activate_Valves_cmd(void){
-    pince_action_step = 40;
-    return 0;
-}
-
-uint8_t Ouvrir_clapet_cmd(void){
-    pince_action_step = 50;
-    return 0;
-}
-
-uint8_t start_pince = 0;
-int Test_pince_action_step = 0;
-int Test_pince_action_timer = 0;
-
-void Test_pince_action_loop(void){
-    switch(Test_pince_action_step){
-        case 0:
-            if(start_pince){
-                start_pince = 0;
-                pince_action_step = 10; //baisser la pince
-                Test_pince_action_timer = Timer_ms1;
-                Test_pince_action_step = 1;
-            }
-            break;
-        case 1: // aspirer
-            if(Timer_ms1 - Test_pince_action_timer >= 1000){
-                pince_action_step = 30;
-                Test_pince_action_timer = Timer_ms1;
-                Test_pince_action_step = 2;
-            }
-            break;
-        case 2: // monter la pince
-            if(Timer_ms1 - Test_pince_action_timer >= 500){
-                pince_action_step = 20; 
-                Test_pince_action_timer = Timer_ms1;
-                Test_pince_action_step = 3;
-            }
-            break;
-        case 3: // sortir les clapets   
-            if(Timer_ms1 - Test_pince_action_timer >= 1000){
-                pince_action_step = 50; 
-                Test_pince_action_timer = Timer_ms1;
-                Test_pince_action_step = 4;
-            }
-            break;
-
-        case 4: // ouvrir les valves
-            if(Timer_ms1 - Test_pince_action_timer >= 1000){
-                pince_action_step = 40;
-                Test_pince_action_timer = Timer_ms1;
-                Test_pince_action_step = 5;
-            }
-            break;
-        case 5: // etteindre les pompes
-            if(Timer_ms1 - Test_pince_action_timer >= 200){
-                pince_action_step = 35;
-                Test_pince_action_timer = Timer_ms1;
-                Test_pince_action_step = 6;
-            }
-            break;
-        case 6: // ranger les clapets
-            if(Timer_ms1 - Test_pince_action_timer >= 500){
-                pince_action_step = 60;
-                Test_pince_action_timer = Timer_ms1;
-                Test_pince_action_step = 0;
-            }
-            break;
-        default:
-            break;
-                
+    if(ID_pince < 0 || ID_pince > NBR_PINCES-1){
+        printf("Invalid pince ID\n");
+        return PARAM_ERROR_CODE;
     }
-}
 
-
-uint8_t Test_pince_cmd(void){
-    start_pince = 1;
-    Test_pince_action_step = 0;
+    Pince_t *pince = &robot_pinces[ID_pince];
+    if(pince->action_step != 0){
+        printf("Pince is busy\n");
+        return PARAM_ERROR_CODE;
+    }
+    switch (command){
+        case 1:
+            pince->current_command = CMD_RAMASSER;
+            pince->action_step = 10;
+            break;
+        case 2:
+            pince->current_command = CMD_LACHER_G;
+            pince->action_step = 200;
+            break;
+        case 3:
+            pince->current_command = CMD_LACHER_D;
+            pince->action_step = 200;
+            break;
+        case 4:
+            pince->current_command = CMD_LACHER_ALL;
+            pince->action_step = 200;
+            break;
+        case 5:
+            pince->current_command = CMD_MONTER;
+            pince->action_step = 100;
+            break;
+    }
     return 0;
 }
-
 
 //// ACTION 2026 ////
 Pince_t robot_pinces[NBR_PINCES];

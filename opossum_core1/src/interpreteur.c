@@ -32,14 +32,7 @@ const Command Command_List[] = {
         { "SCSGET", Get_FEETECH_SCS_Cmd},
         { "FEETECHSEARCHID", Test_ID_FEETECH_Cmd},
 
-        { "MONTERPINCE", Monter_pince_cmd},
-        { "BAISSERPINCE", Baisser_pince_cmd},
-        { "ALLUMERPOMPES", Allumer_pompes_cmd},
-        { "ETEINDREPOMPES", Eteindre_pompes_cmd},
-        { "VALVES", Activate_Valves_cmd},
-        { "OUVRIRCLAPET", Ouvrir_clapet_cmd},
-
-        { "TESTPINCE", Test_pince_cmd},
+        { "PINCE", pince_action_cmd},
     #endif
 
     #ifdef PWM
