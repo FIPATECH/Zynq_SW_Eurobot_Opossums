@@ -6,7 +6,9 @@
 typedef enum {
     CMD_IDLE = 0,
     CMD_RAMASSER,
-    CMD_LACHER
+    CMD_LACHER_G,
+    CMD_LACHER_D,
+    CMD_LACHER_ALL
 } Pince_Command_t;
 
 
@@ -63,6 +65,8 @@ typedef struct {
 #define PUMP_ON 255
 #define PUMP_OFF 0
 
+#define VALVE_ON 1
+#define VALVE_OFF 0
 
 // ------------------------------------------ //
 // ---------- define des positions ---------- //
