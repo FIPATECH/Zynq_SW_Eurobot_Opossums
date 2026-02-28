@@ -108,6 +108,7 @@ void pince_loop(void){
 void pince_action_loop(Pince_t *pince){
     switch(pince->action_step){
         case 0:
+            pince->current_command = CMD_IDLE;
             break;
 
         /* ---------------------------------------------------- */
@@ -508,110 +509,154 @@ void pince_action_loop(Pince_t *pince){
             }
             break;
         
+        
         /* ---------------------------------------------------- */
-        /* ------------- RETOURNER PALETS ----------------------*/
+        /* ------------- DEPOSER PALETS ----------------------*/
         /* ---------------------------------------------------- */
-        case 300:
-            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done); // même position pour lacher sans retourner que pour ramasser
-            pince->action_timer = Timer_ms1;
+        
+        case 300: // 1. Ordre de baisser la pince
+            pince->retry_count = 0; 
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done); 
+            pince->gros_pos.cmd_timer = Timer_ms1;
             pince->action_step = 301;
             break;
-        case 301:
+            
+        case 301: // 2. Attendre que l'ordre de descente soit bien transmis
             if(pince->action_done){
                 pince->action_done = 0;
-                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
+                // On met une valeur "impossible" dans current_position pour forcer une vraie lecture
+                pince->gros_pos.current_position = 0xFFFF; 
                 pince->action_step = 302;
             }
             break;
-        case 302:
+            
+        case 302: // 3. Demander la position actuelle
+            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
+            pince->action_step = 303;
+            break;
+            
+        case 303: // 4. Attendre la réponse et vérifier la position
             if(pince->action_done){
+                pince->action_done = 0; 
+                
+                // On vérifie si on est bien arrivé en position basse
                 if((pince->gros_pos.ramasser_pos - 100) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 100)){
-                    printf("Pince action done at position %d\n", pince->gros_pos.current_position);
-                    pince->action_done = 0;
-                    pince->action_step = 303;
-                } else if (Timer_ms1 - pince->action_timer >= 3000){
-                    printf("Pince action timeout at position %d\n", pince->gros_pos.current_position);
-                    pince->action_step = 0;
+                    printf("Pince en position de depot (%d)\n", pince->gros_pos.current_position);
+                    pince->action_step = 304; // ---> PINCE EN BAS : ON PEUT LACHER
+                } else if (Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
+                    printf("Timeout descente pince depot (pos: %d)\n", pince->gros_pos.current_position);
+                    pince->action_step = 500; // ---> ABANDON DE SECURITE
                 } else {
-                    pince->action_step = 301; // keep waiting
+                    pince->action_step = 302; // Pas encore en bas : on redemande la position
                 }
             }
             break;
-        case 303: // on allume les valves et éteind les pompes des objets à déposer
+            
+        case 304: // 5. COUPER LES POMPES EN PREMIER
+            if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
+                PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+            }
+            if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
+                PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+            }
+            
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 305;
+            break;
+            
+        case 305: // 6. LAISSER UN MINI TEMPS DE 100ms
+            if(Timer_ms1 - pince->action_timer >= 100){
+                pince->action_step = 306;
+            }
+            break;
+
+        case 306: // 7. ACTIVER LES ELECTROVANNES POUR CASSER LE VIDE
             if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                 PutFEETECH(pince->id_pump, VALVE_CMD_1, VALVE_ON);
-                PutFEETECH_Ext_Done(pince->id_pump, PUMP_CMD_1, PUMP_OFF, &pince->action_done);
             }
             if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
                 PutFEETECH(pince->id_pump, VALVE_CMD_2, VALVE_ON);
-                PutFEETECH_Ext_Done(pince->id_pump, PUMP_CMD_2, PUMP_OFF, &pince->action_done);
             }
-            pince->action_timer = Timer_ms1;
-            pince->action_step = 304;
+            pince->action_step = 307;
             break;
-        case 304: // attendre que les commandes soient prises en compte
+            
+        case 307: // 8. DEMANDER LES COURANTS POUR VERIFIER LA CHUTE
+            pince->action_done = 0;
+            if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
+                GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current, &pince->action_done);
+            }
+            if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
+                GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
+            }
+            pince->action_step = 308;
+            break;
+            
+        case 308: // 9. VERIFIER LA CHUTE DE COURANT
             if(pince->action_done){
                 pince->action_done = 0;
-                if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
-                    GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current, &pince->action_done);
-                }
-                if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
-                    GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
-                }
-                pince->action_step = 305;
-            }
-            break;
-        case 305:
-            if(pince->action_done){
                 uint8_t pump_ok = 1;
+                
+                // On utilise CURRENT_THRESHOLD_ON_EXTINCTION (par exemple 300 ou 400)
+                // pour s'assurer que le moteur est bien en train de s'arrêter.
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
-                    if(pince->pump_left.pump_current > 100){ // if current is below threshold, we assume the pump is off
-                        printf("Valve gauche not on or pump not off\n");
+                    if(pince->pump_left.pump_current > CURRENT_THRESHOLD_ON_EXTINCTION){ 
                         pump_ok = 0;
                     }
                 }
                 if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
-                    if(pince->pump_right.pump_current > 100){ // if current is below threshold, we assume the pump is off
-                        printf("Valve droite not on or pump not off\n");
+                    if(pince->pump_right.pump_current > CURRENT_THRESHOLD_ON_EXTINCTION){ 
                         pump_ok = 0;
                     }
                 }
 
                 if(pump_ok){
-                    printf("Pince action done, object released\n");
-                    pince->action_done = 0;
-                    pince->action_step = 306; // put pince in idle pos
-                } else if (Timer_ms1 - pince->action_timer >= 3000){
-                    printf("Pince action timeout, valve not on or pump not off\n");
-                    pince->action_step = 0;
+                    printf("Courant bas, pompes coupees, palet relache.\n");
+                    pince->retry_count = 0;
+                    pince->action_step = 309; // Le palet est tombé, on remonte
                 } else {
-                    pince->action_step = 304; // keep waiting
+                    pince->retry_count++;
+                    if(pince->retry_count >= 50){ 
+                        // Au bout de 50 essais (environ 1 seconde de boucle), on abandonne
+                        printf("ERREUR CRITIQUE: Le courant ne chute pas (%d / %d). Abandon.\n", 
+                               pince->pump_left.pump_current, pince->pump_right.pump_current);
+                        pince->action_step = 500; 
+                    } else {
+                        // Le rotor tourne encore un peu, on refait une mesure
+                        pince->action_step = 307; 
+                    }
                 }
             }
             break;
-        case 306:
+
+        case 309: // 10. Ordre de remonter la pince
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.idle_position, &pince->action_done);
             pince->action_timer = Timer_ms1;
-            pince->action_step = 307;
+            pince->action_step = 310;
             break;
-        case 307:
+
+        case 310: // 11. Attendre que l'ordre de remontée parte
             if(pince->action_done){
                 pince->action_done = 0;
-                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->action_position, &pince->action_done);
-                pince->action_step = 308;
+                pince->action_step = 311;
             }
             break;
-        case 308:
+            
+        case 311: // 12. Demander position actuelle
+            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->action_position, &pince->action_done);
+            pince->action_step = 312;
+            break;
+            
+        case 312: // 13. Verifier si on est en haut
             if(pince->action_done){
+                pince->action_done = 0;
                 if((pince->gros_pos.idle_position - 100) <= pince->action_position && pince->action_position <= (pince->gros_pos.idle_position + 100)){
-                    printf("Pince action done at position %d\n", pince->action_position);
-                    pince->action_done = 0;
-                    pince->action_step = 0;
+                    printf("Pince remontee at position %d\n", pince->action_position);
+                    pince->action_step = 0; // FIN DU CYCLE
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
-                    printf("Pince action timeout at position %d\n", pince->action_position);
-                    pince->action_step = 0;
+                    printf("Timeout remontee pince (pos: %d)\n", pince->action_position);
+                    pince->action_step = 500; 
                 } else {
-                    pince->action_step = 307; // keep waiting
+                    pince->action_step = 311; // keep waiting
                 }
             }
             break;
@@ -737,18 +782,32 @@ uint8_t pince_action_cmd(void){
             pince->action_step = 10;
             break;
         case 2:
-            pince->current_command = CMD_LACHER_G;
             pince->action_step = 200;
+            if(param == 0){
+                pince->current_command = CMD_LACHER_G;
+            } else if (param == 1){
+                pince->current_command = CMD_LACHER_D;
+            } else if (param == 2){
+                pince->current_command = CMD_LACHER_ALL;
+            } else {
+                printf("Invalid parameter for LACHER command\n");
+                return PARAM_ERROR_CODE;
+            }
             break;
         case 3:
-            pince->current_command = CMD_LACHER_D;
-            pince->action_step = 200;
+            pince->action_step = 300;
+            if(param == 0){
+                pince->current_command = CMD_LACHER_G;
+            } else if (param == 1){
+                pince->current_command = CMD_LACHER_D;
+            } else if (param == 2){
+                pince->current_command = CMD_LACHER_ALL;
+            } else {
+                printf("Invalid parameter for LACHER command\n");
+                return PARAM_ERROR_CODE;
+            }
             break;
         case 4:
-            pince->current_command = CMD_LACHER_ALL;
-            pince->action_step = 200;
-            break;
-        case 5:
             pince->current_command = CMD_MONTER;
             pince->action_step = 100;
             break;
