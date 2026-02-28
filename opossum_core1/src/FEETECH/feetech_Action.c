@@ -243,9 +243,11 @@ void pince_action_loop(Pince_t *pince){
             if(pince->action_done){
                 pince->action_done = 0;
                 
-                // 1. Soustraire l'ancienne valeur du buffer
-                pince->pump_right.sum_current -= pince->pump_right.samples[pince->sample_idx];
-                pince->pump_left.sum_current  -= pince->pump_left.samples[pince->sample_idx];
+                // 1. Soustraire l'ancienne valeur du buffer (Seulement si le buffer est plein)
+                if (pince->buffer_full) {
+                    pince->pump_right.sum_current -= pince->pump_right.samples[pince->sample_idx];
+                    pince->pump_left.sum_current  -= pince->pump_left.samples[pince->sample_idx];
+                }
 
                 // 2. Insérer la nouvelle valeur
                 pince->pump_right.samples[pince->sample_idx] = pince->pump_right.pump_current;
@@ -259,13 +261,15 @@ void pince_action_loop(Pince_t *pince){
                 pince->sample_idx++;
                 if (pince->sample_idx >= NBR_VALUES_FOR_MEAN) {
                     pince->sample_idx = 0;
-                    pince->buffer_full = 1; // Le tableau a fait un tour complet, les moyennes sont 100% fiables
+                    pince->buffer_full = 1; // Le tableau a fait un tour complet !
                 }
 
-                // 5. Décision (Uniquement si le buffer est rempli une première fois)
-                if (pince->buffer_full) {
-                    uint16_t avg_right = pince->pump_right.sum_current / NBR_VALUES_FOR_MEAN;
-                    uint16_t avg_left  = pince->pump_left.sum_current / NBR_VALUES_FOR_MEAN;
+                // 5. Décision (On commence à évaluer dès 5 échantillons pour aller vite si on a tout)
+                uint8_t current_sample_count = pince->buffer_full ? NBR_VALUES_FOR_MEAN : pince->sample_idx;
+
+                if (current_sample_count >= 5) { 
+                    uint16_t avg_right = pince->pump_right.sum_current / current_sample_count;
+                    uint16_t avg_left  = pince->pump_left.sum_current / current_sample_count;
 
                     // On compare la moyenne glissante avec le baseline
                     uint8_t right_ok = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) > CURRENT_VARIATION_CATCH);
@@ -273,28 +277,29 @@ void pince_action_loop(Pince_t *pince){
 
                     if(right_ok && left_ok){ 
                         printf("Deux objets ramassés (Variations > %d)\n", CURRENT_VARIATION_CATCH);
-                        pince->action_step = 20; // On passe à la remontée
+                        pince->action_step = 20; // On passe à la remontée INSTANTANEMENT
                     } else {
-                        if (Timer_ms1 - pince->action_timer >= 2000){ 
-                            // TIMEOUT 2 SECONDES
+                        // --- NOUVELLE LOGIQUE D'ABANDON BASÉE SUR LE BUFFER ---
+                        if (pince->buffer_full) { 
+                            // Le buffer a fait un tour complet : l'analyse est définitive
                             if (right_ok || left_ok) {
-                                printf("Timeout: 1 seul objet ramassé (G:%d, D:%d)\n", left_ok, right_ok);
+                                printf("Analyse terminée: 1 seul objet ramassé (G:%d, D:%d)\n", left_ok, right_ok);
                                 if (!right_ok) PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
                                 if (!left_ok)  PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
                                 pince->action_step = 20; 
                             } else {
-                                printf("Timeout: Aucun objet ramassé.\n");
+                                printf("Analyse terminée: Aucun objet ramassé.\n");
                                 PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
                                 PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
                                 pince->action_step = 500; 
                             }
                         } else {
-                            // On continue de tourner la moyenne glissante
+                            // Le buffer n'a pas encore fini son premier tour, on continue d'échantillonner
                             pince->action_step = 18; 
                         }
                     }
                 } else {
-                    // On n'a pas encore rempli le buffer, on relance direct au 18
+                    // On n'a pas encore nos 5 premiers échantillons, on relance direct au 18
                     pince->action_step = 18;
                 }
             }
