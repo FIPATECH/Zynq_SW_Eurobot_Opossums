@@ -84,9 +84,9 @@ typedef struct {
 #define PINCE_1_GAUCHE_RETRAIT_POS 512
 
 // ---------------- PINCE 2 ----------------- //
-#define PINCE_2_GROS_IDLE_POS 3200
-#define PINCE_2_GROS_RAMASSER_POS 2300
-#define PINCE_2_GROS_LACHER_POS 3500
+#define PINCE_2_GROS_IDLE_POS 3580
+#define PINCE_2_GROS_RAMASSER_POS 2400
+#define PINCE_2_GROS_LACHER_POS 3700
 
 #define PINCE_2_DROITE_SORTIE_POS 700
 #define PINCE_2_DROITE_RETRAIT_POS 512
@@ -109,4 +109,5 @@ uint8_t pince_action_cmd(void);
 
 void pince_loop(void);
 void Init_Pinces_Loop(void);
+void AU_pinces(void);
 #endif // FEETECH_ACTION_H

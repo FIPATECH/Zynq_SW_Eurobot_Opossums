@@ -115,10 +115,13 @@ int main()
         if(AU_state == 1){
             // printf("AU activated\n\r");
             LED_AU();
+            AU_pinces();
         }else{
             LED_CLASSIC_MODE();
 
+            Init_Pinces_Loop();
             FEETECH_Loop();
+            
             // FEETECH_Search_ID_Loop();
             // FEETECH_action_loop();
             pince_loop();

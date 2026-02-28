@@ -133,7 +133,7 @@ void pince_action_loop(Pince_t *pince){
 
         case 12: // check pump are on
             if(pince->action_done){
-                if (Timer_ms1 - pince->pump_right.cmd_timer >= 50){ // wait a bit for current to stabilize
+                if (Timer_ms1 - pince->pump_right.cmd_timer >= 250){ // wait a bit for current to stabilize
                     pince->action_done = 0; // reset done flag
                     GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_right.pump_current, &pince->action_done);
                     GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_left.pump_current, &pince->action_done);
@@ -153,6 +153,7 @@ void pince_action_loop(Pince_t *pince){
                     pince->action_step = 11; // pump not on, try again
                 }
             }
+            break;
 
         case 14: // wait for pince to reach position
             GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
@@ -168,7 +169,7 @@ void pince_action_loop(Pince_t *pince){
                     pince->action_step++;
                 } else if (Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
                     printf("Pince action timeout at position %d\n", pince->gros_pos.current_position);
-                    pince->action_step = 0;
+                    pince->action_step = 500; // on a un problème, on coupe les pompes et on abandonne
                 } else {
                     pince->action_step = 14; // keep waiting
                 }
@@ -184,16 +185,39 @@ void pince_action_loop(Pince_t *pince){
         case 17:
             if(pince->action_done){
                 pince->action_done = 0;
-                if(pince->pump_right.pump_current > 150 && pince->pump_left.pump_current > 150){ // if current is above threshold, we assume we have an object
-                    printf("Object ramassé\n");
-                    pince->action_step++; 
+                
+                // On vérifie si chaque pompe a bien fait le vide
+                printf("Pump currents: Right=%d, Left=%d\n", pince->pump_right.pump_current, pince->pump_left.pump_current);
+                uint8_t right_ok = (pince->pump_right.pump_current < 1650);
+                uint8_t left_ok = (pince->pump_left.pump_current < 1650);
+
+                if(right_ok && left_ok){ 
+                    // Cas idéal : les 2 objets sont attrapés rapidement
+                    printf("Deux objets ramassés\n");
+                    pince->action_step = 18; 
                 } else {
-                    printf("No object detected\n");
-                    if (Timer_ms1 - pince->action_timer >= 2000){ // if after 2s we don't detect an object, we assume there's no object and we stop trying
-                        printf("Pince action timeout, no object detected\n");
-                        pince->action_step = 0;
+                    if (Timer_ms1 - pince->action_timer >= 2000){ 
+                        // Le délai de 2 secondes est écoulé, on prend une décision finale
+                        if (right_ok || left_ok) {
+                            printf("Timeout: 1 seul objet ramassé (G:%d, D:%d)\n", left_ok, right_ok);
+                            
+                            // On coupe uniquement la pompe qui tourne dans le vide
+                            if (!right_ok) PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+                            if (!left_ok)  PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+                            
+                            pince->action_step = 18; // On remonte quand même le bras avec 1 seul palet
+                        } else {
+                            printf("Timeout: Aucun objet ramassé\n");
+                            
+                            // Aucun objet, on coupe les deux pompes et on abandonne
+                            PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+                            PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+                            
+                            pince->action_step = 500; // Abandon
+                        }
                     } else {
-                        pince->action_step = 16; // keep checking for object
+                        // Pas encore de timeout et les 2 ne sont pas OK, on relance une lecture
+                        pince->action_step = 16; 
                     }
                 }
             }
@@ -221,7 +245,7 @@ void pince_action_loop(Pince_t *pince){
                     pince->action_step = 0;
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
                     printf("Pince action timeout at position %d\n", pince->action_position);
-                    pince->action_step = 0;
+                    pince->action_step = 500; // on a un problème, on coupe les pompes et on abandonne
                 } else {
                     pince->action_step = 19; // keep waiting
                 }
@@ -459,13 +483,13 @@ void pince_action_loop(Pince_t *pince){
             if(pince->action_done){
                 uint8_t pump_ok = 1;
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
-                    if(pince->pump_left.pump_current < 100){ // if current is below threshold, we assume the pump is off
+                    if(pince->pump_left.pump_current > 100){ // if current is below threshold, we assume the pump is off
                         printf("Valve gauche not on or pump not off\n");
                         pump_ok = 0;
                     }
                 }
                 if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
-                    if(pince->pump_right.pump_current < 100){ // if current is below threshold, we assume the pump is off
+                    if(pince->pump_right.pump_current > 100){ // if current is below threshold, we assume the pump is off
                         printf("Valve droite not on or pump not off\n");
                         pump_ok = 0;
                     }
@@ -510,7 +534,45 @@ void pince_action_loop(Pince_t *pince){
             }
             break;
 
-
+        /* ---------------------------------------------------- */
+        /* ------------- SEQUENCE D'ABANDON / ERREUR -----------*/
+        /* ---------------------------------------------------- */
+        case 500:
+            printf("Pince Abort ! Extinction pompes et retour IDLE\n");
+            // 1. Eteindre les pompes
+            PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+            PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+            // 2. ranger les clapets pour éviter de les casser en cas de collision au retour
+            PutFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_GOAL_POSITION_L, pince->petit_gauche_pos.retrait_pos, &pince->action_done);
+            PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.retrait_pos, &pince->action_done);
+            // 3. Ordonner la remontée de sécurité
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.idle_position, &pince->action_done);
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 501;
+            break;
+            
+        case 501:
+            if(pince->action_done){
+                pince->action_done = 0;
+                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->action_position, &pince->action_done);
+                pince->action_step = 502;
+            }
+            break;
+            
+        case 502:
+            if(pince->action_done){
+                if((pince->gros_pos.idle_position - 100) <= pince->action_position && pince->action_position <= (pince->gros_pos.idle_position + 100)){
+                    printf("Pince action annulée et retour au repos ok\n");
+                    pince->action_done = 0;
+                    pince->action_step = 0; // Prêt pour une nouvelle commande
+                } else if (Timer_ms1 - pince->action_timer >= 3000){
+                    printf("Timeout critique : impossible de remonter la pince.\n");
+                    pince->action_step = 0; // On force à 0 pour ne pas geler tout le robot
+                } else {
+                    pince->action_step = 501; // Continue de vérifier la position
+                }
+            }
+            break;
 
         default:
             break;
@@ -570,12 +632,17 @@ uint8_t pince_action_cmd(void){
 
 uint8_t init_pince_state = 0;
 uint32_t init_pince_timer = 0;
+uint8_t pinces_initialized = 0;
+
+void AU_pinces(void){
+    pinces_initialized = 0;
+}
 
 void Init_Pinces_Loop(void){
 
     switch(init_pince_state){
         case 0:
-            if (init_pince_state == 0){
+            if (pinces_initialized == 0){
                 init_pince_state = 1;
             }
             break;
@@ -638,6 +705,7 @@ void Init_Pinces_Loop(void){
             break;
         case 4:
             printf("Pinces initialized\n");
+            pinces_initialized = 1;
             init_pince_state = 0;
             break;
         default:
