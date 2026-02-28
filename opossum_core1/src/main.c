@@ -12,7 +12,6 @@ int timer_lidar = 0;
 
 LD19Instance LD19;
 
-
 int main()
 {
     //Disable cache on OCM    
@@ -80,7 +79,14 @@ int main()
     // init_QEI();
     // PWM_Init();
     Std_Com_Init();
+
+
     init_AU();
+    uint8_t previous_AU_state = AU_state; // Pour détecter le changement d'état
+    uint32_t au_recovery_timer = 0;       // Timer pour les 2 secondes
+    uint8_t au_recovering = 0;            // Flag : 1 = on est en train d'attendre les 2s
+
+
     ws2812b_init();
     init_switch();
     // Init_Pump();
@@ -116,16 +122,35 @@ int main()
             // printf("AU activated\n\r");
             LED_AU();
             AU_pinces();
-        }else{
-            LED_CLASSIC_MODE();
 
-            Init_Pinces_Loop();
-            FEETECH_Loop();
+            // Si on appuie sur l'AU pendant qu'on attendait les 2s, on annule l'attente
+            au_recovering = 0;
+        }else{
+            if (previous_AU_state == 1) {
+                au_recovering = 1;              // On lance la phase de récupération
+                au_recovery_timer = Timer_ms1;  // On enregistre l'heure de départ
+                printf("AU relâché. Attente de 2 secondes avant reprise...\n");
+            }
+
+            // 2. Gestion de l'attente
+            if (au_recovering) {
+                // Optionnel : tu pourrais mettre un mode de LED spécifique ici (ex: clignotement rapide)
+                if (Timer_ms1 - au_recovery_timer >= 3000) {
+                    au_recovering = 0; // Les 2 secondes sont écoulées !
+                    printf("Reprise des actionneurs !\n");
+                }
+            }
+
+            // 3. Exécution classique si on n'est PAS en phase de récupération
+            if (!au_recovering) {
+                Init_Pinces_Loop();
+                FEETECH_Loop();
+                pince_loop();
+            }
             
-            // FEETECH_Search_ID_Loop();
-            // FEETECH_action_loop();
-            pince_loop();
+            LED_CLASSIC_MODE();
         }
+        previous_AU_state = AU_state;
         IHM_loop();
     }
     cleanup_platform();

@@ -57,6 +57,8 @@ typedef struct {
     Pump_t pump_right;
     Pump_t pump_left;
 
+    uint8_t retry_count;
+
     // -- consignes -- //
     Pince_Command_t current_command;
 } Pince_t;
@@ -65,6 +67,10 @@ typedef struct {
 // -------------- defines pompes ------------ //
 #define PUMP_ON 255
 #define PUMP_OFF 0
+
+#define CURRENT_THRESHOLD_ON 500 // if current is above this threshold, we assume the pump is on
+#define CURRENT_THRESHOLD_CATCH 2100 // if current is above this threshold, we assume an object is catched
+
 
 #define VALVE_ON 1
 
