@@ -5,72 +5,6 @@
 
 #define ABS_DIFF(a, b) ((a) > (b) ? ((a) - (b)) : ((b) - (a)))
 
-typedef enum {
-    CMD_IDLE = 0,
-    CMD_RAMASSER,
-    CMD_LACHER_G,
-    CMD_LACHER_D,
-    CMD_LACHER_ALL,
-    CMD_MONTER
-} Pince_Command_t;
-
-
-typedef struct {
-    uint16_t idle_position;
-    uint16_t ramasser_pos;
-    uint16_t lacher_pos;
-
-    uint16_t current_position;
-    uint32_t cmd_timer;
-} Gros_Servo_Pos_t;
-
-typedef struct {
-    uint16_t sortie_pos;
-    uint16_t retrait_pos;
-
-    uint16_t current_position;
-    uint32_t cmd_timer;
-} Petit_Servo_Pos_t;
-
-typedef struct {
-    uint16_t pump_current;
-    uint32_t cmd_timer;
-
-    uint16_t baseline_current; 
-    uint32_t sum_current;
-} Pump_t;
-
-
-typedef struct {
-    // -- ID matériel -- //
-    uint8_t id_gros;
-    uint8_t id_droite;
-    uint8_t id_gauche;
-    uint8_t id_pump;
-
-    // -- variables d'états fsm -- //
-    uint16_t action_step;
-    uint8_t action_done;
-    uint32_t action_timer;
-    uint32_t action_position;
-
-    // -- positions -- //
-    Gros_Servo_Pos_t gros_pos;
-    Petit_Servo_Pos_t petit_droite_pos;
-    Petit_Servo_Pos_t petit_gauche_pos;
-
-    Pump_t pump_right;
-    Pump_t pump_left;
-
-    uint8_t retry_count;
-
-    uint8_t sample_count;
-
-    // -- consignes -- //
-    Pince_Command_t current_command;
-} Pince_t;
-
-
 // -------------------------------------------------- //
 // -------------- GLOBAL USE  ----------------------- //
 #define NBR_VALUES_FOR_MEAN 20
@@ -114,6 +48,77 @@ typedef struct {
 
 #define PINCE_2_GAUCHE_SORTIE_POS 300
 #define PINCE_2_GAUCHE_RETRAIT_POS 512
+
+
+typedef enum {
+    CMD_IDLE = 0,
+    CMD_RAMASSER,
+    CMD_LACHER_G,
+    CMD_LACHER_D,
+    CMD_LACHER_ALL,
+    CMD_MONTER
+} Pince_Command_t;
+
+
+typedef struct {
+    uint16_t idle_position;
+    uint16_t ramasser_pos;
+    uint16_t lacher_pos;
+
+    uint16_t current_position;
+    uint32_t cmd_timer;
+} Gros_Servo_Pos_t;
+
+typedef struct {
+    uint16_t sortie_pos;
+    uint16_t retrait_pos;
+
+    uint16_t current_position;
+    uint32_t cmd_timer;
+} Petit_Servo_Pos_t;
+
+typedef struct {
+    uint16_t pump_current;
+    uint32_t cmd_timer;
+
+    uint16_t baseline_current; 
+    uint32_t sum_current;
+
+    uint16_t samples[NBR_VALUES_FOR_MEAN];
+} Pump_t;
+
+
+typedef struct {
+    // -- ID matériel -- //
+    uint8_t id_gros;
+    uint8_t id_droite;
+    uint8_t id_gauche;
+    uint8_t id_pump;
+
+    // -- variables d'états fsm -- //
+    uint16_t action_step;
+    uint8_t action_done;
+    uint32_t action_timer;
+    uint32_t action_position;
+
+    // -- positions -- //
+    Gros_Servo_Pos_t gros_pos;
+    Petit_Servo_Pos_t petit_droite_pos;
+    Petit_Servo_Pos_t petit_gauche_pos;
+
+    Pump_t pump_right;
+    Pump_t pump_left;
+
+    uint8_t retry_count;
+
+    uint8_t sample_count;
+
+    uint8_t sample_idx;
+    uint8_t buffer_full;
+
+    // -- consignes -- //
+    Pince_Command_t current_command;
+} Pince_t;
 
 
 

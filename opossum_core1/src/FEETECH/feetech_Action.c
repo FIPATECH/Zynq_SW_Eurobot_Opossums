@@ -156,8 +156,8 @@ void pince_action_loop(Pince_t *pince){
                     // Préparation pour l'échantillonnage de base (baseline)
                     pince->pump_right.sum_current = 0;
                     pince->pump_left.sum_current = 0;
-                    pince->sample_count = 0;
-                    pince->action_step = 14; // On passe à la sous-étape d'échantillonnage
+                    pince->sample_idx = 0;
+                    pince->action_step = 14; 
                 } else {
                     pince->retry_count++;
                     if (pince->retry_count >= 3) {
@@ -182,20 +182,23 @@ void pince_action_loop(Pince_t *pince){
         case 15:
             if(pince->action_done){
                 pince->action_done = 0;
+                
+                // Ici une simple moyenne classique suffit pour la base
                 pince->pump_right.sum_current += pince->pump_right.pump_current;
                 pince->pump_left.sum_current  += pince->pump_left.pump_current;
-                pince->sample_count++;
+                pince->sample_idx++;
                 
-                if (pince->sample_count >= NBR_VALUES_FOR_MEAN) { // On fait la moyenne sur 4 valeurs
+                if (pince->sample_idx >= NBR_VALUES_FOR_MEAN) { 
                     pince->pump_right.baseline_current = pince->pump_right.sum_current / NBR_VALUES_FOR_MEAN;
                     pince->pump_left.baseline_current  = pince->pump_left.sum_current / NBR_VALUES_FOR_MEAN;
                     printf("Baseline trouvé - D:%d, G:%d\n", pince->pump_right.baseline_current, pince->pump_left.baseline_current);
                     pince->action_step = 16; // On reprend le flux normal
                 } else {
-                    pince->action_step = 14; // On boucle pour le prochain échantillon
+                    pince->action_step = 14; 
                 }
             }
             break;
+
         // -------------------------------------------------------------
 
         case 16: // wait for pince to reach position
@@ -206,14 +209,20 @@ void pince_action_loop(Pince_t *pince){
         case 17:
             if(pince->action_done){
                 if((pince->gros_pos.ramasser_pos - 100) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 100)){
-                    printf("Pince en position, debut de l'aspiration...\n");
+                    printf("Pince en position, debut de l'aspiration lissée...\n");
                     pince->action_timer = Timer_ms1; 
                     pince->action_done = 0;
                     
-                    // Préparation pour l'échantillonnage de prise (catch)
+                    // --- INITIALISATION DU BUFFER DE MOYENNE GLISSANTE ---
                     pince->pump_right.sum_current = 0;
                     pince->pump_left.sum_current = 0;
-                    pince->sample_count = 0;
+                    pince->sample_idx = 0;
+                    pince->buffer_full = 0;
+                    for(int i = 0; i < NBR_VALUES_FOR_MEAN; i++) {
+                        pince->pump_right.samples[i] = 0;
+                        pince->pump_left.samples[i]  = 0;
+                    }
+                    
                     pince->action_step = 18;
                 } else if (Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
                     printf("Pince action timeout at position %d\n", pince->gros_pos.current_position);
@@ -224,29 +233,41 @@ void pince_action_loop(Pince_t *pince){
             }
             break;
  
-        case 18: // Demande de mesure
+        case 18: // Demande de mesure continue
             GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_right.pump_current, &pince->action_done);
             GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_left.pump_current, &pince->action_done);
             pince->action_step = 19;
             break;
 
-        case 19: // Lecture, Moyenne et Décision
+        case 19: // Moyenne Glissante et Décision
             if(pince->action_done){
                 pince->action_done = 0;
                 
-                // Accumulation
+                // 1. Soustraire l'ancienne valeur du buffer
+                pince->pump_right.sum_current -= pince->pump_right.samples[pince->sample_idx];
+                pince->pump_left.sum_current  -= pince->pump_left.samples[pince->sample_idx];
+
+                // 2. Insérer la nouvelle valeur
+                pince->pump_right.samples[pince->sample_idx] = pince->pump_right.pump_current;
+                pince->pump_left.samples[pince->sample_idx]  = pince->pump_left.pump_current;
+                
+                // 3. Ajouter à la somme totale
                 pince->pump_right.sum_current += pince->pump_right.pump_current;
                 pince->pump_left.sum_current  += pince->pump_left.pump_current;
-                pince->sample_count++;
+                
+                // 4. Avancer l'index tournant
+                pince->sample_idx++;
+                if (pince->sample_idx >= NBR_VALUES_FOR_MEAN) {
+                    pince->sample_idx = 0;
+                    pince->buffer_full = 1; // Le tableau a fait un tour complet, les moyennes sont 100% fiables
+                }
 
-                // On attend d'avoir 3 échantillons pour lisser les pics aléatoires
-                if (pince->sample_count >= NBR_VALUES_FOR_MEAN) {
+                // 5. Décision (Uniquement si le buffer est rempli une première fois)
+                if (pince->buffer_full) {
                     uint16_t avg_right = pince->pump_right.sum_current / NBR_VALUES_FOR_MEAN;
                     uint16_t avg_left  = pince->pump_left.sum_current / NBR_VALUES_FOR_MEAN;
 
-                    printf("Moyennes actuelles après %d échantillons: D=%d, G=%d\n", NBR_VALUES_FOR_MEAN, avg_right, avg_left);
-                    
-                    // On compare la moyenne actuelle avec le baseline (à vide)
+                    // On compare la moyenne glissante avec le baseline
                     uint8_t right_ok = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) > CURRENT_VARIATION_CATCH);
                     uint8_t left_ok  = (ABS_DIFF(pince->pump_left.baseline_current, avg_left) > CURRENT_VARIATION_CATCH);
 
@@ -262,23 +283,18 @@ void pince_action_loop(Pince_t *pince){
                                 if (!left_ok)  PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
                                 pince->action_step = 20; 
                             } else {
-                                printf("Timeout: Aucun objet ramassé. Moyennes: D=%d (Base %d), G=%d (Base %d)\n", 
-                                       avg_right, pince->pump_right.baseline_current, avg_left, pince->pump_left.baseline_current);
+                                printf("Timeout: Aucun objet ramassé.\n");
                                 PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
                                 PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
                                 pince->action_step = 500; 
                             }
                         } else {
-                            // --- LA CORRECTION EST ICI ---
-                            // On n'a pas encore timeout, on relance juste l'échantillonnage de courant
-                            pince->pump_right.sum_current = 0;
-                            pince->pump_left.sum_current = 0;
-                            pince->sample_count = 0;
-                            pince->action_step = 18; // Retour au 18 (Demande de mesure) et non au 16 !
+                            // On continue de tourner la moyenne glissante
+                            pince->action_step = 18; 
                         }
                     }
                 } else {
-                    // On n'a pas encore nos 3 échantillons, on boucle sur la mesure
+                    // On n'a pas encore rempli le buffer, on relance direct au 18
                     pince->action_step = 18;
                 }
             }
@@ -777,6 +793,9 @@ void Init_Pinces_Loop(void){
                 robot_pinces[i].retry_count = 0;
 
                 robot_pinces[i].sample_count = 0;
+
+                robot_pinces[i].sample_idx = 0;
+                robot_pinces[i].buffer_full = 0;
 
                 robot_pinces[i].current_command = CMD_IDLE;  
             }
