@@ -19,7 +19,7 @@
 
 #define CURRENT_THRESHOLD_CATCH 2050 // if current is above this threshold, we assume an object is catched
 
-#define CURRENT_VARIATION_CATCH 150
+#define CURRENT_VARIATION_CATCH 100
 
 #define VALVE_ON 1
 

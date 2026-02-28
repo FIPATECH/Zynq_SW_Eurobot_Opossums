@@ -271,6 +271,7 @@ void pince_action_loop(Pince_t *pince){
                 if (current_sample_count >= 5) { 
                     uint16_t avg_right = pince->pump_right.sum_current / current_sample_count;
                     uint16_t avg_left  = pince->pump_left.sum_current / current_sample_count;
+                    printf("Moyenne glissante - D:%d, G:%d (Baseline D:%d, G:%d)\n", avg_right, avg_left, pince->pump_right.baseline_current, pince->pump_left.baseline_current);
 
                     // On compare la moyenne glissante avec le baseline
                     uint8_t right_ok = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) > CURRENT_VARIATION_CATCH);
@@ -664,27 +665,32 @@ void pince_action_loop(Pince_t *pince){
        /* ---------------------------------------------------- */
         /* ------------- SEQUENCE D'ABANDON / ERREUR -----------*/
         /* ---------------------------------------------------- */
-        case 500:
+        case 500: // Sas d'initialisation de la mise en sécurité
+            pince->retry_count = 0;
+            pince->action_step = 501;
+            break;
+        case 501:
+            printf( "\n\n====================\n" );
             printf("Pince Abort ! Extinction pompes (Essai %d/3)...\n", pince->retry_count + 1);
             // 1. Eteindre les pompes
             PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
             PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
             
             pince->action_timer = Timer_ms1;
-            pince->action_step = 501;
+            pince->action_step = 502;
             break;
 
-        case 501:
+        case 502:
             // On laisse un court instant (ex: 250ms) pour que l'inertie du moteur 
             // tombe et que le courant redescende réellement.
             if(Timer_ms1 - pince->action_timer >= 250){
                 GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_right.pump_current, &pince->action_done);
                 GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_left.pump_current, &pince->action_done);
-                pince->action_step = 502;
+                pince->action_step = 503;
             }
             break;
 
-        case 502:
+        case 503:
             if(pince->action_done){
                 pince->action_done = 0;
                 
@@ -692,22 +698,22 @@ void pince_action_loop(Pince_t *pince){
                 if(pince->pump_right.pump_current < CURRENT_THRESHOLD_ON_EXTINCTION && pince->pump_left.pump_current < CURRENT_THRESHOLD_ON_EXTINCTION){
                     printf("Pompes confirmées éteintes.\n");
                     pince->retry_count = 0; // On reset pour la prochaine fois
-                    pince->action_step = 503; // On passe à la suite de la mise en sécurité
+                    pince->action_step = 504; // On passe à la suite de la mise en sécurité
                 } else {
                     pince->retry_count++;
                     if(pince->retry_count >= 3){
                         printf("ERREUR CRITIQUE: Impossible d'éteindre les pompes après 3 essais. Poursuite de l'abandon.\n");
                         pince->retry_count = 0; // On reset
-                        pince->action_step = 503; // On force la suite pour ne pas bloquer le robot
+                        pince->action_step = 504; // On force la suite pour ne pas bloquer le robot
                     } else {
                         printf("Echec extinction pompes (D:%d, G:%d), nouvel essai...\n", pince->pump_right.pump_current, pince->pump_left.pump_current);
-                        pince->action_step = 500; // On boucle pour renvoyer la commande
+                        pince->action_step = 501; // On boucle pour renvoyer la commande
                     }
                 }
             }
             break;
 
-        case 503:
+        case 504:
             // 2. On ouvre les valves au cas où on avait en main un objet pour éviter de le garder 
             // en succion et de risquer de le faire tomber au mauvais moment
             PutFEETECH(pince->id_pump, VALVE_CMD_1, VALVE_ON);
@@ -721,18 +727,18 @@ void pince_action_loop(Pince_t *pince){
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.idle_position, &pince->action_done);
             
             pince->action_timer = Timer_ms1;
-            pince->action_step = 504;
-            break;
-            
-        case 504:
-            if(pince->action_done){
-                pince->action_done = 0;
-                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->action_position, &pince->action_done);
-                pince->action_step = 505;
-            }
+            pince->action_step = 505;
             break;
             
         case 505:
+            if(pince->action_done){
+                pince->action_done = 0;
+                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->action_position, &pince->action_done);
+                pince->action_step = 506;
+            }
+            break;
+            
+        case 506:
             if(pince->action_done){
                 if((pince->gros_pos.idle_position - 100) <= pince->action_position && pince->action_position <= (pince->gros_pos.idle_position + 100)){
                     printf("Pince action annulée et retour au repos ok\n");
@@ -742,7 +748,7 @@ void pince_action_loop(Pince_t *pince){
                     printf("Timeout critique : impossible de remonter la pince.\n");
                     pince->action_step = 0; // On force à 0 pour ne pas geler tout le robot
                 } else {
-                    pince->action_step = 504; // Continue de vérifier la position
+                    pince->action_step = 505; // Continue de vérifier la position
                 }
             }
             break;
