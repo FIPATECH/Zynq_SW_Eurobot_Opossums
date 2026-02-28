@@ -68,8 +68,10 @@ typedef struct {
 #define PUMP_ON 255
 #define PUMP_OFF 0
 
-#define CURRENT_THRESHOLD_ON 500 // if current is above this threshold, we assume the pump is on
-#define CURRENT_THRESHOLD_CATCH 2100 // if current is above this threshold, we assume an object is catched
+#define CURRENT_THRESHOLD_ON_ALLUMAGE 100 // if current is above this threshold, we assume the pump is on wen starting it
+#define CURRENT_THRESHOLD_ON_EXTINCTION 500 // if current is above this threshold, we assume the pump is on when trying to turn it off (we put a higher threshold here because it's possible that the pump is still stopping and consuming more current than usual, but if it's above this threshold, we can assume that the pump is not turning off correctly)
+
+#define CURRENT_THRESHOLD_CATCH 2050 // if current is above this threshold, we assume an object is catched
 
 
 #define VALVE_ON 1

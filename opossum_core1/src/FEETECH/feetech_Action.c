@@ -114,7 +114,8 @@ void pince_action_loop(Pince_t *pince){
         /* ------------- RAMASSER_OBJETS -----------------------*/
         /* ---------------------------------------------------- */
 
-        case 10: // baisser la pince
+case 10: // baisser la pince
+            pince->retry_count = 0; // INITIALISATION DU COMPTEUR DE RETRY ICI
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done);
             pince->gros_pos.cmd_timer = Timer_ms1;
             pince->action_step++;
@@ -123,6 +124,12 @@ void pince_action_loop(Pince_t *pince){
         case 11: // allumer les pompes
             if(pince->action_done){
                 pince->action_done = 0; // reset done flag
+                
+                // Si on arrive ici depuis un retry, on affiche l'essai
+                if (pince->retry_count > 0) {
+                    printf("Tentative allumage pompes %d/3\n", pince->retry_count + 1);
+                }
+                
                 PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_ON);
                 PutFEETECH_Ext_Done_SCS(pince->id_pump, PUMP_CMD_2, PUMP_ON, &pince->action_done);
                 pince->pump_right.cmd_timer = Timer_ms1;
@@ -144,13 +151,22 @@ void pince_action_loop(Pince_t *pince){
 
         case 13: 
             if(pince->action_done){
-                if(pince->pump_right.pump_current > CURRENT_THRESHOLD_ON && pince->pump_left.pump_current > CURRENT_THRESHOLD_ON){ // if current is above threshold, we assume the pump are on
+                if(pince->pump_right.pump_current > CURRENT_THRESHOLD_ON_ALLUMAGE && pince->pump_left.pump_current > CURRENT_THRESHOLD_ON_ALLUMAGE){ 
+                    // if current is above threshold, we assume the pump are on
                     printf("Pump on\n");
+                    pince->retry_count = 0; // On reset le compteur car c'est un succès
                     pince->action_done = 0;
                     pince->action_step++; // keep checking current
                 } else {
-                    printf("Pump not ok\n");
-                    pince->action_step = 11; // pump not on, try again
+                    pince->retry_count++;
+                    if (pince->retry_count >= 3) {
+                        printf("ERREUR CRITIQUE: Impossible d'allumer les pompes après 3 essais. Abandon.\n");
+                        pince->retry_count = 0; // Reset pour le prochain cycle de vie
+                        pince->action_step = 500; // ---> ABANDON DE SECURITE
+                    } else {
+                        printf("Pump not ok (D:%d, G:%d), retry...\n", pince->pump_right.pump_current, pince->pump_left.pump_current);
+                        pince->action_step = 11; // pump not on, try again
+                    }
                 }
             }
             break;
@@ -562,7 +578,7 @@ void pince_action_loop(Pince_t *pince){
                 pince->action_done = 0;
                 
                 // On vérifie si les courants sont bien retombés (j'utilise < 100 comme seuil d'extinction)
-                if(pince->pump_right.pump_current < CURRENT_THRESHOLD_ON && pince->pump_left.pump_current < CURRENT_THRESHOLD_ON){
+                if(pince->pump_right.pump_current < CURRENT_THRESHOLD_ON_EXTINCTION && pince->pump_left.pump_current < CURRENT_THRESHOLD_ON_EXTINCTION){
                     printf("Pompes confirmées éteintes.\n");
                     pince->retry_count = 0; // On reset pour la prochaine fois
                     pince->action_step = 503; // On passe à la suite de la mise en sécurité
