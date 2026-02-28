@@ -8,7 +8,8 @@ typedef enum {
     CMD_RAMASSER,
     CMD_LACHER_G,
     CMD_LACHER_D,
-    CMD_LACHER_ALL
+    CMD_LACHER_ALL,
+    CMD_MONTER
 } Pince_Command_t;
 
 
@@ -43,7 +44,7 @@ typedef struct {
     uint8_t id_pump;
 
     // -- variables d'états fsm -- //
-    uint8_t action_step;
+    uint16_t action_step;
     uint8_t action_done;
     uint32_t action_timer;
     uint32_t action_position;
@@ -101,16 +102,10 @@ uint8_t Get_FEETECH_Cmd(void);
 uint8_t Send_FEETECH_SCS_Cmd(void);
 uint8_t Get_FEETECH_SCS_Cmd(void);
 
-void FEETECH_Search_ID_Loop(void);
-uint8_t Test_ID_FEETECH_Cmd(void);
-
 void FEETECH_action_loop(void);
 
 void pince_action_loop(Pince_t *pince);
 uint8_t pince_action_cmd(void);
-
-void Test_pince_action_loop(void);
-uint8_t Test_pince_cmd(void);
 
 void pince_loop(void);
 void Init_Pinces_Loop(void);

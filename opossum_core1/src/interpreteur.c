@@ -30,7 +30,6 @@ const Command Command_List[] = {
         { "STSGET", Get_FEETECH_Cmd},
         { "SCSSEND", Send_FEETECH_SCS_Cmd},
         { "SCSGET", Get_FEETECH_SCS_Cmd},
-        { "FEETECHSEARCHID", Test_ID_FEETECH_Cmd},
 
         { "PINCE", pince_action_cmd},
     #endif
