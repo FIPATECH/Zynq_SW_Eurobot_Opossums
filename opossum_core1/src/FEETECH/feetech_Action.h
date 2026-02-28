@@ -3,6 +3,8 @@
 
 #define NBR_PINCES 2
 
+#define ABS_DIFF(a, b) ((a) > (b) ? ((a) - (b)) : ((b) - (a)))
+
 typedef enum {
     CMD_IDLE = 0,
     CMD_RAMASSER,
@@ -33,6 +35,9 @@ typedef struct {
 typedef struct {
     uint16_t pump_current;
     uint32_t cmd_timer;
+
+    uint16_t baseline_current; 
+    uint32_t sum_current;
 } Pump_t;
 
 
@@ -59,9 +64,16 @@ typedef struct {
 
     uint8_t retry_count;
 
+    uint8_t sample_count;
+
     // -- consignes -- //
     Pince_Command_t current_command;
 } Pince_t;
+
+
+// -------------------------------------------------- //
+// -------------- GLOBAL USE  ----------------------- //
+#define NBR_VALUES_FOR_MEAN 20
 
 // ------------------------------------------ //
 // -------------- defines pompes ------------ //
@@ -73,6 +85,7 @@ typedef struct {
 
 #define CURRENT_THRESHOLD_CATCH 2050 // if current is above this threshold, we assume an object is catched
 
+#define CURRENT_VARIATION_CATCH 150
 
 #define VALVE_ON 1
 
@@ -118,4 +131,6 @@ uint8_t pince_action_cmd(void);
 void pince_loop(void);
 void Init_Pinces_Loop(void);
 void AU_pinces(void);
+
+void Pump_Calibration_Loop(void);
 #endif // FEETECH_ACTION_H

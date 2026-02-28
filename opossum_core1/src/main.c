@@ -143,9 +143,11 @@ int main()
 
             // 3. Exécution classique si on n'est PAS en phase de récupération
             if (!au_recovering) {
-                Init_Pinces_Loop();
+                // Init_Pinces_Loop();
                 FEETECH_Loop();
                 pince_loop();
+
+                // Pump_Calibration_Loop();
             }
             
             LED_CLASSIC_MODE();

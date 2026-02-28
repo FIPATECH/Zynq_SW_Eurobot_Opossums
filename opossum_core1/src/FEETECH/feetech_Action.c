@@ -114,8 +114,8 @@ void pince_action_loop(Pince_t *pince){
         /* ------------- RAMASSER_OBJETS -----------------------*/
         /* ---------------------------------------------------- */
 
-case 10: // baisser la pince
-            pince->retry_count = 0; // INITIALISATION DU COMPTEUR DE RETRY ICI
+        case 10: // baisser la pince
+            pince->retry_count = 0; 
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done);
             pince->gros_pos.cmd_timer = Timer_ms1;
             pince->action_step++;
@@ -123,13 +123,10 @@ case 10: // baisser la pince
 
         case 11: // allumer les pompes
             if(pince->action_done){
-                pince->action_done = 0; // reset done flag
-                
-                // Si on arrive ici depuis un retry, on affiche l'essai
+                pince->action_done = 0;
                 if (pince->retry_count > 0) {
                     printf("Tentative allumage pompes %d/3\n", pince->retry_count + 1);
                 }
-                
                 PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_ON);
                 PutFEETECH_Ext_Done_SCS(pince->id_pump, PUMP_CMD_2, PUMP_ON, &pince->action_done);
                 pince->pump_right.cmd_timer = Timer_ms1;
@@ -140,8 +137,8 @@ case 10: // baisser la pince
 
         case 12: // check pump are on
             if(pince->action_done){
-                if (Timer_ms1 - pince->pump_right.cmd_timer >= 250){ // wait a bit for current to stabilize
-                    pince->action_done = 0; // reset done flag
+                if (Timer_ms1 - pince->pump_right.cmd_timer >= 250){ 
+                    pince->action_done = 0; 
                     GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_right.pump_current, &pince->action_done);
                     GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_left.pump_current, &pince->action_done);
                     pince->action_step++;
@@ -152,108 +149,156 @@ case 10: // baisser la pince
         case 13: 
             if(pince->action_done){
                 if(pince->pump_right.pump_current > CURRENT_THRESHOLD_ON_ALLUMAGE && pince->pump_left.pump_current > CURRENT_THRESHOLD_ON_ALLUMAGE){ 
-                    // if current is above threshold, we assume the pump are on
-                    printf("Pump on\n");
-                    pince->retry_count = 0; // On reset le compteur car c'est un succès
+                    printf("Pump on. Lancement calcul du baseline à vide...\n");
+                    pince->retry_count = 0; 
                     pince->action_done = 0;
-                    pince->action_step++; // keep checking current
+                    
+                    // Préparation pour l'échantillonnage de base (baseline)
+                    pince->pump_right.sum_current = 0;
+                    pince->pump_left.sum_current = 0;
+                    pince->sample_count = 0;
+                    pince->action_step = 14; // On passe à la sous-étape d'échantillonnage
                 } else {
                     pince->retry_count++;
                     if (pince->retry_count >= 3) {
                         printf("ERREUR CRITIQUE: Impossible d'allumer les pompes après 3 essais. Abandon.\n");
-                        pince->retry_count = 0; // Reset pour le prochain cycle de vie
-                        pince->action_step = 500; // ---> ABANDON DE SECURITE
+                        pince->retry_count = 0; 
+                        pince->action_step = 500; 
                     } else {
                         printf("Pump not ok (D:%d, G:%d), retry...\n", pince->pump_right.pump_current, pince->pump_left.pump_current);
-                        pince->action_step = 11; // pump not on, try again
+                        pince->action_step = 11; 
                     }
                 }
             }
             break;
 
-        case 14: // wait for pince to reach position
+        // --- ECHANTILLONNAGE BASELINE (A VIDE) ---
+        case 14:
+            GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_right.pump_current, &pince->action_done);
+            GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_left.pump_current, &pince->action_done);
+            pince->action_step = 15;
+            break;
+
+        case 15:
+            if(pince->action_done){
+                pince->action_done = 0;
+                pince->pump_right.sum_current += pince->pump_right.pump_current;
+                pince->pump_left.sum_current  += pince->pump_left.pump_current;
+                pince->sample_count++;
+                
+                if (pince->sample_count >= NBR_VALUES_FOR_MEAN) { // On fait la moyenne sur 4 valeurs
+                    pince->pump_right.baseline_current = pince->pump_right.sum_current / NBR_VALUES_FOR_MEAN;
+                    pince->pump_left.baseline_current  = pince->pump_left.sum_current / NBR_VALUES_FOR_MEAN;
+                    printf("Baseline trouvé - D:%d, G:%d\n", pince->pump_right.baseline_current, pince->pump_left.baseline_current);
+                    pince->action_step = 16; // On reprend le flux normal
+                } else {
+                    pince->action_step = 14; // On boucle pour le prochain échantillon
+                }
+            }
+            break;
+        // -------------------------------------------------------------
+
+        case 16: // wait for pince to reach position
             GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
             pince->action_step++;
             break;    
 
-        case 15:
+        case 17:
             if(pince->action_done){
                 if((pince->gros_pos.ramasser_pos - 100) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 100)){
-                    printf("Pince action done at position %d\n", pince->gros_pos.current_position);
-                    pince->action_timer = Timer_ms1; // timer pour laisser un peu de temps pour aspirer une fois qu'on est en position
+                    printf("Pince en position, debut de l'aspiration...\n");
+                    pince->action_timer = Timer_ms1; 
                     pince->action_done = 0;
-                    pince->action_step++;
+                    
+                    // Préparation pour l'échantillonnage de prise (catch)
+                    pince->pump_right.sum_current = 0;
+                    pince->pump_left.sum_current = 0;
+                    pince->sample_count = 0;
+                    pince->action_step = 18;
                 } else if (Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
                     printf("Pince action timeout at position %d\n", pince->gros_pos.current_position);
-                    pince->action_step = 500; // on a un problème, on coupe les pompes et on abandonne
+                    pince->action_step = 500; 
                 } else {
-                    pince->action_step = 14; // keep waiting
+                    pince->action_step = 16; 
                 }
             }
             break;
  
-        case 16: // verifier si on aspire un objet
+        case 18: // Demande de mesure
             GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_right.pump_current, &pince->action_done);
             GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_left.pump_current, &pince->action_done);
-            pince->action_step++;
+            pince->action_step = 19;
             break;
 
-        case 17:
+        case 19: // Lecture, Moyenne et Décision
             if(pince->action_done){
                 pince->action_done = 0;
                 
-                // On vérifie si chaque pompe a bien fait le vide
-                printf("Pump currents: Right=%d, Left=%d\n", pince->pump_right.pump_current, pince->pump_left.pump_current);
-                uint8_t right_ok = (pince->pump_right.pump_current < CURRENT_THRESHOLD_CATCH);
-                uint8_t left_ok = (pince->pump_left.pump_current < CURRENT_THRESHOLD_CATCH);
+                // Accumulation
+                pince->pump_right.sum_current += pince->pump_right.pump_current;
+                pince->pump_left.sum_current  += pince->pump_left.pump_current;
+                pince->sample_count++;
 
-                if(right_ok && left_ok){ 
-                    // Cas idéal : les 2 objets sont attrapés rapidement
-                    printf("Deux objets ramassés\n");
-                    pince->action_step = 18; 
-                } else {
-                    if (Timer_ms1 - pince->action_timer >= 2000){ 
-                        // Le délai de 2 secondes est écoulé, on prend une décision finale
-                        if (right_ok || left_ok) {
-                            printf("Timeout: 1 seul objet ramassé (G:%d, D:%d)\n", left_ok, right_ok);
-                            
-                            // On coupe uniquement la pompe qui tourne dans le vide
-                            if (!right_ok) PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
-                            if (!left_ok)  PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
-                            
-                            pince->action_step = 18; // On remonte quand même le bras avec 1 seul palet
-                        } else {
-                            printf("Timeout: Aucun objet ramassé\n");
-                            
-                            // Aucun objet, on coupe les deux pompes et on abandonne
-                            PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
-                            PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
-                            
-                            pince->action_step = 500; // Abandon
-                        }
+                // On attend d'avoir 3 échantillons pour lisser les pics aléatoires
+                if (pince->sample_count >= NBR_VALUES_FOR_MEAN) {
+                    uint16_t avg_right = pince->pump_right.sum_current / NBR_VALUES_FOR_MEAN;
+                    uint16_t avg_left  = pince->pump_left.sum_current / NBR_VALUES_FOR_MEAN;
+
+                    printf("Moyennes actuelles après %d échantillons: D=%d, G=%d\n", NBR_VALUES_FOR_MEAN, avg_right, avg_left);
+                    
+                    // On compare la moyenne actuelle avec le baseline (à vide)
+                    uint8_t right_ok = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) > CURRENT_VARIATION_CATCH);
+                    uint8_t left_ok  = (ABS_DIFF(pince->pump_left.baseline_current, avg_left) > CURRENT_VARIATION_CATCH);
+
+                    if(right_ok && left_ok){ 
+                        printf("Deux objets ramassés (Variations > %d)\n", CURRENT_VARIATION_CATCH);
+                        pince->action_step = 20; // On passe à la remontée
                     } else {
-                        // Pas encore de timeout et les 2 ne sont pas OK, on relance une lecture
-                        pince->action_step = 16; 
+                        if (Timer_ms1 - pince->action_timer >= 2000){ 
+                            // TIMEOUT 2 SECONDES
+                            if (right_ok || left_ok) {
+                                printf("Timeout: 1 seul objet ramassé (G:%d, D:%d)\n", left_ok, right_ok);
+                                if (!right_ok) PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+                                if (!left_ok)  PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+                                pince->action_step = 20; 
+                            } else {
+                                printf("Timeout: Aucun objet ramassé. Moyennes: D=%d (Base %d), G=%d (Base %d)\n", 
+                                       avg_right, pince->pump_right.baseline_current, avg_left, pince->pump_left.baseline_current);
+                                PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+                                PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+                                pince->action_step = 500; 
+                            }
+                        } else {
+                            // --- LA CORRECTION EST ICI ---
+                            // On n'a pas encore timeout, on relance juste l'échantillonnage de courant
+                            pince->pump_right.sum_current = 0;
+                            pince->pump_left.sum_current = 0;
+                            pince->sample_count = 0;
+                            pince->action_step = 18; // Retour au 18 (Demande de mesure) et non au 16 !
+                        }
                     }
+                } else {
+                    // On n'a pas encore nos 3 échantillons, on boucle sur la mesure
+                    pince->action_step = 18;
                 }
             }
             break;
         
-        case 18: //remonter la pince
+        case 20: //remonter la pince
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.idle_position, &pince->action_done);
             pince->action_timer = Timer_ms1;
-            pince->action_step = 19;
+            pince->action_step = 21;
             break;
 
-        case 19:
+        case 21:
             if(pince->action_done){
                 pince->action_done = 0;
                 GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->action_position, &pince->action_done);
-                pince->action_step = 20;
+                pince->action_step = 22;
             }
             break;
 
-        case 20:
+        case 22:
             if(pince->action_done){
                 if((pince->gros_pos.idle_position - 100) <= pince->action_position && pince->action_position <= (pince->gros_pos.idle_position + 100)){
                     printf("Pince action done at position %d\n", pince->action_position);
@@ -263,7 +308,7 @@ case 10: // baisser la pince
                     printf("Pince action timeout at position %d\n", pince->action_position);
                     pince->action_step = 500; // on a un problème, on coupe les pompes et on abandonne
                 } else {
-                    pince->action_step = 19; // keep waiting
+                    pince->action_step = 21; // keep waiting
                 }
             }
             break;
@@ -731,6 +776,8 @@ void Init_Pinces_Loop(void){
 
                 robot_pinces[i].retry_count = 0;
 
+                robot_pinces[i].sample_count = 0;
+
                 robot_pinces[i].current_command = CMD_IDLE;  
             }
             // PINCE_1
@@ -784,3 +831,128 @@ void Init_Pinces_Loop(void){
     }
 }
 
+
+// Tu peux changer cet ID pour tester les autres pinces (10, 20, 30...)
+#define CALIB_PUMP_ID 20 
+#define CALIB_WINDOW 50
+// Variables globales pour la calibration
+uint8_t calib_step = 0;
+uint32_t calib_timer = 0;
+uint8_t calib_done = 0;
+uint16_t calib_current_right = 0;
+uint16_t calib_current_left = 0;
+
+// Variables dédiées à la moyenne glissante
+uint16_t samples_right[CALIB_WINDOW] = {0};
+uint16_t samples_left[CALIB_WINDOW]  = {0};
+uint32_t sum_right = 0;
+uint32_t sum_left = 0;
+uint8_t sample_idx = 0;
+uint8_t buffer_full = 0;
+uint8_t print_counter = 0;
+
+
+void Pump_Calibration_Loop(void) {
+    switch(calib_step) {
+        case 0:
+            printf("\n=== DEMARRAGE CALIBRATION POMPE %d ===\n", CALIB_PUMP_ID);
+            
+            // 1. Réinitialisation complète du buffer circulaire
+            sum_right = 0;
+            sum_left = 0;
+            sample_idx = 0;
+            buffer_full = 0;
+            print_counter = 0;
+            for(int i = 0; i < CALIB_WINDOW; i++){
+                samples_right[i] = 0;
+                samples_left[i] = 0;
+            }
+            
+            // Allumage des deux pompes
+            // INFO : J'utilise un PutFEETECH "normal" pour la 1ère commande.
+            // Utiliser deux fois Ext_Done de suite avec le même &calib_done risque d'écraser le flag.
+            PutFEETECH(CALIB_PUMP_ID, PUMP_CMD_1, PUMP_ON);
+            PutFEETECH_Ext_Done(CALIB_PUMP_ID, PUMP_CMD_2, PUMP_ON, &calib_done);
+            calib_timer = Timer_ms1;
+            calib_step = 1;
+            break;
+            
+        case 1:
+            // Attendre 500ms que les pompes soient bien lancées
+            if (calib_done) {
+                if (Timer_ms1 - calib_timer >= 500) { 
+                    calib_done = 0;
+                    calib_step = 2;
+                }
+            }
+            break;
+            
+        case 2:
+            // Demander le courant Droit (1)
+            GetFEETECH_Ext_Done(CALIB_PUMP_ID, ADDR_CURRENT_1_L, &calib_current_right, &calib_done);
+            calib_step = 3;
+            break;
+            
+        case 3:
+            if(calib_done) {
+                calib_done = 0;
+                // Demander le courant Gauche (2)
+                GetFEETECH_Ext_Done(CALIB_PUMP_ID, ADDR_CURRENT_2_L, &calib_current_left, &calib_done);
+                calib_step = 4;
+            }
+            break;
+            
+        case 4:
+            if(calib_done) {
+                calib_done = 0;
+                
+                // --- ALGORITHME DE MOYENNE GLISSANTE ---
+                // a) Retirer la plus vieille valeur de la somme
+                sum_right -= samples_right[sample_idx];
+                sum_left  -= samples_left[sample_idx];
+                
+                // b) Ajouter la nouvelle valeur au tableau et à la somme
+                samples_right[sample_idx] = calib_current_right;
+                samples_left[sample_idx]  = calib_current_left;
+                sum_right += calib_current_right;
+                sum_left  += calib_current_left;
+                
+                // c) Avancer le curseur du buffer circulaire
+                sample_idx++;
+                if(sample_idx >= CALIB_WINDOW) {
+                    sample_idx = 0;
+                    buffer_full = 1; // Le tableau est entièrement rempli
+                }
+                
+                // d) Calculer la moyenne
+                uint16_t avg_right, avg_left;
+                if(buffer_full) {
+                    avg_right = sum_right / CALIB_WINDOW;
+                    avg_left  = sum_left  / CALIB_WINDOW;
+                } else {
+                    // Si on vient de démarrer, on divise seulement par les valeurs acquises
+                    avg_right = sum_right / sample_idx;
+                    avg_left  = sum_left  / sample_idx;
+                }
+                
+                // --- AFFICHAGE REDUIT ---
+                print_counter++;
+                if (print_counter >= 10) { // N'affiche qu'1 fois sur 10
+                    printf("CALIB - Brut[D:%4d G:%4d] | MOYENNE LISSEE[D:%4d G:%4d]\n", 
+                           calib_current_right, calib_current_left, avg_right, avg_left);
+                    print_counter = 0;
+                }
+                
+                calib_timer = Timer_ms1;
+                calib_step = 5;
+            }
+            break;
+            
+        case 5:
+            // On tourne très vite ! 20ms = 50 mesures par seconde
+            if (Timer_ms1 - calib_timer >= 20) { 
+                calib_step = 2; // On boucle
+            }
+            break;
+    }
+}
