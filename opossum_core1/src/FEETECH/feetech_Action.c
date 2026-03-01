@@ -373,44 +373,51 @@ void pince_action_loop(Pince_t *pince){
         /* ------------- RETOURNER PALETS ----------------------*/
         /* ---------------------------------------------------- */
 
-        case 200:
+        case 200: // Ordonner la descente du bras
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.lacher_pos, &pince->action_done);
             pince->action_timer = Timer_ms1;
             pince->action_step = 201;
             break;
-        case 201:
+
+        case 201: // Demander la position
             if(pince->action_done){
                 pince->action_done = 0;
                 GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
                 pince->action_step = 202;
             }
             break;
-        case 202:
+
+        case 202: // Vérifier l'arrivée en position
             if(pince->action_done){
-                if((pince->gros_pos.lacher_pos - 100) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.lacher_pos + 100)){
-                    printf("Pince action done at position %d\n", pince->gros_pos.current_position);
+                if((pince->gros_pos.lacher_pos - 50) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.lacher_pos + 50)){
+                    printf("Pince en position de lacher (%d)\n", pince->gros_pos.current_position);
                     pince->action_done = 0;
-                    pince->action_step++;
+                    pince->action_step = 203;
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
                     printf("Pince action timeout at position %d\n", pince->gros_pos.current_position);
-                    pince->action_step = 0;
+                    pince->action_step = 500; // Sas de sécurité
                 } else {
-                    pince->action_step = 201; // keep waiting
+                    pince->action_step = 201; // Continue de vérifier
                 }
             }
             break;
-        case 203: // ouvrir les clapets des palets à lacher
+
+        case 203: // Ouvrir les clapets (les sortir)
             if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
+                printf("Ouverture clapet gauche a la position %d\n", pince->petit_gauche_pos.sortie_pos);
                 PutFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_GOAL_POSITION_L, pince->petit_gauche_pos.sortie_pos, &pince->action_done);
             }
             if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
+                printf("Ouverture clapet droite a la position %d\n", pince->petit_droite_pos.sortie_pos);
                 PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.sortie_pos, &pince->action_done);
             }
             pince->action_timer = Timer_ms1;
             pince->action_step = 204;
             break;
-        case 204: // attendre que les clapets soient ouverts
+
+        case 204: // Demander la position des clapets
             if(pince->action_done){
+                pince->action_done = 0;
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     GetFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_PRESENT_POSITION_L, &pince->petit_gauche_pos.current_position, &pince->action_done);
                 }
@@ -418,13 +425,14 @@ void pince_action_loop(Pince_t *pince){
                     GetFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_PRESENT_POSITION_L, &pince->petit_droite_pos.current_position, &pince->action_done);
                 }
                 pince->action_step = 205;
-                pince->action_done = 0;
             }
             break;
-        case 205:
+
+        case 205: // Vérifier l'ouverture des clapets
             if(pince->action_done){
                 uint8_t gauche_ok = 1;
                 uint8_t droite_ok = 1;
+                
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     if(!( (pince->petit_gauche_pos.sortie_pos - 100) <= pince->petit_gauche_pos.current_position && pince->petit_gauche_pos.current_position <= (pince->petit_gauche_pos.sortie_pos + 100) )){
                         gauche_ok = 0;
@@ -437,18 +445,72 @@ void pince_action_loop(Pince_t *pince){
                 }
 
                 if(gauche_ok && droite_ok){
-                    printf("Pince action done at position gauche: %d droite: %d\n", pince->petit_gauche_pos.current_position, pince->petit_droite_pos.current_position);
                     pince->action_done = 0;
-                    pince->action_step++;
+                    pince->retry_count = 0;   // <-- INITIALISATION DU COMPTEUR DE RETRY
+                    pince->action_step = 206; // Clapets ouverts, on passe aux pompes
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
-                    printf("Pince action timeout at position gauche: %d droite: %d\n", pince->petit_gauche_pos.current_position, pince->petit_droite_pos.current_position);
-                    pince->action_step = 0;
+                    printf("Timeout ouverture clapets\n");
+                    pince->action_step = 500; // Sas de sécurité
                 } else {
-                    pince->action_step = 204; // keep waiting
+                    pince->action_step = 204; // Continue de vérifier
                 }
             }
             break;
-        case 206: // allumer les electrovannes pour lacher les objets
+
+        case 206: // Éteindre les pompes
+            if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
+                PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+            }
+            if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
+                PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+            }
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 207;
+            break;
+
+        case 207: // Demander les courants (après une courte pause de 100ms pour l'inertie)
+            if(Timer_ms1 - pince->action_timer >= 100){
+                pince->action_done = 0;
+                if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
+                    GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current, &pince->action_done);
+                }
+                if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
+                    GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
+                }
+                pince->action_step = 208;
+            }
+            break;
+
+        case 208: // Vérifier la chute de courant (Pompes bien éteintes)
+            if(pince->action_done){
+                pince->action_done = 0;
+                uint8_t pump_ok = 1;
+                
+                if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
+                    if(pince->pump_left.pump_current > CURRENT_THRESHOLD_ON_EXTINCTION) pump_ok = 0;
+                }
+                if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
+                    if(pince->pump_right.pump_current > CURRENT_THRESHOLD_ON_EXTINCTION) pump_ok = 0;
+                }
+
+                if(pump_ok){
+                    printf("Pompes coupees. Activation valves.\n");
+                    pince->retry_count = 0;
+                    pince->action_step = 209;
+                } else {
+                    pince->retry_count++;
+                    if(pince->retry_count >= 3){ 
+                        printf("ERREUR CRITIQUE: Le courant pompe ne chute pas apres 3 tentatives. Abandon.\n");
+                        pince->action_step = 500; // Sas de sécurité
+                    } else {
+                        printf("Echec extinction pompes, tentative %d/3...\n", pince->retry_count + 1);
+                        pince->action_step = 206; // <-- RETOUR À L'ÉTAPE 206 POUR RENVOYER LA COMMANDE OFF
+                    }
+                }
+            }
+            break;
+
+        case 209: // Allumer les électrovannes pour casser le vide et lâcher l'objet
             if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                 PutFEETECH(pince->id_pump, VALVE_CMD_1, VALVE_ON);
             }
@@ -456,9 +518,10 @@ void pince_action_loop(Pince_t *pince){
                 PutFEETECH(pince->id_pump, VALVE_CMD_2, VALVE_ON);
             }
             pince->action_timer = Timer_ms1;
-            pince->action_step = 207;
+            pince->action_step = 210;
             break;
-        case 207: // attendre un peu avant de ranger les clapets
+
+        case 210: // Attendre 1s que ça tombe, puis retirer les clapets
             if(Timer_ms1 - pince->action_timer >= 1000){
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     PutFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_GOAL_POSITION_L, pince->petit_gauche_pos.retrait_pos, &pince->action_done);
@@ -466,26 +529,29 @@ void pince_action_loop(Pince_t *pince){
                 if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
                     PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.retrait_pos, &pince->action_done);
                 }
-                pince->action_step = 208;
                 pince->action_timer = Timer_ms1;
+                pince->action_step = 211;
             }
             break;
-        case 208: // attendre que les clapets soient rentrés
+
+        case 211: // Demander la position de retrait
             if(pince->action_done){
+                pince->action_done = 0;
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     GetFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_PRESENT_POSITION_L, &pince->petit_gauche_pos.current_position, &pince->action_done);
                 }
                 if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
                     GetFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_PRESENT_POSITION_L, &pince->petit_droite_pos.current_position, &pince->action_done);
                 }
-                pince->action_step = 209;
-                pince->action_done = 0;
+                pince->action_step = 212;
             }
             break;
-        case 209:
+
+        case 212: // Vérifier que les clapets sont bien rentrés
             if(pince->action_done){ 
                 uint8_t gauche_ok = 1;
                 uint8_t droite_ok = 1;
+                
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     if(!( (pince->petit_gauche_pos.retrait_pos - 100) <= pince->petit_gauche_pos.current_position && pince->petit_gauche_pos.current_position <= (pince->petit_gauche_pos.retrait_pos + 100) )){
                         gauche_ok = 0;
@@ -498,14 +564,14 @@ void pince_action_loop(Pince_t *pince){
                 }
 
                 if(gauche_ok && droite_ok){
-                    printf("Pince action done at position gauche: %d droite: %d\n", pince->petit_gauche_pos.current_position, pince->petit_droite_pos.current_position);
+                    printf("Clapets rentres, depot termine avec succes.\n");
                     pince->action_done = 0;
-                    pince->action_step = 0;
+                    pince->action_step = 0; // FIN DU CYCLE
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
-                    printf("Pince action timeout at position gauche: %d droite: %d\n", pince->petit_gauche_pos.current_position, pince->petit_droite_pos.current_position);
-                    pince->action_step = 0;
+                    printf("Timeout retrait clapets\n");
+                    pince->action_step = 500; // Sas de sécurité
                 } else {
-                    pince->action_step = 208; // keep waiting
+                    pince->action_step = 211; // Continue de vérifier
                 }
             }
             break;

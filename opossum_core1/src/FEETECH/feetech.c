@@ -253,10 +253,23 @@ void FEETECH_Loop(void){
                 if((FEETECH_Receive_Tab[3] == (FEETECH_Receive_Ptr - 4)) ) {
                     FEETECH_Loop_State = 30;
                 }else if((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime){
+                    #ifdef FEETECH_PROTOCOL_DEBUG
+                         // --- PRINT TIMEOUT ---
+                        printf("FEETECH Error: Timeout (Partial Rx) on ID %d (Reg 0x%02X)\r\n", 
+                                Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr, 
+                                Liste_Command_FEETECH[Command_FEETECH_DONE].Reg_Addr);
+                    #endif
+
                     *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
                     FEETECH_Loop_State = 90;
                 }
             } else if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) > Com_FEETECH_Maxtime) {
+                #ifdef FEETECH_PROTOCOL_DEBUG
+                    printf("FEETECH Error: No response from ID %d (Reg 0x%02X)\r\n", 
+                            Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr, 
+                            Liste_Command_FEETECH[Command_FEETECH_DONE].Reg_Addr);
+                #endif
+                
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_TIMEOUT;
                 FEETECH_Loop_State = 90;
             }
@@ -271,6 +284,13 @@ void FEETECH_Loop(void){
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_OK;
                 FEETECH_Loop_State = 31;
             } else {
+                #ifdef FEETECH_PROTOCOL_DEBUG
+                    // --- PRINT CHECKSUM ERROR ---
+                    printf("FEETECH Error: Checksum mismatch from ID %d. Expected 0x%02X, got 0x%02X\r\n", 
+                            Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr, 
+                            val8, FEETECH_Receive_Tab[FEETECH_Receive_Tab[3] + 3]);
+                #endif
+
                 *(Liste_Command_FEETECH[Command_FEETECH_DONE].Status) = FEETECH_STATUS_CHKSUM_ERROR;
                 FEETECH_Loop_State = 90;
             }
@@ -311,9 +331,23 @@ void FEETECH_Loop(void){
             FEETECH_Bytes_To_Ignore = 0;
             FEETECH_Cmd_Nb_Try ++;
             if (FEETECH_Cmd_Nb_Try < FEETECH_CMD_NB_MAX_TRY_SEND) {
+                #ifdef FEETECH_PROTOCOL_DEBUG
+                    // Print de la tentative de retry
+                    printf("FEETECH: Retrying ID %d (Attempt %d/%d)\r\n", 
+                            Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr, 
+                            FEETECH_Cmd_Nb_Try + 1, FEETECH_CMD_NB_MAX_TRY_SEND);
+                #endif
+
                 FEETECH_Loop_State = 10;
                 Com_FEETECH_Status = COM_FEETECH_IDDLE;
             } else {
+                #ifdef FEETECH_PROTOCOL_DEBUG
+                    // Print de l'abandon final
+                    printf("FEETECH Error: Command failed for ID %d after %d attempts.\r\n", 
+                            Liste_Command_FEETECH[Command_FEETECH_DONE].FEETECH_Addr, 
+                            FEETECH_CMD_NB_MAX_TRY_SEND);
+                #endif
+
                 FEETECH_Loop_State = 100;
             }
             break;

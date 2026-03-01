@@ -1,6 +1,7 @@
 #ifndef FEETECH_H
 #define FEETECH_H
 
+// #define FEETECH_PROTOCOL_DEBUG
 
 typedef unsigned char byte;
 // Broadcast ID
@@ -15,8 +16,8 @@ typedef unsigned char byte;
 #define FEETECH_BROADCAST               254
 
 #define FEETECH_CMD_NB_MAX_TRY_SEND 3
-#define FEETECH_CMD_LIST_SIZE 20
-#define FEETECH_CMD_BUFF_LENGTH 20
+#define FEETECH_CMD_LIST_SIZE 40
+#define FEETECH_CMD_BUFF_LENGTH 40
 
 #define FEETECH_STATUS_OK              0
 
