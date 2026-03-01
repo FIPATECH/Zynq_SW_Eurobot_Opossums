@@ -207,28 +207,39 @@ void pince_action_loop(Pince_t *pince){
             pince->action_step++;
             break;    
 
-        case 17:
+        case 17: // check position and stabilize
             if(pince->action_done){
-                if((pince->gros_pos.ramasser_pos - 100) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 100)){
-                    printf("Pince en position, debut de l'aspiration lissée...\n");
-                    pince->action_timer = Timer_ms1; 
-                    pince->action_done = 0;
+                // Vérification de la position avec tolérance
+                if((pince->gros_pos.ramasser_pos - 20) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 20)){
                     
-                    // --- INITIALISATION DU BUFFER DE MOYENNE GLISSANTE ---
-                    pince->pump_right.sum_current = 0;
-                    pince->pump_left.sum_current = 0;
-                    pince->sample_idx = 0;
-                    pince->buffer_full = 0;
-                    for(int i = 0; i < NBR_VALUES_FOR_MEAN; i++) {
-                        pince->pump_right.samples[i] = 0;
-                        pince->pump_left.samples[i]  = 0;
+                    // On ne passe pas au step 18 tant qu'on n'a pas attendu 150ms EN POSITION
+                    if (pince->action_timer == 0) {
+                        pince->action_timer = Timer_ms1; // On lance le chrono au premier passage
+                        printf("Position atteinte, stabilisation et mise en pression (150ms)...\n");
                     }
-                    
-                    pince->action_step = 18;
+
+                    if (Timer_ms1 - pince->action_timer >= 150) {
+                        printf("Stabilisation finie, début de l'analyse.\n");
+                        pince->action_timer = 0; // Reset pour usage futur
+                        pince->action_done = 0;
+                        
+                        // --- INITIALISATION DU BUFFER DE MOYENNE GLISSANTE ---
+                        pince->pump_right.sum_current = 0;
+                        pince->pump_left.sum_current = 0;
+                        pince->sample_idx = 0;
+                        pince->buffer_full = 0;
+                        for(int i = 0; i < NBR_VALUES_FOR_MEAN; i++) {
+                            pince->pump_right.samples[i] = 0;
+                            pince->pump_left.samples[i]  = 0;
+                        }
+                        pince->gros_pos.current_position = 0;
+                        pince->action_step = 18; // On passe enfin à la mesure
+                    }
                 } else if (Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
                     printf("Pince action timeout at position %d\n", pince->gros_pos.current_position);
                     pince->action_step = 500; 
                 } else {
+                    pince->action_timer = 0; // On reset le timer si on sort de la zone de tolérance
                     pince->action_step = 16; 
                 }
             }

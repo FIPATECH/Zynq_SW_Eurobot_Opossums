@@ -29,7 +29,7 @@
 
 // ---------------- PINCE 1 ----------------- //
 #define PINCE_1_GROS_IDLE_POS 2450
-#define PINCE_1_GROS_RAMASSER_POS 3650
+#define PINCE_1_GROS_RAMASSER_POS 3615
 #define PINCE_1_GROS_LACHER_POS 2200
 
 #define PINCE_1_DROITE_SORTIE_POS 620
@@ -40,7 +40,7 @@
 
 // ---------------- PINCE 2 ----------------- //
 #define PINCE_2_GROS_IDLE_POS 3580
-#define PINCE_2_GROS_RAMASSER_POS 2400
+#define PINCE_2_GROS_RAMASSER_POS 2395
 #define PINCE_2_GROS_LACHER_POS 3800
 
 #define PINCE_2_DROITE_SORTIE_POS 620 //700
