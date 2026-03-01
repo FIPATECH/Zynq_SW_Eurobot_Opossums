@@ -138,7 +138,7 @@ void pince_action_loop(Pince_t *pince){
 
         case 12: // check pump are on
             if(pince->action_done){
-                if (Timer_ms1 - pince->pump_right.cmd_timer >= 250){ 
+                if (Timer_ms1 - pince->pump_right.cmd_timer >= 500){ 
                     pince->action_done = 0; 
                     GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_right.pump_current, &pince->action_done);
                     GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_left.pump_current, &pince->action_done);

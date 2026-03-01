@@ -7,7 +7,7 @@
 
 // -------------------------------------------------- //
 // -------------- GLOBAL USE  ----------------------- //
-#define NBR_VALUES_FOR_MEAN 30
+#define NBR_VALUES_FOR_MEAN 40
 
 // ------------------------------------------ //
 // -------------- defines pompes ------------ //
@@ -19,7 +19,7 @@
 
 #define CURRENT_THRESHOLD_CATCH 2050 // if current is above this threshold, we assume an object is catched
 
-#define CURRENT_VARIATION_CATCH 100
+#define CURRENT_VARIATION_CATCH 100 //62
 
 #define VALVE_ON 1
 
