@@ -28,14 +28,14 @@
 // ------------------------------------------ //
 
 // ---------------- PINCE 1 ----------------- //
-#define PINCE_1_GROS_IDLE_POS 2600
-#define PINCE_1_GROS_RAMASSER_POS 3500
-#define PINCE_1_GROS_LACHER_POS 2300
+#define PINCE_1_GROS_IDLE_POS 2450
+#define PINCE_1_GROS_RAMASSER_POS 3650
+#define PINCE_1_GROS_LACHER_POS 2200
 
-#define PINCE_1_DROITE_SORTIE_POS 700
+#define PINCE_1_DROITE_SORTIE_POS 620
 #define PINCE_1_DROITE_RETRAIT_POS 512
 
-#define PINCE_1_GAUCHE_SORTIE_POS 300
+#define PINCE_1_GAUCHE_SORTIE_POS 380
 #define PINCE_1_GAUCHE_RETRAIT_POS 512
 
 // ---------------- PINCE 2 ----------------- //

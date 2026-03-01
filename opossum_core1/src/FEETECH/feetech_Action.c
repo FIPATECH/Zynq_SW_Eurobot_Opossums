@@ -566,7 +566,7 @@ void pince_action_loop(Pince_t *pince){
                 if(gauche_ok && droite_ok){
                     printf("Clapets rentres, depot termine avec succes.\n");
                     pince->action_done = 0;
-                    pince->action_step = 0; // FIN DU CYCLE
+                    pince->action_step = 213; // remettre la pince en position haute pour éviter les accrochages
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
                     printf("Timeout retrait clapets\n");
                     pince->action_step = 500; // Sas de sécurité
@@ -575,7 +575,35 @@ void pince_action_loop(Pince_t *pince){
                 }
             }
             break;
-        
+
+        case 213: // Remonter la pince après le dépôt
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.idle_position, &pince->action_done);
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 214;
+            break;
+
+        case 214: // Vérifier la remontée
+            if(pince->action_done){
+                pince->action_done = 0;
+                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
+                pince->action_step = 215;
+            }
+            break;
+
+        case 215:
+            if(pince->action_done){
+                if((pince->gros_pos.idle_position - 100) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.idle_position + 100)){
+                    printf("Pince remontee en position idle (%d)\n", pince->gros_pos.current_position);
+                    pince->action_done = 0;
+                    pince->action_step = 0; // On a fini le cycle de dépôt, on reset l'état pour la prochaine commande
+                } else if (Timer_ms1 - pince->action_timer >= 3000){
+                    printf("Timeout remontée pince après dépôt (pos: %d)\n", pince->gros_pos.current_position);
+                    pince->action_step = 500; // Sas de sécurité
+                } else {
+                    pince->action_step = 214; // Continue de vérifier
+                }
+            }
+            break;
         
         /* ---------------------------------------------------- */
         /* ------------- DEPOSER PALETS ----------------------*/
@@ -912,7 +940,7 @@ void Init_Pinces_Loop(void){
             }
             break;
         case 1:
-            for (uint8_t i = 1; i < NBR_PINCES; i++){
+            for (uint8_t i = 0; i < NBR_PINCES; i++){
                 robot_pinces[i].id_gros     = (i + 1)*10 + 1; 
                 robot_pinces[i].id_droite   = (i + 1)*10 + 3;
                 robot_pinces[i].id_gauche   = (i + 1)*10 + 2;
@@ -956,7 +984,7 @@ void Init_Pinces_Loop(void){
             init_pince_state = 2;
             break;
         case 2:
-            for (uint8_t i = 1; i < NBR_PINCES; i++){
+            for (uint8_t i = 0; i < NBR_PINCES; i++){
                 // move gros servo to IDLE position
                 PutFEETECH_Ext_Done(robot_pinces[i].id_gros, FEETECH_GOAL_POSITION_L, robot_pinces[i].gros_pos.idle_position, &robot_pinces[i].action_done);
                 // move petit servos to RETRAIT position
@@ -969,7 +997,7 @@ void Init_Pinces_Loop(void){
         case 3:
             // wait for all servos to reach position
             if (Timer_ms1 - init_pince_timer >= 3000){
-                for (uint8_t i = 1; i < NBR_PINCES; i++){
+                for (uint8_t i = 0; i < NBR_PINCES; i++){
                     robot_pinces[i].action_done = 0;
                 }
                 init_pince_state = 4;
