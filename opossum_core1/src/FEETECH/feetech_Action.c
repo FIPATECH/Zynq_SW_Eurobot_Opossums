@@ -912,7 +912,7 @@ void Init_Pinces_Loop(void){
             }
             break;
         case 1:
-            for (uint8_t i = 0; i < NBR_PINCES; i++){
+            for (uint8_t i = 1; i < NBR_PINCES; i++){
                 robot_pinces[i].id_gros     = (i + 1)*10 + 1; 
                 robot_pinces[i].id_droite   = (i + 1)*10 + 3;
                 robot_pinces[i].id_gauche   = (i + 1)*10 + 2;
@@ -956,7 +956,7 @@ void Init_Pinces_Loop(void){
             init_pince_state = 2;
             break;
         case 2:
-            for (uint8_t i = 0; i < NBR_PINCES; i++){
+            for (uint8_t i = 1; i < NBR_PINCES; i++){
                 // move gros servo to IDLE position
                 PutFEETECH_Ext_Done(robot_pinces[i].id_gros, FEETECH_GOAL_POSITION_L, robot_pinces[i].gros_pos.idle_position, &robot_pinces[i].action_done);
                 // move petit servos to RETRAIT position
@@ -969,7 +969,7 @@ void Init_Pinces_Loop(void){
         case 3:
             // wait for all servos to reach position
             if (Timer_ms1 - init_pince_timer >= 3000){
-                for (uint8_t i = 0; i < NBR_PINCES; i++){
+                for (uint8_t i = 1; i < NBR_PINCES; i++){
                     robot_pinces[i].action_done = 0;
                 }
                 init_pince_state = 4;

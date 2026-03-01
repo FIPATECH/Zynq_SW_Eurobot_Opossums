@@ -15,7 +15,7 @@ extern XUartPs Uart1_Instance; // from your uart code (you had this variable)
 
 uint8_t Com_FEETECH_Status = COM_FEETECH_IDDLE;
 uint32_t Time_Of_Last_FEETECH_Received = 0;
-uint32_t Com_FEETECH_Maxtime = 5;
+uint32_t Com_FEETECH_Maxtime = 10;
 
 uint8_t FEETECH_Loop_State = 0;
 
@@ -229,7 +229,7 @@ void FEETECH_Loop(void){
         case 11:
             if (feetech_tx_done) {
                 if (XUartPs_IsTransmitEmpty(&Uart1_Instance)) {
-                    usleep(10); 
+                    usleep(150); 
                     XGpio_DiscreteWrite(&GpioFeetechDir, FEETECH_DIR_CHANNEL, FEETECH_DIR_RX);
                     feetech_tx_done = 0;
                     FEETECH_Receive_Ptr = 0;
