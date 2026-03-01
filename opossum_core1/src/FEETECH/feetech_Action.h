@@ -15,7 +15,7 @@
 #define PUMP_OFF 0
 
 #define CURRENT_THRESHOLD_ON_ALLUMAGE 100 // if current is above this threshold, we assume the pump is on wen starting it
-#define CURRENT_THRESHOLD_ON_EXTINCTION 1500 // if current is above this threshold, we assume the pump is on when trying to turn it off (we put a higher threshold here because it's possible that the pump is still stopping and consuming more current than usual, but if it's above this threshold, we can assume that the pump is not turning off correctly)
+#define CURRENT_THRESHOLD_ON_EXTINCTION 1600 // if current is above this threshold, we assume the pump is on when trying to turn it off (we put a higher threshold here because it's possible that the pump is still stopping and consuming more current than usual, but if it's above this threshold, we can assume that the pump is not turning off correctly)
 
 #define CURRENT_THRESHOLD_CATCH 2050 // if current is above this threshold, we assume an object is catched
 
@@ -41,12 +41,12 @@
 // ---------------- PINCE 2 ----------------- //
 #define PINCE_2_GROS_IDLE_POS 3580
 #define PINCE_2_GROS_RAMASSER_POS 2400
-#define PINCE_2_GROS_LACHER_POS 3750
+#define PINCE_2_GROS_LACHER_POS 3800
 
-#define PINCE_2_DROITE_SORTIE_POS 700
+#define PINCE_2_DROITE_SORTIE_POS 620 //700
 #define PINCE_2_DROITE_RETRAIT_POS 512
 
-#define PINCE_2_GAUCHE_SORTIE_POS 300
+#define PINCE_2_GAUCHE_SORTIE_POS 380 //300
 #define PINCE_2_GAUCHE_RETRAIT_POS 512
 
 
