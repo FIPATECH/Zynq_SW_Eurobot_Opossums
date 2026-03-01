@@ -893,7 +893,7 @@ uint8_t pince_action_cmd(void){
             pince->action_step = 10;
             break;
         case 2:
-            pince->action_step = 200;
+            
             if(param == 0){
                 pince->current_command = CMD_LACHER_G;
             } else if (param == 1){
@@ -904,9 +904,9 @@ uint8_t pince_action_cmd(void){
                 printf("Invalid parameter for LACHER command\n");
                 return PARAM_ERROR_CODE;
             }
+            pince->action_step = 200;
             break;
         case 3:
-            pince->action_step = 300;
             if(param == 0){
                 pince->current_command = CMD_LACHER_G;
             } else if (param == 1){
@@ -917,6 +917,7 @@ uint8_t pince_action_cmd(void){
                 printf("Invalid parameter for LACHER command\n");
                 return PARAM_ERROR_CODE;
             }
+            pince->action_step = 300;
             break;
         case 4:
             pince->current_command = CMD_MONTER;
