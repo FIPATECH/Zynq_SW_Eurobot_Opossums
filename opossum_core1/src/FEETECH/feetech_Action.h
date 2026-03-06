@@ -1,7 +1,7 @@
 #ifndef FEETECH_ACTION_H
 #define FEETECH_ACTION_H
 
-#define NBR_PINCES 2
+#define NBR_PINCES 8
 
 #define ABS_DIFF(a, b) ((a) > (b) ? ((a) - (b)) : ((b) - (a)))
 
@@ -27,7 +27,7 @@
 // ---------- define des positions ---------- //
 // ------------------------------------------ //
 
-// ---------------- PINCE 1 ----------------- //
+// ---------------- PINCE 0 ----------------- //
 #define PINCE_1_GROS_IDLE_POS 2450
 #define PINCE_1_GROS_RAMASSER_POS 3615
 #define PINCE_1_GROS_LACHER_POS 2200
@@ -38,7 +38,7 @@
 #define PINCE_1_GAUCHE_SORTIE_POS 380
 #define PINCE_1_GAUCHE_RETRAIT_POS 512
 
-// ---------------- PINCE 2 ----------------- //
+// ---------------- PINCE 1 ----------------- //
 #define PINCE_2_GROS_IDLE_POS 3580
 #define PINCE_2_GROS_RAMASSER_POS 2395
 #define PINCE_2_GROS_LACHER_POS 3800
@@ -48,6 +48,72 @@
 
 #define PINCE_2_GAUCHE_SORTIE_POS 380 //300
 #define PINCE_2_GAUCHE_RETRAIT_POS 512
+
+// ---------------- PINCE 2 ----------------- //
+#define PINCE_3_GROS_IDLE_POS 2450
+#define PINCE_3_GROS_RAMASSER_POS 3615
+#define PINCE_3_GROS_LACHER_POS 2200
+
+#define PINCE_3_DROITE_SORTIE_POS 620
+#define PINCE_3_DROITE_RETRAIT_POS 512
+
+#define PINCE_3_GAUCHE_SORTIE_POS 380
+#define PINCE_3_GAUCHE_RETRAIT_POS 512
+
+// ---------------- PINCE 3 ----------------- //
+#define PINCE_4_GROS_IDLE_POS 3580
+#define PINCE_4_GROS_RAMASSER_POS 2395
+#define PINCE_4_GROS_LACHER_POS 3800
+
+#define PINCE_4_DROITE_SORTIE_POS 620 //700
+#define PINCE_4_DROITE_RETRAIT_POS 512
+
+#define PINCE_4_GAUCHE_SORTIE_POS 380 //300
+#define PINCE_4_GAUCHE_RETRAIT_POS 512
+
+// ---------------- PINCE 4 ----------------- //
+#define PINCE_5_GROS_IDLE_POS 2450
+#define PINCE_5_GROS_RAMASSER_POS 3615
+#define PINCE_5_GROS_LACHER_POS 2200
+
+#define PINCE_5_DROITE_SORTIE_POS 620
+#define PINCE_5_DROITE_RETRAIT_POS 512
+
+#define PINCE_5_GAUCHE_SORTIE_POS 380
+#define PINCE_5_GAUCHE_RETRAIT_POS 512
+
+// ---------------- PINCE 5 ----------------- //
+#define PINCE_6_GROS_IDLE_POS 3580
+#define PINCE_6_GROS_RAMASSER_POS 2395
+#define PINCE_6_GROS_LACHER_POS 3800
+
+#define PINCE_6_DROITE_SORTIE_POS 620 //700
+#define PINCE_6_DROITE_RETRAIT_POS 512
+
+#define PINCE_6_GAUCHE_SORTIE_POS 380 //300
+#define PINCE_6_GAUCHE_RETRAIT_POS 512
+
+// ---------------- PINCE 6 ----------------- //
+#define PINCE_7_GROS_IDLE_POS 2450
+#define PINCE_7_GROS_RAMASSER_POS 3615
+#define PINCE_7_GROS_LACHER_POS 2200
+
+#define PINCE_7_DROITE_SORTIE_POS 620
+#define PINCE_7_DROITE_RETRAIT_POS 512
+
+#define PINCE_7_GAUCHE_SORTIE_POS 380
+#define PINCE_7_GAUCHE_RETRAIT_POS 512
+
+// ---------------- PINCE 7 ----------------- //
+#define PINCE_8_GROS_IDLE_POS 3580
+#define PINCE_8_GROS_RAMASSER_POS 2395
+#define PINCE_8_GROS_LACHER_POS 3800
+
+#define PINCE_8_DROITE_SORTIE_POS 620 //700
+#define PINCE_8_DROITE_RETRAIT_POS 512
+
+#define PINCE_8_GAUCHE_SORTIE_POS 380 //300
+#define PINCE_8_GAUCHE_RETRAIT_POS 512
 
 
 typedef enum {

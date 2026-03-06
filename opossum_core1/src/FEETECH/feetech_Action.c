@@ -975,7 +975,7 @@ void Init_Pinces_Loop(void){
 
                 robot_pinces[i].current_command = CMD_IDLE;  
             }
-            // PINCE_1
+            // PINCE_0
             robot_pinces[0].gros_pos.idle_position = PINCE_1_GROS_IDLE_POS;
             robot_pinces[0].gros_pos.ramasser_pos = PINCE_1_GROS_RAMASSER_POS;
             robot_pinces[0].gros_pos.lacher_pos = PINCE_1_GROS_LACHER_POS;
@@ -984,7 +984,7 @@ void Init_Pinces_Loop(void){
             robot_pinces[0].petit_gauche_pos.sortie_pos = PINCE_1_GAUCHE_SORTIE_POS;
             robot_pinces[0].petit_gauche_pos.retrait_pos = PINCE_1_GAUCHE_RETRAIT_POS;
 
-            // PINCE_2
+            // PINCE_1
             robot_pinces[1].gros_pos.idle_position = PINCE_2_GROS_IDLE_POS;
             robot_pinces[1].gros_pos.ramasser_pos = PINCE_2_GROS_RAMASSER_POS;
             robot_pinces[1].gros_pos.lacher_pos = PINCE_2_GROS_LACHER_POS;
@@ -992,6 +992,60 @@ void Init_Pinces_Loop(void){
             robot_pinces[1].petit_droite_pos.retrait_pos = PINCE_2_DROITE_RETRAIT_POS;
             robot_pinces[1].petit_gauche_pos.sortie_pos = PINCE_2_GAUCHE_SORTIE_POS;
             robot_pinces[1].petit_gauche_pos.retrait_pos = PINCE_2_GAUCHE_RETRAIT_POS;
+
+            // PINCE_2
+            robot_pinces[2].gros_pos.idle_position = PINCE_3_GROS_IDLE_POS;
+            robot_pinces[2].gros_pos.ramasser_pos = PINCE_3_GROS_RAMASSER_POS;
+            robot_pinces[2].gros_pos.lacher_pos = PINCE_3_GROS_LACHER_POS;
+            robot_pinces[2].petit_droite_pos.sortie_pos = PINCE_3_DROITE_SORTIE_POS;
+            robot_pinces[2].petit_droite_pos.retrait_pos = PINCE_3_DROITE_RETRAIT_POS;
+            robot_pinces[2].petit_gauche_pos.sortie_pos = PINCE_3_GAUCHE_SORTIE_POS;
+            robot_pinces[2].petit_gauche_pos.retrait_pos = PINCE_3_GAUCHE_RETRAIT_POS;
+
+            // PINCE_3
+            robot_pinces[3].gros_pos.idle_position = PINCE_4_GROS_IDLE_POS;
+            robot_pinces[3].gros_pos.ramasser_pos = PINCE_4_GROS_RAMASSER_POS;
+            robot_pinces[3].gros_pos.lacher_pos = PINCE_4_GROS_LACHER_POS;
+            robot_pinces[3].petit_droite_pos.sortie_pos = PINCE_4_DROITE_SORTIE_POS;
+            robot_pinces[3].petit_droite_pos.retrait_pos = PINCE_4_DROITE_RETRAIT_POS;
+            robot_pinces[3].petit_gauche_pos.sortie_pos = PINCE_4_GAUCHE_SORTIE_POS;
+            robot_pinces[3].petit_gauche_pos.retrait_pos = PINCE_4_GAUCHE_RETRAIT_POS;
+
+            // PINCE_4
+            robot_pinces[4].gros_pos.idle_position = PINCE_5_GROS_IDLE_POS;
+            robot_pinces[4].gros_pos.ramasser_pos = PINCE_5_GROS_RAMASSER_POS;
+            robot_pinces[4].gros_pos.lacher_pos = PINCE_5_GROS_LACHER_POS;
+            robot_pinces[4].petit_droite_pos.sortie_pos = PINCE_5_DROITE_SORTIE_POS;
+            robot_pinces[4].petit_droite_pos.retrait_pos = PINCE_5_DROITE_RETRAIT_POS;
+            robot_pinces[4].petit_gauche_pos.sortie_pos = PINCE_5_GAUCHE_SORTIE_POS;
+            robot_pinces[4].petit_gauche_pos.retrait_pos = PINCE_5_GAUCHE_RETRAIT_POS;
+
+            // PINCE_5
+            robot_pinces[5].gros_pos.idle_position = PINCE_6_GROS_IDLE_POS;
+            robot_pinces[5].gros_pos.ramasser_pos = PINCE_6_GROS_RAMASSER_POS;
+            robot_pinces[5].gros_pos.lacher_pos = PINCE_6_GROS_LACHER_POS;
+            robot_pinces[5].petit_droite_pos.sortie_pos = PINCE_6_DROITE_SORTIE_POS;
+            robot_pinces[5].petit_droite_pos.retrait_pos = PINCE_6_DROITE_RETRAIT_POS;
+            robot_pinces[5].petit_gauche_pos.sortie_pos = PINCE_6_GAUCHE_SORTIE_POS;
+            robot_pinces[5].petit_gauche_pos.retrait_pos = PINCE_6_GAUCHE_RETRAIT_POS;
+
+            // PINCE_6
+            robot_pinces[6].gros_pos.idle_position = PINCE_7_GROS_IDLE_POS;
+            robot_pinces[6].gros_pos.ramasser_pos = PINCE_7_GROS_RAMASSER_POS;
+            robot_pinces[6].gros_pos.lacher_pos = PINCE_7_GROS_LACHER_POS;
+            robot_pinces[6].petit_droite_pos.sortie_pos = PINCE_7_DROITE_SORTIE_POS;
+            robot_pinces[6].petit_droite_pos.retrait_pos = PINCE_7_DROITE_RETRAIT_POS;
+            robot_pinces[6].petit_gauche_pos.sortie_pos = PINCE_7_GAUCHE_SORTIE_POS;
+            robot_pinces[6].petit_gauche_pos.retrait_pos = PINCE_7_GAUCHE_RETRAIT_POS;
+
+            // PINCE_7
+            robot_pinces[7].gros_pos.idle_position = PINCE_8_GROS_IDLE_POS;
+            robot_pinces[7].gros_pos.ramasser_pos = PINCE_8_GROS_RAMASSER_POS;
+            robot_pinces[7].gros_pos.lacher_pos = PINCE_8_GROS_LACHER_POS;
+            robot_pinces[7].petit_droite_pos.sortie_pos = PINCE_8_DROITE_SORTIE_POS;
+            robot_pinces[7].petit_droite_pos.retrait_pos = PINCE_8_DROITE_RETRAIT_POS;
+            robot_pinces[7].petit_gauche_pos.sortie_pos = PINCE_8_GAUCHE_SORTIE_POS;
+            robot_pinces[7].petit_gauche_pos.retrait_pos = PINCE_8_GAUCHE_RETRAIT_POS;
 
             init_pince_state = 2;
             break;
