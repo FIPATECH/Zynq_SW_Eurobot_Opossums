@@ -1,6 +1,8 @@
 #ifndef FEETECH_ACTION_H
 #define FEETECH_ACTION_H
 
+// #define DEBUG_FEETECH_ACTION
+
 #define NBR_PINCES 8
 
 #define ABS_DIFF(a, b) ((a) > (b) ? ((a) - (b)) : ((b) - (a)))
