@@ -56,4 +56,6 @@ uint8_t Get_Uart1_Cmd(uint8_t *c);
  * @return u16 Number of commands that can be placed in the buffer
  */
 u16 Place_In_Uart1_Cmd(void);
+
+void UART1_Flush_RX(void);
 #endif

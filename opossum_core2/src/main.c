@@ -50,7 +50,7 @@ int main()
         check_for_cmd_loop();
         if(AU_state == 1){
             if(Timer_ms1 - old_timer_AU >= 100) {
-                xil_printf("AU activated, stopping asserv\n\r");
+                // xil_printf("AU activated, stopping asserv\n\r");
                 old_timer_AU = Timer_ms1;
             }
             motion_free();

@@ -539,7 +539,7 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle RX FIFO Overflow Interrupt should be put here.
 		 */
 		XCanPs_IntrClear(CanPtr, XCANPS_IXR_RXOFLW_MASK);
-		xil_printf("RX FIFO Overflow\r\n");
+		// xil_printf("RX FIFO Overflow\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_RXUFLW_MASK) {
@@ -547,7 +547,7 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle RX FIFO Underflow Interrupt
 		 * should be put here.
 		 */
-		xil_printf("RX FIFO Underflow\r\n");
+		// xil_printf("RX FIFO Underflow\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_TXBFLL_MASK) {
@@ -555,14 +555,14 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle TX High Priority Buffer Full
 		 * Interrupt should be put here.
 		 */
-		xil_printf("TX High Priority Buffer Full\r\n");
+		// xil_printf("TX High Priority Buffer Full\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_TXFLL_MASK) {
 		/*
 		 * Code to handle TX FIFO Full Interrupt should be put here.
 		 */
-		xil_printf("TX FIFO Full\r\n");
+		// xil_printf("TX FIFO Full\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_WKUP_MASK) {
@@ -570,14 +570,14 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle Wake up from sleep mode Interrupt
 		 * should be put here.
 		 */
-		xil_printf("Wake up from sleep mode\r\n");
+		// xil_printf("Wake up from sleep mode\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_SLP_MASK) {
 		/*
 		 * Code to handle Enter sleep mode Interrupt should be put here.
 		 */
-		xil_printf("Enter sleep mode\r\n");
+		// xil_printf("Enter sleep mode\r\n");
 	}
 
 	if (IntrMask & XCANPS_IXR_ARBLST_MASK) {
@@ -585,7 +585,7 @@ void EventHandler(void *CallBackRef, u32 IntrMask)
 		 * Code to handle Lost bus arbitration Interrupt
 		 * should be put here.
 		 */
-		xil_printf("Lost bus arbitration\r\n");
+		// xil_printf("Lost bus arbitration\r\n");
 	}
 }
 

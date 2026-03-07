@@ -29,7 +29,7 @@
 
 // ---------------- PINCE 0 ----------------- //
 #define PINCE_1_GROS_IDLE_POS 2450
-#define PINCE_1_GROS_RAMASSER_POS 3615
+#define PINCE_1_GROS_RAMASSER_POS 3590
 #define PINCE_1_GROS_LACHER_POS 2200
 
 #define PINCE_1_DROITE_SORTIE_POS 620
@@ -155,6 +155,7 @@ typedef struct {
 
 
 typedef struct {
+    uint8_t id; // ID de la pince (0 à NBR_PINCES-1)
     // -- ID matériel -- //
     uint8_t id_gros;
     uint8_t id_droite;
@@ -205,5 +206,5 @@ void AU_pinces(void);
 
 void Pump_Calibration_Loop(void);
 
-void setup_pince_set_pos_cmd(void);
+uint8_t setup_pince_set_pos_cmd(void);
 #endif // FEETECH_ACTION_H

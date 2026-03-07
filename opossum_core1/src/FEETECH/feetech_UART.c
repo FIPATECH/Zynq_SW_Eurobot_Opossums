@@ -151,3 +151,14 @@ uint8_t Get_Uart1_Cmd(uint8_t *c) {
 		return 0;
 	}
 }
+
+void UART1_Flush_RX(void) {
+    // 1. On vide le buffer logiciel circulaire
+    i_RX1_CMD_Buff_DONE = i_RX1_CMD_Buff_TODO;
+    
+    // 2. On vide sauvagement le FIFO matériel de l'UART du Zynq 
+    // (au cas où un octet serait coincé dans le hardware)
+    while (XUartPs_IsReceiveData(Uart1_Instance.Config.BaseAddress)) {
+        XUartPs_ReadReg(Uart1_Instance.Config.BaseAddress, XUARTPS_FIFO_OFFSET);
+    }
+}

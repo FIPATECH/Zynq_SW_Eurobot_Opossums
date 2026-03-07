@@ -150,6 +150,8 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     FEETECH_Transmit_Goal = (uint8_t)(FEETECH_Transmit_Tab [3] + 4); 
     FEETECH_Transmit_Tab[FEETECH_Transmit_Goal - 1] = calculate_chk;
 
+    // UART1_Flush_RX();
+
     FEETECH_Transmit_Ptr = 0;
     FEETECH_Receive_Ptr = 0;
     FEETECH_Bytes_To_Ignore = FEETECH_Transmit_Goal; 
@@ -358,7 +360,19 @@ void FEETECH_Loop(void){
             Command_FEETECH_DONE++;
             if (Command_FEETECH_DONE == FEETECH_CMD_LIST_SIZE)
                 Command_FEETECH_DONE = 0;
-            FEETECH_Loop_State = 0;
+            
+            // --- AJOUT : Préparation du délai inter-commande ---
+            // On réutilise Time_Of_Last_FEETECH_Received pour marquer le début du délai
+            Time_Of_Last_FEETECH_Received = Timer_ms1; 
+            FEETECH_Loop_State = 101; 
+            break;
+
+        // --- AJOUT : Nouvel état pour gérer le délai sans bloquer le CPU ---
+        case 101:
+            // On attend 2 millisecondes (vous pouvez tester 1, 2 ou 3 selon vos cartes)
+            if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) >= 1) {
+                FEETECH_Loop_State = 0; // Le délai est passé, on peut traiter la commande suivante
+            }
             break;
 
         default:

@@ -12,6 +12,7 @@ void init_AU(void){
     XGpio_SetDataDirection(&AU, 1, 1);
 }
 
+
 void AU_Loop(void){
 	AU_state = XGpio_DiscreteRead(&AU, 1);
     if (AU_state != previous_AU_state){
