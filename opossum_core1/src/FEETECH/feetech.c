@@ -150,7 +150,8 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     FEETECH_Transmit_Goal = (uint8_t)(FEETECH_Transmit_Tab [3] + 4); 
     FEETECH_Transmit_Tab[FEETECH_Transmit_Goal - 1] = calculate_chk;
 
-    // UART1_Flush_RX();
+    usleep(2000);
+    UART1_Flush_RX();
 
     FEETECH_Transmit_Ptr = 0;
     FEETECH_Receive_Ptr = 0;
