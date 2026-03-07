@@ -1,7 +1,7 @@
 #ifndef FEETECH_ACTION_H
 #define FEETECH_ACTION_H
 
-// #define DEBUG_FEETECH_ACTION
+#define DEBUG_FEETECH_ACTION
 
 #define NBR_PINCES 8
 
