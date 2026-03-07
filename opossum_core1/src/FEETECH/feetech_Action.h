@@ -204,4 +204,6 @@ void Init_Pinces_Loop(void);
 void AU_pinces(void);
 
 void Pump_Calibration_Loop(void);
+
+void setup_pince_set_pos_cmd(void);
 #endif // FEETECH_ACTION_H

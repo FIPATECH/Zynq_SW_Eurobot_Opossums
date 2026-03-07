@@ -1205,3 +1205,75 @@ void Pump_Calibration_Loop(void) {
             break;
     }
 }
+
+void setup_pince_set_pos_cmd(void){
+    uint32_t ID_pince;
+    if (Get_Param_u32(&ID_pince))
+        return PARAM_ERROR_CODE;
+
+    if(ID_pince < 0 || ID_pince > NBR_PINCES-1){
+        printf("Invalid pince ID\n");
+        return PARAM_ERROR_CODE;
+    }
+
+    uint32_t servo_type; 
+    if (Get_Param_u32(&servo_type))
+        return PARAM_ERROR_CODE;
+    
+    if (servo_type > 2){
+        printf("Invalid servo type\n");
+        return PARAM_ERROR_CODE;
+    }
+    
+    uint32_t param; // type de position à update 
+    if (Get_Param_u32(&param))
+        return PARAM_ERROR_CODE;
+
+    uint32_t val;
+    if (Get_Param_u32(&val))
+        return PARAM_ERROR_CODE;
+
+    Pince_t *pince = &robot_pinces[ID_pince];
+    
+    switch (servo_type){
+        case 0:
+            if(param == 0){
+                pince->gros_pos.idle_position =  val;
+            } else if (param == 1){
+                pince->gros_pos.ramasser_pos = val;
+            } else if (param == 2){
+                pince->gros_pos.lacher_pos = val;
+            } else {
+                printf("Invalid parameter for GROS servo\n");
+                return PARAM_ERROR_CODE;
+            }
+            printf ("Updated gros servo position: idle=%d, ramasser=%d, lacher=%d\n", 
+                    pince->gros_pos.idle_position, pince->gros_pos.ramasser_pos, pince->gros_pos.lacher_pos);
+            break;
+        case 1:
+            if(param == 0){
+                pince->petit_droite_pos.sortie_pos = val;
+            } else if (param == 1){
+                pince->petit_droite_pos.retrait_pos = val;
+            } else {
+                printf("Invalid parameter for PETIT DROITE servo\n");
+                return PARAM_ERROR_CODE;
+            }
+            printf ("Updated petit_droite servo position: sortie=%d, retrait=%d\n", 
+                    pince->petit_droite_pos.sortie_pos, pince->petit_droite_pos.retrait_pos);
+            break;
+        case 2:
+            if(param == 0){
+                pince->petit_gauche_pos.sortie_pos = val;
+            } else if (param == 1){
+                pince->petit_gauche_pos.retrait_pos = val;
+            } else {
+                printf("Invalid parameter for PETIT GAUCHE servo\n");
+                return PARAM_ERROR_CODE;
+            }
+            printf ("Updated petit_gauche servo position: sortie=%d, retrait=%d\n", 
+                    pince->petit_gauche_pos.sortie_pos, pince->petit_gauche_pos.retrait_pos);
+            break;
+    }
+    return 0;    
+}
