@@ -15,6 +15,7 @@ extern XUartPs Uart1_Instance; // from your uart code (you had this variable)
 
 uint8_t Com_FEETECH_Status = COM_FEETECH_IDDLE;
 uint32_t Time_Of_Last_FEETECH_Received = 0;
+uint32_t FEETECH_IFG_Timer = 0;
 uint32_t Com_FEETECH_Maxtime = 10;
 
 uint8_t FEETECH_Loop_State = 0;
@@ -150,7 +151,7 @@ void FEETECH_Cmd_Send(FEETECH_Command *Cmd) {
     FEETECH_Transmit_Goal = (uint8_t)(FEETECH_Transmit_Tab [3] + 4); 
     FEETECH_Transmit_Tab[FEETECH_Transmit_Goal - 1] = calculate_chk;
 
-    usleep(2000);
+    // usleep(2000);
     UART1_Flush_RX();
 
     FEETECH_Transmit_Ptr = 0;
@@ -341,8 +342,10 @@ void FEETECH_Loop(void){
                             FEETECH_Cmd_Nb_Try + 1, FEETECH_CMD_NB_MAX_TRY_SEND);
                 #endif
 
-                FEETECH_Loop_State = 10;
-                Com_FEETECH_Status = COM_FEETECH_IDDLE;
+                // FEETECH_Loop_State = 10;
+                // Com_FEETECH_Status = COM_FEETECH_IDDLE;
+                FEETECH_IFG_Timer = Timer_ms1; // On lance le chrono
+                FEETECH_Loop_State = 91;
             } else {
                 #ifdef FEETECH_PROTOCOL_DEBUG
                     // Print de l'abandon final
@@ -352,6 +355,14 @@ void FEETECH_Loop(void){
                 #endif
 
                 FEETECH_Loop_State = 100;
+            }
+            break;
+        
+        case 91: 
+            // Attente non-bloquante de 2ms avant de renvoyer la commande
+            if ((Timer_ms1 - FEETECH_IFG_Timer) >= 4) {
+                FEETECH_Loop_State = 10;
+                Com_FEETECH_Status = COM_FEETECH_IDDLE;
             }
             break;
 
@@ -364,14 +375,14 @@ void FEETECH_Loop(void){
             
             // --- AJOUT : Préparation du délai inter-commande ---
             // On réutilise Time_Of_Last_FEETECH_Received pour marquer le début du délai
-            Time_Of_Last_FEETECH_Received = Timer_ms1; 
+            FEETECH_IFG_Timer = Timer_ms1; 
             FEETECH_Loop_State = 101; 
             break;
 
         // --- AJOUT : Nouvel état pour gérer le délai sans bloquer le CPU ---
         case 101:
             // On attend 2 millisecondes (vous pouvez tester 1, 2 ou 3 selon vos cartes)
-            if ((Timer_ms1 - Time_Of_Last_FEETECH_Received) >= 1) {
+            if ((Timer_ms1 - FEETECH_IFG_Timer) >= 4) {
                 FEETECH_Loop_State = 0; // Le délai est passé, on peut traiter la commande suivante
             }
             break;
