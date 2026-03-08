@@ -109,6 +109,9 @@ void pince_action_loop(Pince_t *pince){
     switch(pince->action_step){
         case 0:
             pince->current_command = CMD_IDLE;
+
+            pince->succes_left = 0;
+            pince->succes_right = 0;
             break;
 
         /* ---------------------------------------------------- */
@@ -117,6 +120,11 @@ void pince_action_loop(Pince_t *pince){
 
         case 10: // baisser la pince
             pince->retry_count = 0; 
+
+            // reset succes flags
+            pince->succes_left = 0;
+            pince->succes_right = 0;
+
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done);
             pince->gros_pos.cmd_timer = Timer_ms1;
             pince->action_step++;
@@ -167,7 +175,7 @@ void pince_action_loop(Pince_t *pince){
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Impossible d'allumer les pompes après 3 essais. Abandon.\n", pince->id);
                         #endif
-                        printf("PINCE %d 1 0\n", pince->id); // signalement de l'erreur à la stratégie
+                        printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                         pince->retry_count = 0; 
                         pince->action_step = 500; 
                     } else {
@@ -250,7 +258,7 @@ void pince_action_loop(Pince_t *pince){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Pince action timeout at position %d\n", pince->id, pince->gros_pos.current_position);
                     #endif
-                    printf("PINCE %d 1 0\n", pince->id); // signalement de l'erreur à la stratégie
+                    printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                     pince->action_step = 500; 
                 } else {
                     pince->action_timer = 0; // On reset le timer si on sort de la zone de tolérance
@@ -300,10 +308,10 @@ void pince_action_loop(Pince_t *pince){
                         printf("pince : %d : Moyenne glissante - D:%d, G:%d (Baseline D:%d, G:%d)\n", pince->id, avg_right, avg_left, pince->pump_right.baseline_current, pince->pump_left.baseline_current);
                     #endif
                     // On compare la moyenne glissante avec le baseline
-                    uint8_t right_ok = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) > CURRENT_VARIATION_CATCH);
-                    uint8_t left_ok  = (ABS_DIFF(pince->pump_left.baseline_current, avg_left) > CURRENT_VARIATION_CATCH);
+                    pince->succes_right = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) > CURRENT_VARIATION_CATCH);
+                    pince->succes_left = (ABS_DIFF(pince->pump_left.baseline_current, avg_left) > CURRENT_VARIATION_CATCH);
 
-                    if(right_ok && left_ok){ 
+                    if(pince->succes_right && pince->succes_left){ 
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : Deux objets ramassés (Variations > %d)\n", pince->id, CURRENT_VARIATION_CATCH);
                         #endif
@@ -312,21 +320,20 @@ void pince_action_loop(Pince_t *pince){
                         // --- NOUVELLE LOGIQUE D'ABANDON BASÉE SUR LE BUFFER ---
                         if (pince->buffer_full) { 
                             // Le buffer a fait un tour complet : l'analyse est définitive
-                            if (right_ok || left_ok) {
+                            if (pince->succes_right || pince->succes_left) {
                                 #ifdef DEBUG_FEETECH_ACTION
-                                    printf("pince : %d : Analyse terminée: 1 seul objet ramassé (G:%d, D:%d)\n", pince->id, left_ok, right_ok);
+                                    printf("pince : %d : Analyse terminée: 1 seul objet ramassé (G:%d, D:%d)\n", pince->id, pince->succes_left, pince->succes_right);
                                 #endif
-                                if (!right_ok) PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
-                                if (!left_ok)  PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+                                if (!pince->succes_right) PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+                                if (!pince->succes_left)  PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
                                 pince->action_step = 20; 
                             } else {
                                 #ifdef DEBUG_FEETECH_ACTION
                                     printf("pince : %d : Analyse terminée: Aucun objet ramassé.\n", pince->id);
                                 #endif
-                                printf("PINCE %d 1 0\n", pince->id); // signalement à la stratégie : échec de ramassage
                                 PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
                                 PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
-                                pince->action_step = 500; 
+                                pince->action_step = 20; 
                             }
                         } else {
                             // Le buffer n'a pas encore fini son premier tour, on continue d'échantillonner
@@ -360,13 +367,17 @@ void pince_action_loop(Pince_t *pince){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Pince action done at position %d\n", pince->id, pince->action_position);
                     #endif
-                    printf("PINCE %d 1 1\n", pince->id); // signalement de la réussite à la stratégie
+                    printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de la réussite à la stratégie
                     pince->action_done = 0;
                     pince->action_step = 0;
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Pince action timeout at position %d\n", pince->id, pince->action_position);
                     #endif
+                    // la pince à un problème on abandonne
+                    pince->succes_left = 0;
+                    pince->succes_right = 0;
+                    printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                     pince->action_step = 500; // on a un problème, on coupe les pompes et on abandonne
                 } else {
                     pince->action_step = 21; // keep waiting
@@ -417,6 +428,11 @@ void pince_action_loop(Pince_t *pince){
 
         case 200: // Ordonner la descente du bras
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.lacher_pos, &pince->action_done);
+
+            // set succes flags 
+            pince->succes_left = 0;
+            pince->succes_right = 0;
+
             pince->action_timer = Timer_ms1;
             pince->action_step = 201;
             break;
@@ -441,7 +457,7 @@ void pince_action_loop(Pince_t *pince){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Pince action timeout at position %d\n", pince->id, pince->gros_pos.current_position);
                     #endif
-                    printf("PINCE %d 3 0\n", pince->id); // signalement de l'erreur à la stratégie
+                    printf("PINCEFEEDBACK %d 3 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                     pince->action_step = 500; // Sas de sécurité
                 } else {
                     pince->action_step = 201; // Continue de vérifier
@@ -481,21 +497,21 @@ void pince_action_loop(Pince_t *pince){
 
         case 205: // Vérifier l'ouverture des clapets
             if(pince->action_done){
-                uint8_t gauche_ok = 1;
-                uint8_t droite_ok = 1;
-                
+                pince->succes_left = 1;
+                pince->succes_right = 1;
+
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     if(!( (pince->petit_gauche_pos.sortie_pos - 100) <= pince->petit_gauche_pos.current_position && pince->petit_gauche_pos.current_position <= (pince->petit_gauche_pos.sortie_pos + 100) )){
-                        gauche_ok = 0;
+                        pince->succes_left = 0;
                     }
                 }
                 if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
                     if(!( (pince->petit_droite_pos.sortie_pos - 100) <= pince->petit_droite_pos.current_position && pince->petit_droite_pos.current_position <= (pince->petit_droite_pos.sortie_pos + 100) )){
-                        droite_ok = 0;
+                        pince->succes_right = 0;
                     }
                 }
 
-                if(gauche_ok && droite_ok){
+                if(pince->succes_left && pince->succes_right){
                     pince->action_done = 0;
                     pince->retry_count = 0;   // <-- INITIALISATION DU COMPTEUR DE RETRY
                     pince->action_step = 206; // Clapets ouverts, on passe aux pompes
@@ -503,7 +519,9 @@ void pince_action_loop(Pince_t *pince){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("Timeout ouverture clapets\n");
                     #endif
-                    printf("PINCE %d 3 0\n", pince->id); // signalement de l'erreur à la stratégie
+                    pince->succes_left = 0;
+                    pince->succes_right = 0;
+                    printf("PINCEFEEDBACK %d 3 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                     pince->action_step = 500; // Sas de sécurité
                 } else {
                     pince->action_step = 204; // Continue de vérifier
@@ -559,7 +577,9 @@ void pince_action_loop(Pince_t *pince){
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Le courant pompe ne chute pas apres 3 tentatives. Abandon.\n", pince->id);
                         #endif
-                        printf("PINCE %d 3 0\n", pince->id); // signalement de l'erreur à la stratégie
+                        pince->succes_left = 0;
+                        pince->succes_right = 0;
+                        printf("PINCEFEEDBACK %d 3 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                         pince->action_step = 500; // Sas de sécurité
                     } else {
                         #ifdef DEBUG_FEETECH_ACTION
@@ -610,21 +630,21 @@ void pince_action_loop(Pince_t *pince){
 
         case 212: // Vérifier que les clapets sont bien rentrés
             if(pince->action_done){ 
-                uint8_t gauche_ok = 1;
-                uint8_t droite_ok = 1;
+                pince->succes_left = 1;
+                pince->succes_right = 1;
                 
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     if(!( (pince->petit_gauche_pos.retrait_pos - 100) <= pince->petit_gauche_pos.current_position && pince->petit_gauche_pos.current_position <= (pince->petit_gauche_pos.retrait_pos + 100) )){
-                        gauche_ok = 0;
+                        pince->succes_left = 0;
                     }
                 }
                 if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
                     if(!( (pince->petit_droite_pos.retrait_pos - 100) <= pince->petit_droite_pos.current_position && pince->petit_droite_pos.current_position <= (pince->petit_droite_pos.retrait_pos + 100) )){
-                        droite_ok = 0;
+                        pince->succes_right = 0;
                     }
                 }
 
-                if(gauche_ok && droite_ok){
+                if(pince->succes_left && pince->succes_right){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Clapets rentres, depot termine avec succes.\n", pince->id);
                     #endif
@@ -633,8 +653,10 @@ void pince_action_loop(Pince_t *pince){
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Timeout retrait clapets\n", pince->id);
-                    #endif                    
-                    printf("PINCE %d 3 0\n", pince->id); // signalement de l'erreur à la stratégie
+                    #endif   
+                    pince->succes_left = 0;
+                    pince->succes_right = 0;                 
+                    printf("PINCEFEEDBACK %d 3 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                     pince->action_step = 500; // Sas de sécurité
                 } else {
                     pince->action_step = 211; // Continue de vérifier
@@ -662,14 +684,16 @@ void pince_action_loop(Pince_t *pince){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Pince remontee en position idle (%d)\n", pince->id, pince->gros_pos.current_position);
                     #endif
-                    printf("PINCE %d 3 1\n", pince->id); // signalement de la réussite à la stratégie
+                    printf("PINCEFEEDBACK %d 3 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de la réussite à la stratégie
                     pince->action_done = 0;
                     pince->action_step = 0; // On a fini le cycle de dépôt, on reset l'état pour la prochaine commande
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Timeout remontée pince après dépôt (pos: %d)\n", pince->id, pince->gros_pos.current_position);
                     #endif
-                    printf("PINCE %d 3 0\n", pince->id); // signalement de l'erreur à la stratégie
+                    pince->succes_left = 0;
+                    pince->succes_right = 0;
+                    printf("PINCEFEEDBACK %d 3 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                     pince->action_step = 500; // Sas de sécurité
                 } else {
                     pince->action_step = 214; // Continue de vérifier
@@ -685,6 +709,11 @@ void pince_action_loop(Pince_t *pince){
             pince->retry_count = 0; 
             PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done); 
             pince->gros_pos.cmd_timer = Timer_ms1;
+
+            //init succes flags for safety
+            pince->succes_left = 0; 
+            pince->succes_right = 0;
+
             pince->action_step = 301;
             break;
             
@@ -716,7 +745,9 @@ void pince_action_loop(Pince_t *pince){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Timeout descente pince depot (pos: %d)\n", pince->id, pince->gros_pos.current_position);
                     #endif
-                    printf("PINCE %d 2 0\n", pince->id); // signalement de l'erreur à la stratégie
+                    pince->succes_left = 0;
+                    pince->succes_right = 0;
+                    printf("PINCEFEEDBACK %d 2 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                     pince->action_step = 500; // ---> ABANDON DE SECURITE
                 } else {
                     pince->action_step = 302; // Pas encore en bas : on redemande la position
@@ -773,11 +804,13 @@ void pince_action_loop(Pince_t *pince){
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     if(pince->pump_left.pump_current > CURRENT_THRESHOLD_ON_EXTINCTION){ 
                         pump_ok = 0;
+                        pince->succes_left = 1;
                     }
                 }
                 if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
                     if(pince->pump_right.pump_current > CURRENT_THRESHOLD_ON_EXTINCTION){ 
                         pump_ok = 0;
+                        pince->succes_right = 1;
                     }
                 }
 
@@ -794,7 +827,9 @@ void pince_action_loop(Pince_t *pince){
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Le courant ne chute pas (%d / %d). Abandon.\n", pince->id, pince->pump_left.pump_current, pince->pump_right.pump_current);
                         #endif
-                        printf("PINCE %d 2 0\n", pince->id); // signalement de l'erreur à la stratégie
+                        pince->succes_left = 0;
+                        pince->succes_right = 0;
+                        printf("PINCEFEEDBACK %d 2 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                         pince->action_step = 500; 
                     } else {
                         // Le rotor tourne encore un peu, on refait une mesure
@@ -829,13 +864,17 @@ void pince_action_loop(Pince_t *pince){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("Pince remontee at position %d\n", pince->action_position);
                     #endif
-                    printf("PINCE %d 2 1\n", pince->id); // signalement de la réussite à la stratégie
+                    pince->succes_left = 1;
+                    pince->succes_right = 1;
+                    printf("PINCEFEEDBACK %d 2 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de la réussite à la stratégie
                     pince->action_step = 0; // FIN DU CYCLE
                 } else if (Timer_ms1 - pince->action_timer >= 3000){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Timeout remontee pince (pos: %d)\n", pince->id, pince->action_position);
                     #endif
-                    printf("PINCE %d 2 0\n", pince->id); // signalement de l'erreur à la stratégie
+                    pince->succes_left = 0;
+                    pince->succes_right = 0;
+                    printf("PINCEFEEDBACK %d 2 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                     pince->action_step = 500; 
                 } else {
                     pince->action_step = 311; // keep waiting
@@ -876,7 +915,8 @@ void pince_action_loop(Pince_t *pince){
         case 503:
             if(pince->action_done){
                 pince->action_done = 0;
-                
+                pince->succes_left = 0;
+                pince->succes_right = 0;
                 // On vérifie si les courants sont bien retombés (j'utilise < 100 comme seuil d'extinction)
                 if(pince->pump_right.pump_current < CURRENT_THRESHOLD_ON_EXTINCTION && pince->pump_left.pump_current < CURRENT_THRESHOLD_ON_EXTINCTION){
                     #ifdef DEBUG_FEETECH_ACTION
@@ -1063,6 +1103,9 @@ void Init_Pinces_Loop(void){
 
                 robot_pinces[i].sample_idx = 0;
                 robot_pinces[i].buffer_full = 0;
+
+                robot_pinces[i].succes_left = 0;
+                robot_pinces[i].succes_right = 0;
 
                 robot_pinces[i].current_command = CMD_IDLE;  
             }

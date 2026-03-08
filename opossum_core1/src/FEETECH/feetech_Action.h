@@ -1,7 +1,7 @@
 #ifndef FEETECH_ACTION_H
 #define FEETECH_ACTION_H
 
-#define DEBUG_FEETECH_ACTION
+// #define DEBUG_FEETECH_ACTION
 
 #define NBR_PINCES 8
 
@@ -184,6 +184,9 @@ typedef struct {
 
     uint8_t sample_idx;
     uint8_t buffer_full;
+
+    uint8_t succes_left;
+    uint8_t succes_right;
 
     // -- consignes -- //
     Pince_Command_t current_command;
