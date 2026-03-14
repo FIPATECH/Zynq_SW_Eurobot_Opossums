@@ -32,6 +32,7 @@
 // ---------------- PINCE 0 ----------------- //
 #define PINCE_1_GROS_IDLE_POS 2450
 #define PINCE_1_GROS_RAMASSER_POS 3590
+#define PINCE_1_GROS_DEPOSER_POS 3450
 #define PINCE_1_GROS_LACHER_POS 2200
 
 #define PINCE_1_DROITE_SORTIE_POS 620
@@ -43,6 +44,7 @@
 // ---------------- PINCE 1 ----------------- //
 #define PINCE_2_GROS_IDLE_POS 3580
 #define PINCE_2_GROS_RAMASSER_POS 2395
+#define PINCE_2_GROS_DEPOSER_POS 2535
 #define PINCE_2_GROS_LACHER_POS 3800
 
 #define PINCE_2_DROITE_SORTIE_POS 620 //700
@@ -54,6 +56,7 @@
 // ---------------- PINCE 2 ----------------- //
 #define PINCE_3_GROS_IDLE_POS 2300
 #define PINCE_3_GROS_RAMASSER_POS 3450
+#define PINCE_3_GROS_DEPOSER_POS 3300
 #define PINCE_3_GROS_LACHER_POS 2000
 
 #define PINCE_3_DROITE_SORTIE_POS 620
@@ -65,6 +68,7 @@
 // ---------------- PINCE 3 ----------------- //
 #define PINCE_4_GROS_IDLE_POS 3400
 #define PINCE_4_GROS_RAMASSER_POS 2300
+#define PINCE_4_GROS_DEPOSER_POS 2440
 #define PINCE_4_GROS_LACHER_POS 3700
 
 #define PINCE_4_DROITE_SORTIE_POS 620 //700
@@ -76,6 +80,7 @@
 // ---------------- PINCE 4 ----------------- //
 #define PINCE_5_GROS_IDLE_POS 2500
 #define PINCE_5_GROS_RAMASSER_POS 3630
+#define PINCE_5_GROS_DEPOSER_POS 3490
 #define PINCE_5_GROS_LACHER_POS 2200
 
 #define PINCE_5_DROITE_SORTIE_POS 620
@@ -87,6 +92,7 @@
 // ---------------- PINCE 5 ----------------- //
 #define PINCE_6_GROS_IDLE_POS 3650
 #define PINCE_6_GROS_RAMASSER_POS 2490
+#define PINCE_6_GROS_DEPOSER_POS 2630
 #define PINCE_6_GROS_LACHER_POS 3900
 
 #define PINCE_6_DROITE_SORTIE_POS 620 //700
@@ -98,6 +104,7 @@
 // ---------------- PINCE 6 ----------------- //
 #define PINCE_7_GROS_IDLE_POS 2450
 #define PINCE_7_GROS_RAMASSER_POS 3570
+#define PINCE_7_GROS_DEPOSER_POS 3420
 #define PINCE_7_GROS_LACHER_POS 2200
 
 #define PINCE_7_DROITE_SORTIE_POS 620
@@ -109,6 +116,7 @@
 // ---------------- PINCE 7 ----------------- //
 #define PINCE_8_GROS_IDLE_POS 3580
 #define PINCE_8_GROS_RAMASSER_POS 2395
+#define PINCE_8_GROS_DEPOSER_POS 2535
 #define PINCE_8_GROS_LACHER_POS 3800
 
 #define PINCE_8_DROITE_SORTIE_POS 620 //700
@@ -133,6 +141,7 @@ typedef enum {
 typedef struct {
     uint16_t idle_position;
     uint16_t ramasser_pos;
+    uint16_t deposer_pos;
     uint16_t lacher_pos;
 
     uint16_t current_position;

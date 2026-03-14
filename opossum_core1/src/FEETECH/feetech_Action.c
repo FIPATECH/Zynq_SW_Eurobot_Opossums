@@ -707,7 +707,7 @@ void pince_action_loop(Pince_t *pince){
         
         case 300: // 1. Ordre de baisser la pince
             pince->retry_count = 0; 
-            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done); 
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.deposer_pos, &pince->action_done); 
             pince->gros_pos.cmd_timer = Timer_ms1;
 
             //init succes flags for safety
@@ -736,7 +736,7 @@ void pince_action_loop(Pince_t *pince){
                 pince->action_done = 0; 
                 
                 // On vérifie si on est bien arrivé en position basse
-                if((pince->gros_pos.ramasser_pos - 100) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 100)){
+                if((pince->gros_pos.deposer_pos - 100) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.deposer_pos + 100)){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Pince en position de depot (%d)\n", pince->id, pince->gros_pos.current_position);
                     #endif
@@ -884,17 +884,12 @@ void pince_action_loop(Pince_t *pince){
 
         /* ---------------------------------------------------- */
         /* ------ DEPOSER UN ET RETOURNER L'AUTRE (400) --------*/
-        /* ---------------------------------------------------- */
-        
-        /* ------------------------------------------------------------------ */
-        /* ------ CASE 400 : DEPOSER UN (SOL) ET RETOURNER L'AUTRE -----------*/
-        /* ------------------------------------------------------------------ */
-        
+        /* ---------------------------------------------------- */        
         case 400: // 1. Ordonner la descente totale au sol
             pince->retry_count = 0;
             pince->succes_left = 0;
             pince->succes_right = 0;
-            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done);
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.deposer_pos, &pince->action_done);
             pince->action_timer = Timer_ms1;
             pince->action_step = 401;
             break;
@@ -909,7 +904,7 @@ void pince_action_loop(Pince_t *pince){
 
         case 402: // 3. Vérifier arrivée au sol
             if(pince->action_done){
-                if(ABS_DIFF(pince->gros_pos.ramasser_pos, pince->gros_pos.current_position) < 100){
+                if(ABS_DIFF(pince->gros_pos.deposer_pos, pince->gros_pos.current_position) < 100){
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince %d : Arrivée au sol pour dépose.\n", pince->id);
                     #endif
@@ -1009,7 +1004,7 @@ void pince_action_loop(Pince_t *pince){
             break;
 
         case 410: // 11. Attendre 1s le retournement, puis rentrer clapet
-            if(Timer_ms1 - pince->action_timer >= 100){
+            if(Timer_ms1 - pince->action_timer >= 350){
                 if(pince->current_command == CMD_DEPOSE_G_RETOURNE_D)
                     PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.retrait_pos, &pince->action_done);
                 else
@@ -1285,6 +1280,7 @@ void Init_Pinces_Loop(void){
             // PINCE_0
             robot_pinces[0].gros_pos.idle_position = PINCE_1_GROS_IDLE_POS;
             robot_pinces[0].gros_pos.ramasser_pos = PINCE_1_GROS_RAMASSER_POS;
+            robot_pinces[0].gros_pos.deposer_pos = PINCE_1_GROS_DEPOSER_POS;
             robot_pinces[0].gros_pos.lacher_pos = PINCE_1_GROS_LACHER_POS;
             robot_pinces[0].petit_droite_pos.sortie_pos = PINCE_1_DROITE_SORTIE_POS;
             robot_pinces[0].petit_droite_pos.retrait_pos = PINCE_1_DROITE_RETRAIT_POS;
@@ -1294,6 +1290,7 @@ void Init_Pinces_Loop(void){
             // PINCE_1
             robot_pinces[1].gros_pos.idle_position = PINCE_2_GROS_IDLE_POS;
             robot_pinces[1].gros_pos.ramasser_pos = PINCE_2_GROS_RAMASSER_POS;
+            robot_pinces[1].gros_pos.deposer_pos = PINCE_2_GROS_DEPOSER_POS;
             robot_pinces[1].gros_pos.lacher_pos = PINCE_2_GROS_LACHER_POS;
             robot_pinces[1].petit_droite_pos.sortie_pos = PINCE_2_DROITE_SORTIE_POS;
             robot_pinces[1].petit_droite_pos.retrait_pos = PINCE_2_DROITE_RETRAIT_POS;
@@ -1303,6 +1300,7 @@ void Init_Pinces_Loop(void){
             // PINCE_2
             robot_pinces[2].gros_pos.idle_position = PINCE_3_GROS_IDLE_POS;
             robot_pinces[2].gros_pos.ramasser_pos = PINCE_3_GROS_RAMASSER_POS;
+            robot_pinces[2].gros_pos.deposer_pos = PINCE_3_GROS_DEPOSER_POS;
             robot_pinces[2].gros_pos.lacher_pos = PINCE_3_GROS_LACHER_POS;
             robot_pinces[2].petit_droite_pos.sortie_pos = PINCE_3_DROITE_SORTIE_POS;
             robot_pinces[2].petit_droite_pos.retrait_pos = PINCE_3_DROITE_RETRAIT_POS;
@@ -1312,6 +1310,7 @@ void Init_Pinces_Loop(void){
             // PINCE_3
             robot_pinces[3].gros_pos.idle_position = PINCE_4_GROS_IDLE_POS;
             robot_pinces[3].gros_pos.ramasser_pos = PINCE_4_GROS_RAMASSER_POS;
+            robot_pinces[3].gros_pos.deposer_pos = PINCE_4_GROS_DEPOSER_POS;
             robot_pinces[3].gros_pos.lacher_pos = PINCE_4_GROS_LACHER_POS;
             robot_pinces[3].petit_droite_pos.sortie_pos = PINCE_4_DROITE_SORTIE_POS;
             robot_pinces[3].petit_droite_pos.retrait_pos = PINCE_4_DROITE_RETRAIT_POS;
@@ -1321,6 +1320,7 @@ void Init_Pinces_Loop(void){
             // PINCE_4
             robot_pinces[4].gros_pos.idle_position = PINCE_5_GROS_IDLE_POS;
             robot_pinces[4].gros_pos.ramasser_pos = PINCE_5_GROS_RAMASSER_POS;
+            robot_pinces[4].gros_pos.deposer_pos = PINCE_5_GROS_DEPOSER_POS;
             robot_pinces[4].gros_pos.lacher_pos = PINCE_5_GROS_LACHER_POS;
             robot_pinces[4].petit_droite_pos.sortie_pos = PINCE_5_DROITE_SORTIE_POS;
             robot_pinces[4].petit_droite_pos.retrait_pos = PINCE_5_DROITE_RETRAIT_POS;
@@ -1330,6 +1330,7 @@ void Init_Pinces_Loop(void){
             // PINCE_5
             robot_pinces[5].gros_pos.idle_position = PINCE_6_GROS_IDLE_POS;
             robot_pinces[5].gros_pos.ramasser_pos = PINCE_6_GROS_RAMASSER_POS;
+            robot_pinces[5].gros_pos.deposer_pos = PINCE_6_GROS_DEPOSER_POS;
             robot_pinces[5].gros_pos.lacher_pos = PINCE_6_GROS_LACHER_POS;
             robot_pinces[5].petit_droite_pos.sortie_pos = PINCE_6_DROITE_SORTIE_POS;
             robot_pinces[5].petit_droite_pos.retrait_pos = PINCE_6_DROITE_RETRAIT_POS;
@@ -1339,6 +1340,7 @@ void Init_Pinces_Loop(void){
             // PINCE_6
             robot_pinces[6].gros_pos.idle_position = PINCE_7_GROS_IDLE_POS;
             robot_pinces[6].gros_pos.ramasser_pos = PINCE_7_GROS_RAMASSER_POS;
+            robot_pinces[6].gros_pos.deposer_pos = PINCE_7_GROS_DEPOSER_POS;
             robot_pinces[6].gros_pos.lacher_pos = PINCE_7_GROS_LACHER_POS;
             robot_pinces[6].petit_droite_pos.sortie_pos = PINCE_7_DROITE_SORTIE_POS;
             robot_pinces[6].petit_droite_pos.retrait_pos = PINCE_7_DROITE_RETRAIT_POS;
@@ -1348,6 +1350,7 @@ void Init_Pinces_Loop(void){
             // PINCE_7
             robot_pinces[7].gros_pos.idle_position = PINCE_8_GROS_IDLE_POS;
             robot_pinces[7].gros_pos.ramasser_pos = PINCE_8_GROS_RAMASSER_POS;
+            robot_pinces[7].gros_pos.deposer_pos = PINCE_8_GROS_DEPOSER_POS;
             robot_pinces[7].gros_pos.lacher_pos = PINCE_8_GROS_LACHER_POS;
             robot_pinces[7].petit_droite_pos.sortie_pos = PINCE_8_DROITE_SORTIE_POS;
             robot_pinces[7].petit_droite_pos.retrait_pos = PINCE_8_DROITE_RETRAIT_POS;
