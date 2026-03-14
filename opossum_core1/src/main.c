@@ -76,8 +76,6 @@ int main()
         Status = 0;
     }
 
-    // init_QEI();
-    // PWM_Init();
     Std_Com_Init();
 
 
@@ -89,12 +87,6 @@ int main()
 
     ws2812b_init();
     init_switch();
-    // Init_Pump();
-    // Init_Valve();
-    // Init_Asserv();
-    // Init_Stepper();
-
-    // LD19_init(&LD19);
 
     init_shared_memory();
 
@@ -104,10 +96,6 @@ int main()
         if (Timer_ms1 - old_timer_ms1 >= 1000) {
             old_timer_ms1 = Timer_ms1;
         }
-
-        // if (LD19_readScan(&LD19, &UartLite)) {
-        //     // LD19_printScanTeleplot(&LD19);
-        // }
 
         if (Get_Std_In(&c)) {
             Interp(c);
@@ -119,7 +107,6 @@ int main()
         Print_Position_loop();
 
         if(AU_state == 1){
-            // printf("AU activated\n\r");
             LED_AU();
             AU_pinces();
 
@@ -146,8 +133,6 @@ int main()
                 Init_Pinces_Loop();
                 FEETECH_Loop();
                 pince_loop();
-
-                // Pump_Calibration_Loop();
             }
             
             LED_CLASSIC_MODE();
