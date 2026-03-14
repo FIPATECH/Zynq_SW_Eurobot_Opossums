@@ -938,7 +938,7 @@ void pince_action_loop(Pince_t *pince){
             break;
 
         case 404: // 5. Petite pause et remontée à la position clapet (lacher_pos)
-            if(Timer_ms1 - pince->action_timer >= 400){
+            if(Timer_ms1 - pince->action_timer >= 50){
                 PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.lacher_pos, &pince->action_done);
                 pince->action_timer = Timer_ms1;
                 pince->action_step = 405;
@@ -1009,7 +1009,7 @@ void pince_action_loop(Pince_t *pince){
             break;
 
         case 410: // 11. Attendre 1s le retournement, puis rentrer clapet
-            if(Timer_ms1 - pince->action_timer >= 1000){
+            if(Timer_ms1 - pince->action_timer >= 100){
                 if(pince->current_command == CMD_DEPOSE_G_RETOURNE_D)
                     PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.retrait_pos, &pince->action_done);
                 else
