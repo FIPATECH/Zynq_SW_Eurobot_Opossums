@@ -804,12 +804,17 @@ void pince_action_loop(Pince_t *pince){
                 if(pince->current_command == CMD_LACHER_G || pince->current_command == CMD_LACHER_ALL){
                     if(pince->pump_left.pump_current > CURRENT_THRESHOLD_ON_EXTINCTION){ 
                         pump_ok = 0;
+                        pince->succes_left = 0;
+                    }
+                    else {
                         pince->succes_left = 1;
                     }
                 }
                 if(pince->current_command == CMD_LACHER_D || pince->current_command == CMD_LACHER_ALL){
                     if(pince->pump_right.pump_current > CURRENT_THRESHOLD_ON_EXTINCTION){ 
                         pump_ok = 0;
+                        pince->succes_right = 0;
+                    }else{
                         pince->succes_right = 1;
                     }
                 }
@@ -827,8 +832,6 @@ void pince_action_loop(Pince_t *pince){
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Le courant ne chute pas (%d / %d). Abandon.\n", pince->id, pince->pump_left.pump_current, pince->pump_right.pump_current);
                         #endif
-                        pince->succes_left = 0;
-                        pince->succes_right = 0;
                         printf("PINCEFEEDBACK %d 2 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                         pince->action_step = 500; 
                     } else {
