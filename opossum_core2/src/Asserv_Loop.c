@@ -326,8 +326,7 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             }
 
             // Repropagation depuis l’état corrigé
-            float Q_null[3] = {0.0f, 0.0f, 0.0f};
-            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, Q_null);
+            kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
 
             // Mise à jour de l’état courant
             kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
@@ -378,8 +377,7 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag_dynamic, 0);
 
         // Repropagation
-        float Q_null[3] = {0.0f, 0.0f, 0.0f};
-        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, Q_null);
+        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
         kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
     }
 }

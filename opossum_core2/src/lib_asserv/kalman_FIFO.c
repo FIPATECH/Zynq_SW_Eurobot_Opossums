@@ -112,6 +112,7 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, floa
 
 void kalman_init_with_lidar(KalmanFIFO* fifo, Position* lidar_pos) {
     KalmanState init_state;
+    memset(&init_state, 0, sizeof(KalmanState)); // Initialisation à 0 pour éviter les valeurs indéterminées
 
     // Initialiser la position
     init_state.x[0] = lidar_pos->x;
