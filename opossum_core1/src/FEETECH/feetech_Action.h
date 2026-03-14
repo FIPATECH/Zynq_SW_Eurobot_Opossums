@@ -124,6 +124,8 @@ typedef enum {
     CMD_LACHER_G,
     CMD_LACHER_D,
     CMD_LACHER_ALL,
+    CMD_DEPOSE_G_RETOURNE_D,
+    CMD_DEPOSE_D_RETOURNE_G,
     CMD_MONTER
 } Pince_Command_t;
 

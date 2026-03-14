@@ -882,7 +882,172 @@ void pince_action_loop(Pince_t *pince){
             }
             break;
 
-       /* ---------------------------------------------------- */
+        /* ---------------------------------------------------- */
+        /* ------ DEPOSER UN ET RETOURNER L'AUTRE (400) --------*/
+        /* ---------------------------------------------------- */
+        
+        /* ------------------------------------------------------------------ */
+        /* ------ CASE 400 : DEPOSER UN (SOL) ET RETOURNER L'AUTRE -----------*/
+        /* ------------------------------------------------------------------ */
+        
+        case 400: // 1. Ordonner la descente totale au sol
+            pince->retry_count = 0;
+            pince->succes_left = 0;
+            pince->succes_right = 0;
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done);
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 401;
+            break;
+
+        case 401: // 2. Attendre envoi et demander position
+            if(pince->action_done){
+                pince->action_done = 0;
+                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
+                pince->action_step = 402;
+            }
+            break;
+
+        case 402: // 3. Vérifier arrivée au sol
+            if(pince->action_done){
+                if(ABS_DIFF(pince->gros_pos.ramasser_pos, pince->gros_pos.current_position) < 100){
+                    #ifdef DEBUG_FEETECH_ACTION
+                        printf("pince %d : Arrivée au sol pour dépose.\n", pince->id);
+                    #endif
+                    pince->action_done = 0;
+                    pince->action_step = 403;
+                } else if (Timer_ms1 - pince->action_timer >= 3000){
+                    pince->action_step = 500; // Timeout
+                } else {
+                    pince->action_step = 401; // On reboucle lecture
+                }
+            }
+            break;
+
+        case 403: // 4. Lâcher le PREMIER objet (Dépose)
+            if(pince->current_command == CMD_DEPOSE_G_RETOURNE_D) {
+                PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+                PutFEETECH(pince->id_pump, VALVE_CMD_1, VALVE_ON);
+                pince->succes_left = 1;
+            } else {
+                PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+                PutFEETECH(pince->id_pump, VALVE_CMD_2, VALVE_ON);
+                pince->succes_right = 1;
+            }
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 404;
+            break;
+
+        case 404: // 5. Petite pause et remontée à la position clapet (lacher_pos)
+            if(Timer_ms1 - pince->action_timer >= 400){
+                PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.lacher_pos, &pince->action_done);
+                pince->action_timer = Timer_ms1;
+                pince->action_step = 405;
+            }
+            break;
+
+        case 405: // 6. Attendre envoi et demander position intermédiaire
+            if(pince->action_done){
+                pince->action_done = 0;
+                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
+                pince->action_step = 406;
+            }
+            break;
+
+        case 406: // 7. Vérifier arrivée position clapet
+            if(pince->action_done){
+                if(ABS_DIFF(pince->gros_pos.lacher_pos, pince->gros_pos.current_position) < 50){
+                    pince->action_done = 0;
+                    pince->action_step = 407; // Prêt pour le clapet
+                } else {
+                    pince->action_step = 405;
+                }
+            }
+            break;
+
+        case 407: // 8. Sortir le clapet du SECOND objet (Retourne)
+            if(pince->current_command == CMD_DEPOSE_G_RETOURNE_D){
+                PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.sortie_pos, &pince->action_done);
+            } else {
+                PutFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_GOAL_POSITION_L, pince->petit_gauche_pos.sortie_pos, &pince->action_done);
+            }
+            pince->action_timer = Timer_ms1;
+            pince->action_step = 408;
+            break;
+
+        case 408: // 9. Attendre sortie clapet et demander position clapet
+            if(pince->action_done){
+                pince->action_done = 0;
+                if(pince->current_command == CMD_DEPOSE_G_RETOURNE_D)
+                    GetFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_PRESENT_POSITION_L, &pince->petit_droite_pos.current_position, &pince->action_done);
+                else
+                    GetFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_PRESENT_POSITION_L, &pince->petit_gauche_pos.current_position, &pince->action_done);
+                pince->action_step = 409;
+            }
+            break;
+
+        case 409: // 10. Vérifier clapet sorti et couper pompe 2
+            if(pince->action_done){
+                uint16_t pos = (pince->current_command == CMD_DEPOSE_G_RETOURNE_D) ? pince->petit_droite_pos.current_position : pince->petit_gauche_pos.current_position;
+                uint16_t target = (pince->current_command == CMD_DEPOSE_G_RETOURNE_D) ? pince->petit_droite_pos.sortie_pos : pince->petit_gauche_pos.sortie_pos;
+                
+                if(ABS_DIFF(target, pos) < 100){
+                    if(pince->current_command == CMD_DEPOSE_G_RETOURNE_D){
+                        PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+                        PutFEETECH(pince->id_pump, VALVE_CMD_2, VALVE_ON);
+                        pince->succes_right = 1;
+                    } else {
+                        PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+                        PutFEETECH(pince->id_pump, VALVE_CMD_1, VALVE_ON);
+                        pince->succes_left = 1;
+                    }
+                    pince->action_timer = Timer_ms1;
+                    pince->action_step = 410;
+                } else {
+                    pince->action_step = 408; // On attend encore
+                }
+            }
+            break;
+
+        case 410: // 11. Attendre 1s le retournement, puis rentrer clapet
+            if(Timer_ms1 - pince->action_timer >= 1000){
+                if(pince->current_command == CMD_DEPOSE_G_RETOURNE_D)
+                    PutFEETECH_Ext_Done_SCS(pince->id_droite, FEETECH_GOAL_POSITION_L, pince->petit_droite_pos.retrait_pos, &pince->action_done);
+                else
+                    PutFEETECH_Ext_Done_SCS(pince->id_gauche, FEETECH_GOAL_POSITION_L, pince->petit_gauche_pos.retrait_pos, &pince->action_done);
+                pince->action_timer = Timer_ms1;
+                pince->action_step = 411;
+            }
+            break;
+
+        case 411: // 12. Attendre retrait clapet et ordonner remontée finale
+            if(pince->action_done){
+                pince->action_done = 0;
+                PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.idle_position, &pince->action_done);
+                pince->action_timer = Timer_ms1;
+                pince->action_step = 412;
+            }
+            break;
+
+        case 412: // 13. Vérifier remontée finale (Fin de séquence)
+            if(pince->action_done){
+                pince->action_done = 0;
+                GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
+                pince->action_step = 413;
+            }
+            break;
+
+        case 413:
+            if(pince->action_done){
+                if(ABS_DIFF(pince->gros_pos.idle_position, pince->gros_pos.current_position) < 100){
+                    printf("PINCEFEEDBACK %d 4 %d %d\n", pince->id, pince->succes_left, pince->succes_right);
+                    pince->action_step = 0;
+                } else {
+                    pince->action_step = 412;
+                }
+            }
+            break;
+
+        /* ---------------------------------------------------- */
         /* ------------- SEQUENCE D'ABANDON / ERREUR -----------*/
         /* ---------------------------------------------------- */
         case 500: // Sas d'initialisation de la mise en sécurité
@@ -1049,6 +1214,14 @@ uint8_t pince_action_cmd(void){
             pince->action_step = 200;
             break;
         case 4:
+            pince->current_command = CMD_DEPOSE_G_RETOURNE_D;
+            pince->action_step = 400;
+            break;
+        case 5:
+            pince->current_command = CMD_DEPOSE_D_RETOURNE_G;
+            pince->action_step = 400;
+            break;
+        case 6:
             pince->current_command = CMD_MONTER;
             pince->action_step = 100;
             break;
