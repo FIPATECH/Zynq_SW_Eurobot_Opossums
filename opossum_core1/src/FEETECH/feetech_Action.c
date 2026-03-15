@@ -106,6 +106,26 @@ void pince_loop(void){
 }
 
 void pince_action_loop(Pince_t *pince){
+    /* ---------------------------------------------------- */
+    /* ------------- WATCHDOG TIMER  -----------------------*/
+    /* ---------------------------------------------------- */
+    if (pince->action_step != pince->previous_step) {
+        pince->watchdog_timer = Timer_ms1;
+        pince->previous_step = pince->action_step;
+    }
+
+    if (pince->action_step > 0 && pince->action_step < 500) {
+        // Si on passe plus de 4000 ms (4s) sur la MÊME étape -> Plantage critique
+        if (Timer_ms1 - pince->watchdog_timer >= 4000) {
+            #ifdef DEBUG_FEETECH_ACTION
+                printf("\n[WATCHDOG] Pince %d bloquee a l'etape %d ! Forcage du sas de securite.\n", pince->id, pince->action_step);
+            #endif
+            // Signalement d'erreur générique
+            printf("PINCEFEEDBACK %d 9 0 0\n", pince->id); 
+            pince->action_step = 500; // Envoi vers la routine de mise en sécurité
+        }
+    }
+
     switch(pince->action_step){
         case 0:
             pince->current_command = CMD_IDLE;
@@ -225,7 +245,7 @@ void pince_action_loop(Pince_t *pince){
         case 17: // check position and stabilize
             if(pince->action_done){
                 // Vérification de la position avec tolérance
-                if((pince->gros_pos.ramasser_pos - 20) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 20)){
+                if((pince->gros_pos.ramasser_pos - 30) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 30)){
                     
                     // On ne passe pas au step 18 tant qu'on n'a pas attendu 150ms EN POSITION
                     if (pince->action_timer == 0) {
@@ -1277,6 +1297,9 @@ void Init_Pinces_Loop(void){
 
                 robot_pinces[i].succes_left = 0;
                 robot_pinces[i].succes_right = 0;
+
+                robot_pinces[i].watchdog_timer = 0;
+                robot_pinces[i].previous_step = 0;
 
                 robot_pinces[i].current_command = CMD_IDLE;  
             }

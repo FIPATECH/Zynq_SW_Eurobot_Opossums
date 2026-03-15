@@ -181,6 +181,9 @@ typedef struct {
     uint32_t action_timer;
     uint32_t action_position;
 
+    uint32_t watchdog_timer;
+    uint8_t  previous_step;
+
     // -- positions -- //
     Gros_Servo_Pos_t gros_pos;
     Petit_Servo_Pos_t petit_droite_pos;
