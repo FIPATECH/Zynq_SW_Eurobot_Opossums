@@ -209,7 +209,7 @@ void pince_action_loop(Pince_t *pince){
                     pince->action_step = 14; 
                 } else {
                     pince->retry_count++;
-                    if (pince->retry_count >= 3) {
+                    if (pince->retry_count >= RETRY_COUNT_MAX) {
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Impossible d'allumer les pompes après 3 essais. Abandon.\n", pince->id);
                         #endif
@@ -643,7 +643,7 @@ void pince_action_loop(Pince_t *pince){
                     pince->action_step = 209;
                 } else {
                     pince->retry_count++;
-                    if(pince->retry_count >= 3){ 
+                    if(pince->retry_count >= RETRY_COUNT_MAX){ 
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Le courant pompe ne chute pas apres 3 tentatives. Abandon.\n", pince->id);
                         #endif
@@ -1167,7 +1167,7 @@ void pince_action_loop(Pince_t *pince){
                     pince->action_step = 504; // On passe à la suite de la mise en sécurité
                 } else {
                     pince->retry_count++;
-                    if(pince->retry_count >= 3){
+                    if(pince->retry_count >= RETRY_COUNT_MAX){
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Impossible d'éteindre les pompes après 3 essais. Poursuite de l'abandon.\n", pince->id);
                         #endif

@@ -23,6 +23,8 @@
 
 #define CURRENT_VARIATION_CATCH 100 //62
 
+#define RETRY_COUNT_MAX 5
+
 #define VALVE_ON 1
 
 // ------------------------------------------ //
