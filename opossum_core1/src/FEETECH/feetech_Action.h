@@ -128,7 +128,9 @@
 
 typedef enum {
     CMD_IDLE = 0,
-    CMD_RAMASSER,
+    CMD_RAMASSER_ALL,
+    CMD_RAMASSER_G,
+    CMD_RAMASSER_D,
     CMD_LACHER_G,
     CMD_LACHER_D,
     CMD_LACHER_ALL,
