@@ -1318,6 +1318,33 @@ uint8_t pince_action_cmd(void){
 }
 
 
+uint8_t pince_action_debug_cmd(void){
+    uint32_t val_1;
+    if (Get_Param_u32(&val_1))
+        return PARAM_ERROR_CODE;
+
+    uint32_t val_2;
+    if (Get_Param_u32(&val_2))
+        return PARAM_ERROR_CODE;
+
+    Pince_t *pince_0 = &robot_pinces[0];
+    Pince_t *pince_1 = &robot_pinces[1];
+    
+    if (val_1 == 0){
+        pince_0->current_command = CMD_RAMASSER_ALL;
+        pince_1->current_command = CMD_RAMASSER_ALL;
+        pince_0->action_step = 10;
+        pince_1->action_step = 10;
+    } else {
+        pince_0->current_command = CMD_LACHER_ALL;
+        pince_1->current_command = CMD_LACHER_ALL;
+        pince_0->action_step = 300;
+        pince_1->action_step = 300;
+    }
+    return 0;
+}
+
+
 
 uint8_t init_pince_state = 0;
 uint32_t init_pince_timer = 0;

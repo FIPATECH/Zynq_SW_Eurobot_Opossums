@@ -1,7 +1,7 @@
 #ifndef FEETECH_ACTION_H
 #define FEETECH_ACTION_H
 
-// #define DEBUG_FEETECH_ACTION
+#define DEBUG_FEETECH_ACTION
 
 #define NBR_PINCES 8
 
@@ -222,6 +222,7 @@ void FEETECH_action_loop(void);
 
 void pince_action_loop(Pince_t *pince);
 uint8_t pince_action_cmd(void);
+uint8_t pince_action_debug_cmd(void);
 
 void pince_loop(void);
 void Init_Pinces_Loop(void);

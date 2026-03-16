@@ -32,6 +32,7 @@ const Command Command_List[] = {
         { "SCSGET", Get_FEETECH_SCS_Cmd},
 
         { "PINCE", pince_action_cmd},
+        { "PINCEDEBUG", pince_action_debug_cmd},
         { "SET_PINCE", setup_pince_set_pos_cmd},
     #endif
 
