@@ -179,14 +179,9 @@ void pince_action_loop(Pince_t *pince){
             if(pince->action_done){
                 if (Timer_ms1 - pince->pump_left.cmd_timer >= 500){ 
                     pince->action_done = 0; 
-                    if (pince->current_command == CMD_RAMASSER_ALL) {
-                        GetFEETECH(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current);
-                        GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
-                    } else if (pince->current_command == CMD_RAMASSER_G) {
-                        GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current, &pince->action_done);
-                    } else if (pince->current_command == CMD_RAMASSER_D) {
-                        GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
-                    }
+                    // On lit toujours les deux pour garder un temps de comm constant
+                    GetFEETECH(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current);
+                    GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
                     pince->action_step++;
                 }
             }
@@ -213,7 +208,7 @@ void pince_action_loop(Pince_t *pince){
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Impossible d'allumer les pompes après 3 essais. Abandon.\n", pince->id);
                         #endif
-                        printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
+                        printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); 
                         pince->retry_count = 0; 
                         pince->action_step = 500; 
                     } else {
@@ -225,14 +220,9 @@ void pince_action_loop(Pince_t *pince){
 
         // --- ECHANTILLONNAGE BASELINE (A VIDE) ---
         case 14:
-            if (pince->current_command == CMD_RAMASSER_ALL) {
-                GetFEETECH(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current);
-                GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
-            } else if (pince->current_command == CMD_RAMASSER_G) {
-                GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current, &pince->action_done);
-            } else if (pince->current_command == CMD_RAMASSER_D) {
-                GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
-            }
+            // Toujours les deux lectures pour stabiliser la durée de la boucle physique
+            GetFEETECH(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current);
+            GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
             pince->action_step = 15;
             break;
 
@@ -240,33 +230,25 @@ void pince_action_loop(Pince_t *pince){
             if(pince->action_done){
                 pince->action_done = 0;
                 
-                if (pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL) {
-                    pince->pump_left.sum_current += pince->pump_left.pump_current;
-                }
-                if (pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL) {
-                    pince->pump_right.sum_current += pince->pump_right.pump_current;
-                }
+                // On calcule le baseline pour les deux côtés en permanence
+                pince->pump_left.sum_current += pince->pump_left.pump_current;
+                pince->pump_right.sum_current += pince->pump_right.pump_current;
                 
                 pince->sample_idx++;
                 
                 if (pince->sample_idx >= NBR_VALUES_FOR_MEAN) { 
-                    if (pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL) {
-                        pince->pump_left.baseline_current = pince->pump_left.sum_current / NBR_VALUES_FOR_MEAN;
-                    }
-                    if (pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL) {
-                        pince->pump_right.baseline_current = pince->pump_right.sum_current / NBR_VALUES_FOR_MEAN;
-                    }
+                    pince->pump_left.baseline_current = pince->pump_left.sum_current / NBR_VALUES_FOR_MEAN;
+                    pince->pump_right.baseline_current = pince->pump_right.sum_current / NBR_VALUES_FOR_MEAN;
                     
                     #ifdef DEBUG_FEETECH_ACTION
                         printf("pince : %d : Baseline trouvé - D:%d, G:%d\n", pince->id, pince->pump_right.baseline_current, pince->pump_left.baseline_current);
                     #endif
-                    pince->action_step = 16; // On reprend le flux normal
+                    pince->action_step = 16;
                 } else {
                     pince->action_step = 14; 
                 }
             }
             break;
-
         // -------------------------------------------------------------
 
         case 16: // wait for pince to reach position
@@ -277,7 +259,7 @@ void pince_action_loop(Pince_t *pince){
         case 17: // check position and stabilize
             if(pince->action_done){
                 // Vérification de la position avec tolérance
-                if((pince->gros_pos.ramasser_pos - 30) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 30)){
+                if((pince->gros_pos.ramasser_pos - 20) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 20)){
                     
                     // On ne passe pas au step 18 tant qu'on n'a pas attendu 150ms EN POSITION
                     if (pince->action_timer == 0) {
@@ -322,14 +304,9 @@ void pince_action_loop(Pince_t *pince){
             break;
  
         case 18: // Demande de mesure continue
-            if (pince->current_command == CMD_RAMASSER_ALL) {
-                GetFEETECH(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current);
-                GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
-            } else if (pince->current_command == CMD_RAMASSER_G) {
-                GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current, &pince->action_done);
-            } else if (pince->current_command == CMD_RAMASSER_D) {
-                GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
-            }
+            // Idem, on lit systématiquement les deux pour ne pas diviser par deux le temps d'analyse total
+            GetFEETECH(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current);
+            GetFEETECH_Ext_Done(pince->id_pump, ADDR_CURRENT_2_L, &pince->pump_right.pump_current, &pince->action_done);
             pince->action_step = 19;
             break;
 
@@ -337,17 +314,17 @@ void pince_action_loop(Pince_t *pince){
             if(pince->action_done){
                 pince->action_done = 0;
                 
-                // 1. Mise à jour du buffer uniquement pour les pompes actives
-                if (pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL) {
-                    if (pince->buffer_full) pince->pump_left.sum_current -= pince->pump_left.samples[pince->sample_idx];
-                    pince->pump_left.samples[pince->sample_idx] = pince->pump_left.pump_current;
-                    pince->pump_left.sum_current += pince->pump_left.pump_current;
+                // 1. Mise à jour du buffer pour LES DEUX pompes
+                if (pince->buffer_full) {
+                    pince->pump_left.sum_current -= pince->pump_left.samples[pince->sample_idx];
+                    pince->pump_right.sum_current -= pince->pump_right.samples[pince->sample_idx];
                 }
-                if (pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL) {
-                    if (pince->buffer_full) pince->pump_right.sum_current -= pince->pump_right.samples[pince->sample_idx];
-                    pince->pump_right.samples[pince->sample_idx] = pince->pump_right.pump_current;
-                    pince->pump_right.sum_current += pince->pump_right.pump_current;
-                }
+                
+                pince->pump_left.samples[pince->sample_idx] = pince->pump_left.pump_current;
+                pince->pump_left.sum_current += pince->pump_left.pump_current;
+                
+                pince->pump_right.samples[pince->sample_idx] = pince->pump_right.pump_current;
+                pince->pump_right.sum_current += pince->pump_right.pump_current;
                 
                 // 2. Avancer l'index tournant
                 pince->sample_idx++;
@@ -363,6 +340,7 @@ void pince_action_loop(Pince_t *pince){
                     uint8_t catch_left = 1;  // Considéré "vrai" si non demandé
                     uint8_t catch_right = 1; // Considéré "vrai" si non demandé
 
+                    // On n'évalue le succès que sur la/les pompe(s) demandée(s)
                     if (pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL) {
                         uint16_t avg_left = pince->pump_left.sum_current / current_sample_count;
                         pince->succes_left = (ABS_DIFF(pince->pump_left.baseline_current, avg_left) > CURRENT_VARIATION_CATCH);
@@ -380,7 +358,7 @@ void pince_action_loop(Pince_t *pince){
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : Objets ramassés (Variations > %d)\n", pince->id, CURRENT_VARIATION_CATCH);
                         #endif
-                        pince->action_step = 20; // On passe à la remontée INSTANTANEMENT
+                        pince->action_step = 20; // On passe à la remontée
                     } else {
                         // Si le buffer a fait un tour complet : l'analyse est définitive
                         if (pince->buffer_full) { 
