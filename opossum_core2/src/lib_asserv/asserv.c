@@ -173,7 +173,7 @@ void asserv_free_step(void)
 	
 
 void speed_asserv_break_step(void) {
-    // break only if the robot is moving 
+// break only if the robot is moving 
     if (fabs(speed_robot_asserv.vx) > DEFAULT_SPEED_LIN_STOP || fabs(speed_robot_asserv.vy) > DEFAULT_SPEED_LIN_STOP || fabs(speed_robot_asserv.vt) > DEFAULT_SPEED_ROT_STOP){
         emergency_break_requested = 1;
         speed_order.vx = 0;
@@ -182,6 +182,12 @@ void speed_asserv_break_step(void) {
         Pid_Speed_En = 1;
     } else {
         emergency_break_requested = 0;
+        
+        // CORRECTION : Forcer la consigne interne à 0 pour tuer le "fantôme"
+        speed_order.vx = 0;
+        speed_order.vy = 0;
+        speed_order.vt = 0;
+        
         motion_free();
         printf("Break,done\n");
         motion_done = 1;
