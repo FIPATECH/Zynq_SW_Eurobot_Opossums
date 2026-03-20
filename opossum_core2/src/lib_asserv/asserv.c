@@ -75,9 +75,21 @@ void motion_free(void) {
 }
 
 void motion_pos(Position pos) {
-    if (emergency_break_requested) {
+    // Si on lance un mouvement alors qu'on était arrêté, en roue libre, ou en plein break
+    if (asserv_mode == ASSERV_MODE_OFF || 
+        asserv_mode == ASSERV_MODE_FREE || 
+        asserv_mode == ASSERV_MODE_BREAK) {
+        
+        // 1. On purge l'historique du PID
         pid_vitesse_reset();
+        
+        // 2. On purge la mémoire du générateur de rampe en la calant sur la vitesse physique réelle
+        // (S'il est à l'arrêt, ça forcera la rampe à 0 proprement)
+        speed_order_constrained.vx = speed_robot_asserv.vx;
+        speed_order_constrained.vy = speed_robot_asserv.vy;
+        speed_order_constrained.vt = speed_robot_asserv.vt;
     }
+
     current_stop_distance = default_stop_distance;
     Wanted_Pos = pos;
     emergency_break_requested = 0;
@@ -156,8 +168,9 @@ void asserv_free_step(void)
         (fabs(speed_robot_asserv.vt) < DEFAULT_SPEED_ROT_STOP)) {
         
             motion_off();
-	}
+        }
 }
+	
 
 void speed_asserv_break_step(void) {
     // break only if the robot is moving 
