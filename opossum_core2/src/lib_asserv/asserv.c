@@ -75,6 +75,9 @@ void motion_free(void) {
 }
 
 void motion_pos(Position pos) {
+    if (emergency_break_requested) {
+        pid_vitesse_reset();
+    }
     current_stop_distance = default_stop_distance;
     Wanted_Pos = pos;
     emergency_break_requested = 0;
