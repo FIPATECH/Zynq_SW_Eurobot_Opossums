@@ -1,7 +1,7 @@
 #ifndef FEETECH_ACTION_H
 #define FEETECH_ACTION_H
 
-// #define DEBUG_FEETECH_ACTION
+#define DEBUG_FEETECH_ACTION
 
 #define NBR_PINCES 8
 
@@ -45,7 +45,7 @@
 
 // ---------------- PINCE 1 ----------------- //
 #define PINCE_2_GROS_IDLE_POS 3580
-#define PINCE_2_GROS_RAMASSER_POS 2395
+#define PINCE_2_GROS_RAMASSER_POS 2405
 #define PINCE_2_GROS_DEPOSER_POS 2535
 #define PINCE_2_GROS_LACHER_POS 3800
 

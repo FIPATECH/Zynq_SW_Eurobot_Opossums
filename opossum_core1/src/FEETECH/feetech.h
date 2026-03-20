@@ -16,7 +16,7 @@ typedef unsigned char byte;
 #define FEETECH_BROADCAST               254
 
 #define FEETECH_CMD_NB_MAX_TRY_SEND 3
-#define FEETECH_CMD_LIST_SIZE 100
+#define FEETECH_CMD_LIST_SIZE 1000
 #define FEETECH_CMD_BUFF_LENGTH 40
 
 #define FEETECH_STATUS_OK              0

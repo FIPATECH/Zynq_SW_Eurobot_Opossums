@@ -360,7 +360,7 @@ void FEETECH_Loop(void){
         
         case 91: 
             // Attente non-bloquante de 2ms avant de renvoyer la commande
-            if ((Timer_ms1 - FEETECH_IFG_Timer) >= 4) {
+            if ((Timer_ms1 - FEETECH_IFG_Timer) >= 3) {
                 FEETECH_Loop_State = 10;
                 Com_FEETECH_Status = COM_FEETECH_IDDLE;
             }
@@ -382,7 +382,7 @@ void FEETECH_Loop(void){
         // --- AJOUT : Nouvel état pour gérer le délai sans bloquer le CPU ---
         case 101:
             // On attend 2 millisecondes (vous pouvez tester 1, 2 ou 3 selon vos cartes)
-            if ((Timer_ms1 - FEETECH_IFG_Timer) >= 4) {
+            if ((Timer_ms1 - FEETECH_IFG_Timer) >= 3) {
                 FEETECH_Loop_State = 0; // Le délai est passé, on peut traiter la commande suivante
             }
             break;

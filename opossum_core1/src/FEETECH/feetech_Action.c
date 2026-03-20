@@ -319,7 +319,11 @@ void pince_action_loop(Pince_t *pince){
                     pince->pump_left.sum_current -= pince->pump_left.samples[pince->sample_idx];
                     pince->pump_right.sum_current -= pince->pump_right.samples[pince->sample_idx];
                 }
-                
+
+                #ifdef DEBUG_FEETECH_ACTION
+                    printf("pince : %d : Sample %d - Mesure courante (G:%d, D:%d)\n", pince->id, pince->sample_idx, pince->pump_left.pump_current, pince->pump_right.pump_current);
+                #endif
+
                 pince->pump_left.samples[pince->sample_idx] = pince->pump_left.pump_current;
                 pince->pump_left.sum_current += pince->pump_left.pump_current;
                 
