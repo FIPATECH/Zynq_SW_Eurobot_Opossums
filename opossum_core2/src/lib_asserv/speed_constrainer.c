@@ -73,11 +73,11 @@ void constrain_acceleration_order(float period) {
             speed_order_constrained.vx = speed_order_constrained_1.vx;
             speed_order_constrained.vy = speed_order_constrained_1.vy;
         }
-
+    
         speed_order_constrained.vt = limit_float(
-            speed_order_constrained_1.vt, 
-            speed_order_constrained.vt - delta_vt_max, 
-            speed_order_constrained.vt + delta_vt_max
+        speed_order_constrained_1.vt, 
+        speed_order_constrained.vt - delta_vt_max, 
+        speed_order_constrained.vt + delta_vt_max
         );
     }
 

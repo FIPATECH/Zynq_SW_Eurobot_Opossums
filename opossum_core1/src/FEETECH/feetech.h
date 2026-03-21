@@ -1,7 +1,7 @@
 #ifndef FEETECH_H
 #define FEETECH_H
 
-// #define FEETECH_PROTOCOL_DEBUG
+#define FEETECH_PROTOCOL_DEBUG
 
 typedef unsigned char byte;
 // Broadcast ID
