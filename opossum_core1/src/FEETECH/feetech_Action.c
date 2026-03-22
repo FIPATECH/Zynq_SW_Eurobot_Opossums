@@ -1106,6 +1106,27 @@ void pince_action_loop(Pince_t *pince){
             break;
 
         /* ---------------------------------------------------- */
+        /* ------------- ARRET FORCE DES POMPES (600) --------- */
+        /* ---------------------------------------------------- */
+        case 600:
+            // 1. Eteindre les pompes
+            PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+            PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+            
+            // 2. Ouvrir les valves pour relâcher instantanément un objet éventuel
+            PutFEETECH(pince->id_pump, VALVE_CMD_1, VALVE_ON);
+            PutFEETECH(pince->id_pump, VALVE_CMD_2, VALVE_ON);
+
+            #ifdef DEBUG_FEETECH_ACTION
+                printf("pince : %d : [ARRET FORCE] Pompes coupees, valves ouvertes.\n", pince->id);
+            #endif
+            
+            // 3. Retour à l'état IDLE
+            pince->action_done = 0;
+            pince->action_step = 0;
+            break;
+
+        /* ---------------------------------------------------- */
         /* ------------- SEQUENCE D'ABANDON / ERREUR -----------*/
         /* ---------------------------------------------------- */
         case 500: // Sas d'initialisation de la mise en sécurité
@@ -1230,6 +1251,20 @@ uint8_t pince_action_cmd(void){
     uint32_t param;
     if (Get_Param_u32(&param))
         return PARAM_ERROR_CODE;
+
+    // --- COMMANDE GLOBALE : 10 0 0 ---
+    if (ID_pince == 10 && command == 0 && param == 0) {
+        #ifdef DEBUG_FEETECH_ACTION
+            printf("Action globale: Envoi de toutes les pinces a l'etape 600 (Relachement).\n");
+        #endif
+        
+        for (int i = 0; i < NBR_PINCES; i++) {
+            robot_pinces[i].current_command = CMD_IDLE; // Stoppe la commande en cours
+            robot_pinces[i].action_step = 600;          // Envoi vers le nouveau sas
+        }
+        return 0; 
+    }
+    // ---------------------------------
 
     if(ID_pince < 0 || ID_pince > NBR_PINCES-1){
         printf("Invalid pince ID\n");
