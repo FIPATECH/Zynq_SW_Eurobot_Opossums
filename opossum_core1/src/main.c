@@ -14,9 +14,7 @@ LD19Instance LD19;
 
 int main()
 {
-    //Disable cache on OCM    
-    // S=b1 TEX=b100 AP=b11, Domain=b1111, C=b0, B=b0
-    Xil_SetTlbAttributes(0xFFFF0000,0x14de2); 
+    init_shared_memory();
     
     u8 c;
     init_platform();
