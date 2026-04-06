@@ -105,7 +105,7 @@
 
 // ---------------- PINCE 6 ----------------- //
 #define PINCE_7_GROS_IDLE_POS 2450
-#define PINCE_7_GROS_RAMASSER_POS 3570
+#define PINCE_7_GROS_RAMASSER_POS 3560
 #define PINCE_7_GROS_DEPOSER_POS 3420
 #define PINCE_7_GROS_LACHER_POS 2200
 
@@ -117,7 +117,7 @@
 
 // ---------------- PINCE 7 ----------------- //
 #define PINCE_8_GROS_IDLE_POS 3580
-#define PINCE_8_GROS_RAMASSER_POS 2395
+#define PINCE_8_GROS_RAMASSER_POS 2405
 #define PINCE_8_GROS_DEPOSER_POS 2535
 #define PINCE_8_GROS_LACHER_POS 3800
 

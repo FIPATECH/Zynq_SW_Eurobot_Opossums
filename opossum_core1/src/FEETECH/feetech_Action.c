@@ -208,7 +208,7 @@ void pince_action_loop(Pince_t *pince){
                         #ifdef DEBUG_FEETECH_ACTION
                             printf("pince : %d : ERREUR CRITIQUE: Impossible d'allumer les pompes après 3 essais. Abandon.\n", pince->id);
                         #endif
-                        printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); 
+                        // printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); 
                         pince->retry_count = 0; 
                         pince->action_step = 500; 
                     } else {
@@ -298,7 +298,7 @@ void pince_action_loop(Pince_t *pince){
                 #ifdef DEBUG_FEETECH_ACTION
                     printf("pince : %d : Pince action timeout at position %d\n", pince->id, pince->gros_pos.current_position);
                 #endif
-                printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); 
+                // printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); 
                 pince->action_step = 500; 
             } 
             break;
@@ -423,7 +423,7 @@ void pince_action_loop(Pince_t *pince){
                 // la pince à un problème on abandonne
                 pince->succes_left = 0;
                 pince->succes_right = 0;
-                printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
+                // printf("PINCEFEEDBACK %d 1 %d %d\n", pince->id, pince->succes_left, pince->succes_right); // signalement de l'erreur à la stratégie
                 pince->action_step = 500; // on a un problème, on coupe les pompes et on abandonne
             }
 
