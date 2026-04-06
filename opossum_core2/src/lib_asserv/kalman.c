@@ -86,6 +86,24 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     state->P[3][0] = state->P[0][3]; state->P[3][1] = state->P[1][3]; state->P[3][2] = state->P[2][3];
     state->P[4][0] = state->P[0][4]; state->P[4][1] = state->P[1][4]; state->P[4][2] = state->P[2][4]; state->P[4][3] = state->P[3][4];
     state->P[5][0] = state->P[0][5]; state->P[5][1] = state->P[1][5]; state->P[5][2] = state->P[2][5]; state->P[5][3] = state->P[3][5]; state->P[5][4] = state->P[4][5];
+
+    state->P[0][3] = state->P[3][0] = 0.0f;
+    state->P[0][4] = state->P[4][0] = 0.0f;
+    state->P[0][5] = state->P[5][0] = 0.0f;
+    state->P[1][3] = state->P[3][1] = 0.0f;
+    state->P[1][4] = state->P[4][1] = 0.0f;
+    state->P[1][5] = state->P[5][1] = 0.0f;
+    state->P[2][3] = state->P[3][2] = 0.0f;
+    state->P[2][4] = state->P[4][2] = 0.0f;
+    state->P[2][5] = state->P[5][2] = 0.0f;
+
+    // Réinitialiser P[3..5] à la seule incertitude odométrique
+    state->P[3][3] = q_var_vx;
+    state->P[4][4] = q_var_vy;
+    state->P[5][5] = q_var_vt;
+    state->P[3][4] = state->P[4][3] = 0.0f;
+    state->P[3][5] = state->P[5][3] = 0.0f;
+    state->P[4][5] = state->P[5][4] = 0.0f;
 }
 
 // Seuil de la loi du Chi-Carré pour 3 degrés de liberté (x, y, theta) à 99% de confiance
