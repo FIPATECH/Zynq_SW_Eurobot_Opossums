@@ -84,6 +84,8 @@ void Init_Asserv(void) {
     en_kalman.enable_camera_kalman = 1;
 
     asserv_init();
+
+    Last_Timer_Asserv = Timer_ms1;
 }
 
 void Asserv_Loop(void)
@@ -220,7 +222,7 @@ void Asserv_Loop(void)
 
             Consigne = Wanted_Forced_Consigne;
         } else {
-            Apply_Deadzone_Compensation(&Consigne);
+            // Apply_Deadzone_Compensation(&Consigne);
         }
         
         float Abs_Consigne1 = Abs_Ternaire(Consigne.command1);

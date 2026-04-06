@@ -20,6 +20,23 @@ void speed_constrainer_init(void)
 {
     robot_v_max   = DEFAULT_CONSTRAINT_V_MAX;
     robot_vt_max  = DEFAULT_CONSTRAINT_VT_MAX;
+
+    speed_order.vx = 0;
+    speed_order.vy = 0;
+    speed_order.vt = 0;
+
+    speed_order_constrained.vx = 0;
+    speed_order_constrained.vy = 0;
+    speed_order_constrained.vt = 0;
+    
+    speed_order_constrained_1.vx = 0;
+    speed_order_constrained_1.vy = 0;
+    speed_order_constrained_1.vt = 0;
+
+    Speed_Order_1 = 0;
+    Speed_Order_2 = 0;
+    Speed_Order_3 = 0;
+    Speed_Order_4 = 0;
 }
 
 void acceleration_constrainer_init(void)
@@ -91,19 +108,20 @@ void constrain_acceleration_order(float period) {
 
 
 void set_Constraint_vitesse_xy_max(float v_max) {
-    if (v_max != 0) {
+    if (v_max > 0.0f) { 
         if (v_max <= DEFAULT_CONSTRAINT_V_MAX) {
             robot_v_max = v_max;
         } else {
             robot_v_max = DEFAULT_CONSTRAINT_V_MAX;
         }
     } else {
-        robot_v_max = DEFAULT_CONSTRAINT_V_MAX;
+        // Si on reçoit 0, -1, ou une valeur aberrante, on met la valeur par défaut
+        robot_v_max = DEFAULT_CONSTRAINT_V_MAX; 
     }
 }
 
 void set_Constraint_vt_max(float vt_max) {
-    if (vt_max != 0) {
+    if (vt_max > 0.0f) { 
         if (vt_max <= DEFAULT_CONSTRAINT_VT_MAX) {
             robot_vt_max = vt_max;
         } else {
@@ -113,9 +131,8 @@ void set_Constraint_vt_max(float vt_max) {
         robot_vt_max = DEFAULT_CONSTRAINT_VT_MAX;
     }
 }
-
 void set_Constraint_a_xy_max(float a_max) {
-    if (a_max != 0) {
+    if (a_max > 0.0f) {
         if (a_max <= DEFAULT_CONSTRAINT_A_MAX) {
             robot_a_max = a_max;
         } else {
@@ -127,7 +144,7 @@ void set_Constraint_a_xy_max(float a_max) {
 }
 
 void set_Constraint_at_max(float at_max) {
-    if (at_max != 0) {
+    if (at_max > 0.0f) {
         if (at_max <= DEFAULT_CONSTRAINT_AT_MAX) {
             robot_at_max = at_max;
         } else {

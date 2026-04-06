@@ -261,7 +261,7 @@ void pos_asserv_step(void) {
 }
 
 float radial_speed_calculation(float distance) {
-    return sqrtf(2.0f * DEFAULT_CONSTRAINT_A_MAX * distance * 0.95f);
+    return sqrtf(2.0f * robot_a_max * distance * 0.95f);
 }
 
 float angular_speed_calculation(float angle) {
@@ -270,7 +270,7 @@ float angular_speed_calculation(float angle) {
     if (angle < 0) {
         sign = -1;
     }
-    return sign * sqrtf(2.0f * DEFAULT_CONSTRAINT_AT_MAX * fabs_angle * 0.95f);
+    return sign * sqrtf(2.0f * robot_at_max * fabs_angle * 0.95f);
 }
 
 void speed_asserv_step(void) {
