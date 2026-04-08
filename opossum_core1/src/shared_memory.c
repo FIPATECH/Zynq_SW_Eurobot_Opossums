@@ -7,7 +7,7 @@ void init_shared_memory() {
     memset((void *)shared_mem, 0, sizeof(sharedCommand));
     //Disable cache on OCM
     // S=b1 TEX=b100 AP=b11, Domain=b1111, C=b0, B=b0
-    // Xil_SetTlbAttributes(SHARED_MEMORY_BASEADDR,0x14de2);
+    Xil_SetTlbAttributes(SHARED_MEMORY_BASEADDR,0x14de2); 
 }
 
 
