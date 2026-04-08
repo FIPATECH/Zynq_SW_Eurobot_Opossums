@@ -12,6 +12,8 @@ typedef struct {
     uint8_t has_camera[3];       // Flag : y a-t-il eu une caméra à cet instant ?
     float z_camera[3][3];        // La mesure caméra
     float r_camera[3][3];        // Le bruit de la caméra
+
+    uint8_t bypass_lidar_rejection;
 } Observations;
 
 typedef struct {

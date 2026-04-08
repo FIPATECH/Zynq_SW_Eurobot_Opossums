@@ -17,8 +17,8 @@ void kalman_init(KalmanState* state) {
 }
 
 void kalman_predict(KalmanState* state, Speed* speed, float dt) {
-    // 1. --- State Prediction (Algebraic integration) ---
-    // methode runge-kutta 2 pour une meilleure précision sur l'angle, qui est critique pour la prédiction de la position
+
+    // 1. --- Prédiction d'état (Runge-Kutta 2) ---
     float angle_mid = principal_angle(state->x[2] + speed->vt * dt * 0.5f);
     float cos_t = cosf(angle_mid);
     float sin_t = sinf(angle_mid);
@@ -29,64 +29,62 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
 
     state->x[0] += v_dx * dt;
     state->x[1] += v_dy * dt;
-    state->x[2] = principal_angle(state->x[2] + v_ang * dt);
-    state->x[3] = v_dx;
-    state->x[4] = v_dy;
-    state->x[5] = v_ang;
+    state->x[2]  = principal_angle(state->x[2] + v_ang * dt);
+    state->x[3]  = v_dx;   // directement observé par l'odométrie
+    state->x[4]  = v_dy;
+    state->x[5]  = v_ang;
 
-    // 2. --- Calcul Dynamique de la Matrice Q (Bruit de Processus) ---
-    // On calcule l'écart-type (std) dynamique en fonction du patinage (vitesse absolue)
+    // 2. --- Bruit de processus Q dynamique ---
     float abs_vx = fabsf(speed->vx);
     float abs_vy = fabsf(speed->vy);
     float abs_vt = fabsf(speed->vt);
 
-    float q_std_x = PROCESS_NOISE_ODOM_BASE_X + (PROCESS_NOISE_ODOM_VEL_X * abs_vx);
-    float q_std_y = PROCESS_NOISE_ODOM_BASE_Y + (PROCESS_NOISE_ODOM_VEL_Y * abs_vy);
-    float q_std_t = PROCESS_NOISE_ODOM_BASE_THETA + (PROCESS_NOISE_ODOM_VEL_THETA * abs_vt);
-
-    // On élève au carré pour obtenir les variances (la diagonale de Q)
-    float q_var_x = q_std_x * q_std_x;
-    float q_var_y = q_std_y * q_std_y;
-    float q_var_t = q_std_t * q_std_t;
-
-    // Variances pour les vitesses (considérées statiques ici, mais modifiables)
-    float q_var_vx = PROCESS_NOISE_ODOM_VX * PROCESS_NOISE_ODOM_VX;
-    float q_var_vy = PROCESS_NOISE_ODOM_VY * PROCESS_NOISE_ODOM_VY;
+    float q_var_x  = powf(PROCESS_NOISE_ODOM_BASE_X     + PROCESS_NOISE_ODOM_VEL_X     * abs_vx, 2.0f);
+    float q_var_y  = powf(PROCESS_NOISE_ODOM_BASE_Y     + PROCESS_NOISE_ODOM_VEL_Y     * abs_vy, 2.0f);
+    float q_var_t  = powf(PROCESS_NOISE_ODOM_BASE_THETA + PROCESS_NOISE_ODOM_VEL_THETA * abs_vt, 2.0f);
+    float q_var_vx = PROCESS_NOISE_ODOM_VX     * PROCESS_NOISE_ODOM_VX;
+    float q_var_vy = PROCESS_NOISE_ODOM_VY     * PROCESS_NOISE_ODOM_VY;
     float q_var_vt = PROCESS_NOISE_ODOM_VTHETA * PROCESS_NOISE_ODOM_VTHETA;
 
+    // 3. --- Propagation de P avec le vrai Jacobien F ---
+    //
+    // Les vitesses x[3..5] sont DIRECTEMENT ÉCRASÉES par l'odométrie à chaque pas.
+    // Elles ne sont pas prédites depuis l'état précédent.
+    // Le vrai Jacobien F pour le bloc position est donc :
+    //
+    //   F_pos = [ 1   0   F02 ]     F02 = (-vx*sin_t - vy*cos_t) * dt
+    //           [ 0   1   F12 ]     F12 = ( vx*cos_t - vy*sin_t) * dt
+    //           [ 0   0   1   ]
+    //
+    // et F pour le bloc vitesse est 0 (overwrite direct, pas de dynamique d'état).
+    // Tous les cross-termes position/vitesse sont nuls après predict.
 
-    // 3. --- Covariance Prediction: P = F*P*F' + Q ---
-    // Since F is [I, dt*I; 0, I], we compute only the upper triangle 
-    // and mirror it, saving roughly 50% of the math.
-    float dt2 = dt * dt;
+    float F02 = (-speed->vx * sin_t - speed->vy * cos_t) * dt;
+    float F12 = ( speed->vx * cos_t - speed->vy * sin_t) * dt;
 
-    // Diagonal Elements (On ajoute notre bruit dynamique q_var)
-    state->P[0][0] += dt * (state->P[0][3] + state->P[3][0]) + dt2 * state->P[3][3] + q_var_x;
-    state->P[1][1] += dt * (state->P[1][4] + state->P[4][1]) + dt2 * state->P[4][4] + q_var_y;
-    state->P[2][2] += dt * (state->P[2][5] + state->P[5][2]) + dt2 * state->P[5][5] + q_var_t;
+    // Extraction du bloc position de P avant modification (évite les aliasing)
+    float P00 = state->P[0][0];
+    float P01 = state->P[0][1];
+    float P02_val = state->P[0][2];
+    float P11 = state->P[1][1];
+    float P12_val = state->P[1][2];
+    float P22 = state->P[2][2];
 
-    // Off-diagonal Position/Position
-    state->P[0][1] += dt * (state->P[0][4] + state->P[3][1]) + dt2 * state->P[3][4];
-    state->P[0][2] += dt * (state->P[0][5] + state->P[3][2]) + dt2 * state->P[3][5];
-    state->P[1][2] += dt * (state->P[1][5] + state->P[4][2]) + dt2 * state->P[4][5];
+    // P_new = F_pos * P_pos * F_pos^T + Q_pos
+    state->P[0][0] = P00 + 2.0f*F02*P02_val + F02*F02*P22 + q_var_x;
+    state->P[1][1] = P11 + 2.0f*F12*P12_val + F12*F12*P22 + q_var_y;
+    state->P[2][2] = P22 + q_var_t;
 
-    // Position/Velocity Covariances (Top-Right 3x3)
-    state->P[0][3] += dt * state->P[3][3]; state->P[0][4] += dt * state->P[3][4]; state->P[0][5] += dt * state->P[3][5];
-    state->P[1][3] += dt * state->P[4][3]; state->P[1][4] += dt * state->P[4][4]; state->P[1][5] += dt * state->P[4][5];
-    state->P[2][3] += dt * state->P[5][3]; state->P[2][4] += dt * state->P[5][4]; state->P[2][5] += dt * state->P[5][5];
+    float new_P01 = P01 + F02*P12_val + F12*P02_val + F02*F12*P22;
+    float new_P02 = P02_val + F02*P22;
+    float new_P12 = P12_val + F12*P22;
 
-    // Velocity block (Bottom-Right 3x3) - Only add Q on diagonals
-    state->P[3][3] += q_var_vx; 
-    state->P[4][4] += q_var_vy; 
-    state->P[5][5] += q_var_vt; 
+    state->P[0][1] = state->P[1][0] = new_P01;
+    state->P[0][2] = state->P[2][0] = new_P02;
+    state->P[1][2] = state->P[2][1] = new_P12;
 
-    // Mirror to Lower Triangle (Ensure perfect symmetry)
-    state->P[1][0] = state->P[0][1];
-    state->P[2][0] = state->P[0][2]; state->P[2][1] = state->P[1][2];
-    state->P[3][0] = state->P[0][3]; state->P[3][1] = state->P[1][3]; state->P[3][2] = state->P[2][3];
-    state->P[4][0] = state->P[0][4]; state->P[4][1] = state->P[1][4]; state->P[4][2] = state->P[2][4]; state->P[4][3] = state->P[3][4];
-    state->P[5][0] = state->P[0][5]; state->P[5][1] = state->P[1][5]; state->P[5][2] = state->P[2][5]; state->P[5][3] = state->P[3][5]; state->P[5][4] = state->P[4][5];
-
+    // Bloc vitesse : directement observé par l'odométrie → incertitude = bruit odométrique seul.
+    // Tous les cross-termes position/vitesse sont nuls (pas de prédiction couplée).
     state->P[0][3] = state->P[3][0] = 0.0f;
     state->P[0][4] = state->P[4][0] = 0.0f;
     state->P[0][5] = state->P[5][0] = 0.0f;
@@ -97,7 +95,6 @@ void kalman_predict(KalmanState* state, Speed* speed, float dt) {
     state->P[2][4] = state->P[4][2] = 0.0f;
     state->P[2][5] = state->P[5][2] = 0.0f;
 
-    // Réinitialiser P[3..5] à la seule incertitude odométrique
     state->P[3][3] = q_var_vx;
     state->P[4][4] = q_var_vy;
     state->P[5][5] = q_var_vt;

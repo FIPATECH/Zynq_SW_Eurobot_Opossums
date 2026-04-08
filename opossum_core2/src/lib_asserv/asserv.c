@@ -75,24 +75,18 @@ void motion_free(void) {
 }
 
 void motion_pos(Position pos) {
-    if (asserv_mode == ASSERV_MODE_OFF || 
-        asserv_mode == ASSERV_MODE_FREE) {
-        // Transition normale : on part de la vitesse physique réelle
-        pid_vitesse_reset();
-        speed_order_constrained.vx = speed_robot_asserv.vx;
-        speed_order_constrained.vy = speed_robot_asserv.vy;
-        speed_order_constrained.vt = speed_robot_asserv.vt;
-
-    } else if (asserv_mode == ASSERV_MODE_BREAK) {
-        // Transition depuis un break : NE PAS restaurer la vitesse physique.
-        // Le break a déjà hard-zéroé speed_order_constrained.
-        // La rampe doit repartir de 0 — le PID gère le glissement résiduel.
+    if (asserv_mode == ASSERV_MODE_BREAK) {
         pid_vitesse_reset();
         speed_order_constrained.vx = 0.0f;
         speed_order_constrained.vy = 0.0f;
         speed_order_constrained.vt = 0.0f;
+    } else {
+        // OFF, FREE, SPEED, ABSOLUTE_SPEED, POS : toujours partir de la vitesse physique réelle
+        pid_vitesse_reset();
+        speed_order_constrained.vx = speed_robot_asserv.vx;
+        speed_order_constrained.vy = speed_robot_asserv.vy;
+        speed_order_constrained.vt = speed_robot_asserv.vt;
     }
-
     current_stop_distance = default_stop_distance;
     Wanted_Pos = pos;
     emergency_break_requested = 0;

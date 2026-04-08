@@ -316,6 +316,7 @@ void Set_Lidar_Cmd(Set_lidar set_lidar) {
             kalman_fifo.observations[delay_index].z_lidar[2] = position_lidar.t;
 
             uint8_t bypass_rejection = (lidar_consecutive_rejections > 10); // si plus de 10 rejets consécutifs, on considère que le lidar est devenu fiable et on bypass la rejection d'outliers
+            kalman_fifo.observations[delay_index].bypass_lidar_rejection = bypass_rejection;
             
             // Correction de l’état dans la FIFO
             float z[3] = {position_lidar.x, position_lidar.y, position_lidar.t};

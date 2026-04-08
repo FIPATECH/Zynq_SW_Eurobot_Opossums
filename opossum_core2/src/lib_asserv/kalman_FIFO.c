@@ -5,13 +5,9 @@ KalmanFIFO kalman_fifo;
 
 void kalman_fifo_init(KalmanFIFO* fifo) {
     memset(fifo, 0, sizeof(KalmanFIFO));
-
-    // Initialiser la tête de la FIFO
-    fifo->head = 0;
-    // Initialiser le compteur d'éléments
+    fifo->head  = 0;
     fifo->count = 0;
 
-    // Initialiser la mémoire de la FIFO
     KalmanState default_state;
     kalman_init(&default_state);
 
@@ -22,7 +18,8 @@ void kalman_fifo_init(KalmanFIFO* fifo) {
         fifo->speed_robot[i].vy = 0.0f;
         fifo->speed_robot[i].vt = 0.0f;
 
-        fifo->observations[i].has_lidar = 0;
+        fifo->observations[i].has_lidar              = 0;
+        fifo->observations[i].bypass_lidar_rejection = 0;
         fifo->observations[i].z_lidar[0] = 0.0f;
         fifo->observations[i].z_lidar[1] = 0.0f;
         fifo->observations[i].z_lidar[2] = 0.0f;
@@ -44,6 +41,7 @@ void kalman_fifo_push(KalmanFIFO* fifo, KalmanState* state, Speed* speed_robot) 
     memcpy(&fifo->speed_robot[fifo->head], speed_robot, sizeof(Speed));
 
     fifo->observations[fifo->head].has_lidar = 0; // Par défaut, pas d'observation associée à ce nouvel état
+    fifo->observations[fifo->head].bypass_lidar_rejection = 0; // Par défaut, pas de bypass
 
     for(int cam_id = 0; cam_id < 3; cam_id++) {
         fifo->observations[fifo->head].has_camera[cam_id] = 0; // Par défaut, pas d'observation associée à ce nouvel état
@@ -73,11 +71,11 @@ int kalman_fifo_get_delay(KalmanFIFO* fifo, int delay_ms, float dt_ms) {
 
 void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, float R_lidar[3]) {
     int i = delay_index;
-    int next_i;
+    int last = (fifo->head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN;
 
     // On repropague en boucle circulaire jusqu'à la tête-1
-    while (i != ((fifo->head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN)) {
-        next_i = (i + 1) % KALMAN_FIFO_LEN;
+    while (i != last) {
+        int next_i = (i + 1) % KALMAN_FIFO_LEN;
 
         // utilisation direct de l’état précédent, sans copie complète
         KalmanState* current = &fifo->buffer[i];
@@ -93,7 +91,7 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, floa
 
         // 2. CORRECTION : Si une mesure Lidar avait eu lieu à 'next_i', on la réapplique !
         if (fifo->observations[next_i].has_lidar) {
-            kalman_update(next, fifo->observations[next_i].z_lidar, R_lidar, 0);
+            kalman_update(next, fifo->observations[next_i].z_lidar, R_lidar, fifo->observations[next_i].bypass_lidar_rejection);
         }
 
         // 3. CORRECTION : Si une mesure Caméra avait eu lieu à 'next_i', on la réapplique ! 
@@ -124,8 +122,6 @@ void kalman_init_with_lidar(KalmanFIFO* fifo, Position* lidar_pos) {
     init_state.x[4] = 0.0f; // vy
     init_state.x[5] = 0.0f; // vtheta
 
-    kalman_current_state = init_state;
-
     // Initialiser la matrice de covariance P (confiance initiale)
     for (int i = 0; i < STATE_SIZE; i++) {
         for (int j = 0; j < STATE_SIZE; j++) {
@@ -134,12 +130,18 @@ void kalman_init_with_lidar(KalmanFIFO* fifo, Position* lidar_pos) {
         init_state.P[i][i] = 0.01f;  // petite incertitude initiale
     }
 
+    kalman_current_state = init_state;
+
     // Initialiser la FIFO : on remplit tout avec cet état initial
     for (int i = 0; i < KALMAN_FIFO_LEN; i++) {
         fifo->buffer[i] = init_state;
         fifo->speed_robot[i].vx = 0.0f;
         fifo->speed_robot[i].vy = 0.0f;
         fifo->speed_robot[i].vt = 0.0f;
+
+        fifo->observations[i].has_lidar              = 0;
+        fifo->observations[i].bypass_lidar_rejection = 0;
     }
     fifo->head = 0;
+    fifo->count = 0;
 }
