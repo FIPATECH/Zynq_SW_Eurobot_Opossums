@@ -27,8 +27,8 @@
 #define PROCESS_NOISE_ODOM_VY       0.02f
 #define PROCESS_NOISE_ODOM_VTHETA   0.05f
 
-#define PROCESS_NOISE_LIDAR_X       0.5f
-#define PROCESS_NOISE_LIDAR_Y       0.5f
+#define PROCESS_NOISE_LIDAR_X       0.3f
+#define PROCESS_NOISE_LIDAR_Y       0.3f
 #define PROCESS_NOISE_LIDAR_THETA   0.2f
 
 #define PROCESS_NOISE_CAMERA_X      0.05f
