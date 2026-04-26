@@ -25,6 +25,9 @@
 
 #define RETRY_COUNT_MAX 5
 
+#define LOAD_THRESHOLD_CONTACT   300   // à calibrer (~30% de 1023)
+#define ADDR_LOAD_MASK           0x3FF // bits 0-9 = magnitude
+
 #define VALVE_ON 1
 
 // ------------------------------------------ //
@@ -147,6 +150,7 @@ typedef struct {
     uint16_t ramasser_pos;
     uint16_t deposer_pos;
     uint16_t lacher_pos;
+    uint16_t present_load;
 
     uint16_t current_position;
     uint32_t cmd_timer;

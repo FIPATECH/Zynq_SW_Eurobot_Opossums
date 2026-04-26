@@ -254,57 +254,50 @@ void pince_action_loop(Pince_t *pince){
             break;
         // -------------------------------------------------------------
 
-        case 16: // wait for pince to reach position
-            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
-            pince->action_step++;
-            break;    
+        case 16: // Lire le couple du servo gros
+            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_LOAD_L,
+                                &pince->gros_pos.present_load, &pince->action_done);
+            pince->action_step = 17;
+            break;
 
-        case 17: // check position and stabilize
+        case 17: // Décision sur le contact
             if(pince->action_done){
-                // Vérification de la position avec tolérance
-                if((pince->gros_pos.ramasser_pos - 20) <= pince->gros_pos.current_position && pince->gros_pos.current_position <= (pince->gros_pos.ramasser_pos + 20)){
-                    
-                    // On ne passe pas au step 18 tant qu'on n'a pas attendu 150ms EN POSITION
-                    if (pince->action_timer == 0) {
-                        pince->action_timer = Timer_ms1; 
-                        #ifdef DEBUG_FEETECH_ACTION
-                            printf("pince : %d : Position atteinte, stabilisation et mise en pression (150ms)...\n", pince->id);
-                        #endif
-                    }
+                pince->action_done = 0;
 
-                    if (Timer_ms1 - pince->action_timer >= 150) {
-                        #ifdef DEBUG_FEETECH_ACTION
-                            printf("pince : %d : Stabilisation finie, début de l'analyse.\n", pince->id);
-                        #endif
-                        pince->action_timer = 0; 
-                        pince->action_done = 0;
-                        
-                        // --- INITIALISATION DU BUFFER DE MOYENNE GLISSANTE ---
-                        pince->pump_right.sum_current = 0;
-                        pince->pump_left.sum_current = 0;
-                        pince->sample_idx = 0;
-                        pince->buffer_full = 0;
-                        for(int i = 0; i < NBR_VALUES_FOR_MEAN; i++) {
-                            pince->pump_right.samples[i] = 0;
-                            pince->pump_left.samples[i]  = 0;
-                        }
-                        pince->gros_pos.current_position = 0;
-                        pince->action_step = 18; 
+                uint16_t load_magnitude = pince->gros_pos.present_load & ADDR_LOAD_MASK;
+
+                if(load_magnitude >= LOAD_THRESHOLD_CONTACT){
+                    // Contact confirmé : le bras appuie sur l'objet
+                    #ifdef DEBUG_FEETECH_ACTION
+                        printf("pince %d : Contact objet détecté (load=%d)\n",
+                            pince->id, load_magnitude);
+                    #endif
+                    // Init buffer moyenne glissante pour analyse pompes
+                    pince->pump_right.sum_current = 0;
+                    pince->pump_left.sum_current  = 0;
+                    pince->sample_idx  = 0;
+                    pince->buffer_full = 0;
+                    for(int i = 0; i < NBR_VALUES_FOR_MEAN; i++){
+                        pince->pump_right.samples[i] = 0;
+                        pince->pump_left.samples[i]  = 0;
                     }
+                    pince->action_timer = 0;
+                    pince->action_step = 18; // → analyse pompes
                 } else {
-                    pince->action_timer = 0; // On reset le timer si on sort de la zone de tolérance
-                    pince->action_step = 16; 
+                    // Pas encore en contact, on continue de surveiller
+                    pince->action_step = 16;
                 }
             }
 
-            if (Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
+            // Timeout global inchangé
+            if(Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
                 #ifdef DEBUG_FEETECH_ACTION
-                    printf("pince : %d : Pince action timeout at position %d\n", pince->id, pince->gros_pos.current_position);
+                    printf("pince %d : Timeout contact (load=%d)\n",
+                        pince->id, pince->gros_pos.present_load & ADDR_LOAD_MASK);
                 #endif
-                pince->action_step = 500; // PINCEFEEDBACK envoyé par 506
-            } 
+                pince->action_step = 500;
+            }
             break;
- 
         case 18: // Demande de mesure continue
             // Idem, on lit systématiquement les deux pour ne pas diviser par deux le temps d'analyse total
             GetFEETECH(pince->id_pump, ADDR_CURRENT_1_L, &pince->pump_left.pump_current);
