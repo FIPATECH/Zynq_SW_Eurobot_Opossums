@@ -23,6 +23,9 @@
 
 #define CURRENT_VARIATION_CATCH 100 //62
 
+#define CURRENT_RATIO_CATCH_PCT  15 // 15% variabtion on current
+#define CONFIRM_CYCLES_NEEDED  5 
+
 #define RETRY_COUNT_MAX 5
 
 #define LOAD_THRESHOLD_CONTACT   300   // à calibrer (~30% de 1023)
@@ -199,6 +202,8 @@ typedef struct {
 
     Pump_t pump_right;
     Pump_t pump_left;
+    uint8_t confirm_count_left;
+    uint8_t confirm_count_right;
 
     uint8_t retry_count;
 

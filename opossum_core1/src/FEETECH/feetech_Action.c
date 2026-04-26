@@ -335,49 +335,47 @@ void pince_action_loop(Pince_t *pince){
                 // 3. Décision 
                 uint8_t current_sample_count = pince->buffer_full ? NBR_VALUES_FOR_MEAN : pince->sample_idx;
 
-                if (current_sample_count >= 5) { 
-                    uint8_t catch_left = 1;  // Considéré "vrai" si non demandé
-                    uint8_t catch_right = 1; // Considéré "vrai" si non demandé
+                if (current_sample_count >= NBR_VALUES_FOR_MEAN) {
 
-                    // On n'évalue le succès que sur la/les pompe(s) demandée(s)
-                    if (pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL) {
-                        uint16_t avg_left = pince->pump_left.sum_current / current_sample_count;
-                        pince->succes_left = (ABS_DIFF(pince->pump_left.baseline_current, avg_left) > CURRENT_VARIATION_CATCH);
-                        catch_left = pince->succes_left;
+                    uint8_t catch_now_left  = 0;
+                    uint8_t catch_now_right = 0;
+
+                    if(pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL){
+                        uint16_t avg_left    = pince->pump_left.sum_current / current_sample_count;
+                        uint16_t delta_pct_l = (ABS_DIFF(pince->pump_left.baseline_current, avg_left) * 100)
+                                            / (pince->pump_left.baseline_current + 1);
+                        catch_now_left = (delta_pct_l >= CURRENT_RATIO_CATCH_PCT);
+                    }
+                    if(pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL){
+                        uint16_t avg_right   = pince->pump_right.sum_current / current_sample_count;
+                        uint16_t delta_pct_r = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) * 100)
+                                            / (pince->pump_right.baseline_current + 1);
+                        catch_now_right = (delta_pct_r >= CURRENT_RATIO_CATCH_PCT);
                     }
 
-                    if (pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL) {
-                        uint16_t avg_right = pince->pump_right.sum_current / current_sample_count;
-                        pince->succes_right = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) > CURRENT_VARIATION_CATCH);
-                        catch_right = pince->succes_right;
-                    }
+                    // Compteurs de confirmation consécutive
+                    pince->confirm_count_left  = catch_now_left  ? pince->confirm_count_left  + 1 : 0;
+                    pince->confirm_count_right = catch_now_right ? pince->confirm_count_right + 1 : 0;
 
-                    // Si on a attrapé tout ce qu'on a demandé
-                    if(catch_left && catch_right){ 
-                        #ifdef DEBUG_FEETECH_ACTION
-                            printf("pince : %d : Objets ramassés (Variations > %d)\n", pince->id, CURRENT_VARIATION_CATCH);
-                        #endif
-                        pince->action_step = 20; // On passe à la remontée
+                    // Succès uniquement si confirmé N fois de suite
+                    if(pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL)
+                        pince->succes_left  = (pince->confirm_count_left  >= CONFIRM_CYCLES_NEEDED);
+                    if(pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL)
+                        pince->succes_right = (pince->confirm_count_right >= CONFIRM_CYCLES_NEEDED);
+
+                    uint8_t catch_left  = !(pince->current_command == CMD_RAMASSER_G || 
+                                            pince->current_command == CMD_RAMASSER_ALL) || pince->succes_left;
+                    uint8_t catch_right = !(pince->current_command == CMD_RAMASSER_D || 
+                                            pince->current_command == CMD_RAMASSER_ALL) || pince->succes_right;
+
+                    if(catch_left && catch_right){
+                        pince->action_step = 20;
+                    } else if(pince->buffer_full){ // timeout d'analyse
+                        // couper les pompes qui n'ont rien attrapé...
+                        pince->action_step = 20;
                     } else {
-                        // Si le buffer a fait un tour complet : l'analyse est définitive
-                        if (pince->buffer_full) { 
-                            #ifdef DEBUG_FEETECH_ACTION
-                                printf("pince : %d : Analyse terminée. Bilan: (G:%d, D:%d)\n", pince->id, pince->succes_left, pince->succes_right);
-                            #endif
-                            // Couper les pompes qui n'ont rien attrapé pour économiser
-                            if ((pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL) && !pince->succes_left) {
-                                PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
-                            }
-                            if ((pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL) && !pince->succes_right) {
-                                PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
-                            }
-                            pince->action_step = 20; 
-                        } else {
-                            pince->action_step = 18; 
-                        }
+                        pince->action_step = 18;
                     }
-                } else {
-                    pince->action_step = 18;
                 }
             }
             break;
