@@ -1,7 +1,7 @@
 #ifndef FEETECH_ACTION_H
 #define FEETECH_ACTION_H
 
-// #define DEBUG_FEETECH_ACTION
+#define DEBUG_FEETECH_ACTION
 
 #define NBR_PINCES 8
 
@@ -23,13 +23,22 @@
 
 #define CURRENT_VARIATION_CATCH 100 //62
 
-#define CURRENT_RATIO_CATCH_PCT  15 // 15% variabtion on current
+#define CURRENT_RATIO_CATCH_PCT  5 // 15% variabtion on current
 #define CONFIRM_CYCLES_NEEDED  5 
 
 #define RETRY_COUNT_MAX 5
 
 #define LOAD_THRESHOLD_CONTACT   300   // à calibrer (~30% de 1023)
 #define ADDR_LOAD_MASK           0x3FF // bits 0-9 = magnitude
+
+// Ajouter dans GrosPos_t :
+uint16_t last_position;
+uint8_t  stall_count;
+
+// Defines
+#define STALL_DELTA_THRESHOLD   8    // moins de 8 ticks de mouvement = stall
+#define STALL_CYCLES_NEEDED     5    // 5 cycles consécutifs immobiles
+#define OVERREACH_MARGIN        100  // si pos > cible-100, considéré "arrivé librement"
 
 #define VALVE_ON 1
 
@@ -157,6 +166,9 @@ typedef struct {
 
     uint16_t current_position;
     uint32_t cmd_timer;
+
+    uint16_t last_position;
+    uint8_t  stall_count;
 } Gros_Servo_Pos_t;
 
 typedef struct {

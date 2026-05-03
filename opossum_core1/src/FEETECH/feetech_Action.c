@@ -254,17 +254,75 @@ void pince_action_loop(Pince_t *pince){
             break;
         // -------------------------------------------------------------
 
-        case 16: // Lire le couple du servo gros
-            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_LOAD_L,
-                                &pince->gros_pos.present_load, &pince->action_done);
-            pince->action_step = 17;
+        case 16: // lire position
+            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L,
+                                &pince->gros_pos.current_position, &pince->action_done);
+            pince->action_step = 161;
             break;
 
-        case 17: // Décision sur le contact
+        case 161: // lire load — remplacé par détection stall
             if(pince->action_done){
                 pince->action_done = 0;
 
+                uint16_t delta = ABS_DIFF(pince->gros_pos.current_position,
+                                        pince->gros_pos.last_position);
+                pince->gros_pos.last_position = pince->gros_pos.current_position;
+
+                if(delta < STALL_DELTA_THRESHOLD){
+                    pince->gros_pos.stall_count++;
+                } else {
+                    pince->gros_pos.stall_count = 0;
+                }
+
+                printf("pince %d : pos=%d / cible=%d / delta=%d / stall=%d\n",
+                    pince->id,
+                    pince->gros_pos.current_position,
+                    pince->gros_pos.ramasser_pos,
+                    delta,
+                    pince->gros_pos.stall_count);
+
+                // CAS 1 : stall avant la cible → contact objet confirmé
+                if(pince->gros_pos.stall_count >= STALL_CYCLES_NEEDED &&
+                pince->gros_pos.current_position < (pince->gros_pos.ramasser_pos - OVERREACH_MARGIN)){
+                    #ifdef DEBUG_FEETECH_ACTION
+                        printf("pince %d : Contact objet détecté par stall (pos=%d)\n",
+                            pince->id, pince->gros_pos.current_position);
+                    #endif
+                    pince->gros_pos.stall_count = 0;
+                    pince->action_step = 18; // → analyse pompes
+                }
+                // CAS 2 : atteint la cible librement → rien sous la pince, on tente quand même
+                else if(pince->gros_pos.current_position >= 
+                        (pince->gros_pos.ramasser_pos - OVERREACH_MARGIN)){
+                    #ifdef DEBUG_FEETECH_ACTION
+                        printf("pince %d : Cible atteinte librement, pas d'objet détecté (pos=%d)\n",
+                            pince->id, pince->gros_pos.current_position);
+                    #endif
+                    pince->gros_pos.stall_count = 0;
+                    pince->action_step = 18; // on laisse les pompes décider
+                }
+                // CAS 3 : encore en mouvement, on reboucle
+                else {
+                    pince->action_step = 16;
+                }
+            }
+
+            if(Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
+                printf("pince %d : Timeout descente (pos=%d)\n",
+                    pince->id, pince->gros_pos.current_position);
+                pince->action_step = 500;
+            }
+            break;
+
+        case 17:
+            if(pince->action_done){
+                pince->action_done = 0;
                 uint16_t load_magnitude = pince->gros_pos.present_load & ADDR_LOAD_MASK;
+                printf("pince %d : pos=%d / cible=%d / load=%d\n",
+                    pince->id,
+                    pince->gros_pos.current_position,
+                    pince->gros_pos.ramasser_pos,
+                    load_magnitude);
 
                 if(load_magnitude >= LOAD_THRESHOLD_CONTACT){
                     // Contact confirmé : le bras appuie sur l'objet
