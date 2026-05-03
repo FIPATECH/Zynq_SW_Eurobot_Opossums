@@ -337,82 +337,78 @@ void pince_action_loop(Pince_t *pince){
             pince->action_step = 19;
             break;
 
-        case 19: // Moyenne Glissante et Décision
+        case 19: // Acquisition et Décision (Analyse par Pic Maximum)
             if(pince->action_done){
                 pince->action_done = 0;
                 
-                // 1. Mise à jour du buffer pour LES DEUX pompes
-                if (pince->buffer_full) {
-                    pince->pump_left.sum_current -= pince->pump_left.samples[pince->sample_idx];
-                    pince->pump_right.sum_current -= pince->pump_right.samples[pince->sample_idx];
-                }
+                // 1. On stocke l'échantillon courant
+                pince->pump_left.samples[pince->sample_idx] = pince->pump_left.pump_current;
+                pince->pump_right.samples[pince->sample_idx] = pince->pump_right.pump_current;
 
                 #ifdef DEBUG_FEETECH_ACTION
                     printf("pince : %d : Sample %d - Mesure courante (G:%d, D:%d)\n", pince->id, pince->sample_idx, pince->pump_left.pump_current, pince->pump_right.pump_current);
                 #endif
 
-                pince->pump_left.samples[pince->sample_idx] = pince->pump_left.pump_current;
-                pince->pump_left.sum_current += pince->pump_left.pump_current;
-                
-                pince->pump_right.samples[pince->sample_idx] = pince->pump_right.pump_current;
-                pince->pump_right.sum_current += pince->pump_right.pump_current;
-                
-                // 2. Avancer l'index tournant
                 pince->sample_idx++;
-                if (pince->sample_idx >= NBR_VALUES_FOR_MEAN) {
-                    pince->sample_idx = 0;
-                    pince->buffer_full = 1; 
-                }
+                
+                // 2. Tant qu'on n'a pas nos 40 échantillons, on retourne lire à l'étape 18
+                if (pince->sample_idx < NBR_VALUES_FOR_MEAN) {
+                    pince->action_step = 18; 
+                } 
+                // 3. Quand on a les 40 échantillons, on prend la décision
+                else {
+                    uint16_t max_left = 0;
+                    uint16_t max_right = 0;
+                    
+                    // On cherche le pic d'effort de la pompe (le moment où le vide s'est créé)
+                    for(int i=0; i<NBR_VALUES_FOR_MEAN; i++){
+                        if(pince->pump_left.samples[i] > max_left) max_left = pince->pump_left.samples[i];
+                        if(pince->pump_right.samples[i] > max_right) max_right = pince->pump_right.samples[i];
+                    }
 
-                // 3. Décision 
-                uint8_t current_sample_count = pince->buffer_full ? NBR_VALUES_FOR_MEAN : pince->sample_idx;
+                    // Calcul de la variation en % (cast en uint32_t obligatoire pour éviter l'overflow de *100 !)
+                    uint32_t delta_pct_l = 0;
+                    if(max_left > pince->pump_left.baseline_current) {
+                        delta_pct_l = ((uint32_t)(max_left - pince->pump_left.baseline_current) * 100) / (pince->pump_left.baseline_current + 1);
+                    }
+                    
+                    uint32_t delta_pct_r = 0;
+                    if(max_right > pince->pump_right.baseline_current) {
+                        delta_pct_r = ((uint32_t)(max_right - pince->pump_right.baseline_current) * 100) / (pince->pump_right.baseline_current + 1);
+                    }
 
-                if (current_sample_count >= NBR_VALUES_FOR_MEAN) {
+                    pince->succes_left = 0;
+                    pince->succes_right = 0;
 
-                    uint8_t catch_now_left  = 0;
-                    uint8_t catch_now_right = 0;
-
+                    // Validation du succès par rapport au seuil
                     if(pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL){
-                        uint16_t avg_left    = pince->pump_left.sum_current / current_sample_count;
-                        uint16_t delta_pct_l = (ABS_DIFF(pince->pump_left.baseline_current, avg_left) * 100)
-                                            / (pince->pump_left.baseline_current + 1);
-                        catch_now_left = (delta_pct_l >= CURRENT_RATIO_CATCH_PCT);
+                        pince->succes_left = (delta_pct_l >= CURRENT_RATIO_CATCH_PCT);
                     }
                     if(pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL){
-                        uint16_t avg_right   = pince->pump_right.sum_current / current_sample_count;
-                        uint16_t delta_pct_r = (ABS_DIFF(pince->pump_right.baseline_current, avg_right) * 100)
-                                            / (pince->pump_right.baseline_current + 1);
-                        catch_now_right = (delta_pct_r >= CURRENT_RATIO_CATCH_PCT);
+                        pince->succes_right = (delta_pct_r >= CURRENT_RATIO_CATCH_PCT);
                     }
 
-                    // Compteurs de confirmation consécutive
-                    pince->confirm_count_left  = catch_now_left  ? pince->confirm_count_left  + 1 : 0;
-                    pince->confirm_count_right = catch_now_right ? pince->confirm_count_right + 1 : 0;
-
-                    // Succès uniquement si confirmé N fois de suite
-                    if(pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL)
-                        pince->succes_left  = (pince->confirm_count_left  >= CONFIRM_CYCLES_NEEDED);
-                    if(pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL)
-                        pince->succes_right = (pince->confirm_count_right >= CONFIRM_CYCLES_NEEDED);
-
-                    uint8_t catch_left  = !(pince->current_command == CMD_RAMASSER_G || 
-                                            pince->current_command == CMD_RAMASSER_ALL) || pince->succes_left;
-                    uint8_t catch_right = !(pince->current_command == CMD_RAMASSER_D || 
-                                            pince->current_command == CMD_RAMASSER_ALL) || pince->succes_right;
-
-                    if(catch_left && catch_right){
-                        pince->action_step = 20;
-                    } else if(pince->buffer_full){ // timeout d'analyse
-                        // couper les pompes qui n'ont rien attrapé...
-                        pince->action_step = 20;
-                    } else {
-                        pince->action_step = 18;
+                    // --- COUPURE DES POMPES QUI ONT RATE ---
+                    if(pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL){
+                        if(pince->succes_left == 0) {
+                            PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
+                            PutFEETECH(pince->id_pump, VALVE_CMD_1, VALVE_ON);
+                        }
                     }
-                } else {
-                    // ---> LE CORRECTIF EST ICI <---
-                    // Si on n'a pas encore NBR_VALUES_FOR_MEAN échantillons, 
-                    // il faut absolument reboucler sur 18 pour demander la valeur suivante.
-                    pince->action_step = 18;
+                    if(pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL){
+                        if(pince->succes_right == 0) {
+                            PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
+                            PutFEETECH(pince->id_pump, VALVE_CMD_2, VALVE_ON);
+                        }
+                    }
+
+                    #ifdef DEBUG_FEETECH_ACTION
+                        printf("pince %d : Analyse terminee. Max_G:%d (Delta %d%%) -> Succes:%d | Max_D:%d (Delta %d%%) -> Succes:%d\n", 
+                               pince->id, max_left, (int)delta_pct_l, pince->succes_left, max_right, (int)delta_pct_r, pince->succes_right);
+                    #endif
+
+                    // 4. On passe à l'étape de remontée de la pince
+                    pince->action_step = 20;
                 }
             }
             break;
