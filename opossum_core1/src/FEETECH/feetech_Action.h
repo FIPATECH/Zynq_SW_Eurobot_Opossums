@@ -23,7 +23,7 @@
 
 #define CURRENT_VARIATION_CATCH 100 //62
 
-#define CURRENT_RATIO_CATCH_PCT  5 // 15% variabtion on current
+#define CURRENT_RATIO_CATCH_PCT  15 // 15% variabtion on current
 #define CONFIRM_CYCLES_NEEDED  5 
 
 #define RETRY_COUNT_MAX 5
@@ -39,6 +39,8 @@ uint8_t  stall_count;
 #define STALL_DELTA_THRESHOLD   8    // moins de 8 ticks de mouvement = stall
 #define STALL_CYCLES_NEEDED     5    // 5 cycles consécutifs immobiles
 #define OVERREACH_MARGIN        100  // si pos > cible-100, considéré "arrivé librement"
+#define OVERSHOOT_MARGIN 150 // En ticks (à ajuster selon l'enfoncement voulu dans le sol)
+
 
 #define VALVE_ON 1
 

@@ -140,8 +140,7 @@ void pince_action_loop(Pince_t *pince){
         /* ------------- RAMASSER_OBJETS -----------------------*/
         /* ---------------------------------------------------- */
 
-        case 10: // baisser la pince
-            // CONTEXTE D'ABANDON : tout goto 500 depuis les étapes 10-22 enverra le feedback CMD 1
+        case 10: // baisser la pince avec overshoot
             pince->pending_feedback_cmd = 1;
             pince->retry_count = 0; 
 
@@ -149,7 +148,18 @@ void pince_action_loop(Pince_t *pince){
             pince->succes_left = 0;
             pince->succes_right = 0;
 
-            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.ramasser_pos, &pince->action_done);
+            // Calcul de la direction de l'overshoot (gestion du montage miroir)
+            int16_t overshoot = 0;
+            if (pince->gros_pos.ramasser_pos > pince->gros_pos.idle_position) {
+                overshoot = OVERSHOOT_MARGIN;
+            } else {
+                overshoot = -OVERSHOOT_MARGIN;
+            }
+            
+            // On recycle la variable last_position pour stocker notre consigne d'overshoot finale
+            pince->gros_pos.last_position = pince->gros_pos.ramasser_pos + overshoot;
+
+            PutFEETECH_Ext_Done(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.last_position, &pince->action_done);
             pince->gros_pos.cmd_timer = Timer_ms1;
             pince->action_step++;
             break;
@@ -254,82 +264,55 @@ void pince_action_loop(Pince_t *pince){
             break;
         // -------------------------------------------------------------
 
-        case 16: // lire position
-            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L,
-                                &pince->gros_pos.current_position, &pince->action_done);
+        case 16: // Lire la position courante pendant la descente
+            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_POSITION_L, &pince->gros_pos.current_position, &pince->action_done);
             pince->action_step = 161;
             break;
 
-        case 161: // lire load — remplacé par détection stall
+        case 161: // Vérifier si on a percuté le sol sans rien trouver
             if(pince->action_done){
                 pince->action_done = 0;
 
-                uint16_t delta = ABS_DIFF(pince->gros_pos.current_position,
-                                        pince->gros_pos.last_position);
-                pince->gros_pos.last_position = pince->gros_pos.current_position;
-
-                if(delta < STALL_DELTA_THRESHOLD){
-                    pince->gros_pos.stall_count++;
+                // Si on a atteint la consigne finale d'overshoot librement, le terrain est vide (pas de palet)
+                if(ABS_DIFF(pince->gros_pos.current_position, pince->gros_pos.last_position) < 50){
+                    #ifdef DEBUG_FEETECH_ACTION
+                        printf("pince %d : Cible overshoot atteinte librement, pas de palet (pos=%d)\n", pince->id, pince->gros_pos.current_position);
+                    #endif
+                    // On passe quand même à l'étape 18 pour laisser la logique de courant des pompes confirmer l'échec et remonter la pince proprement
+                    pince->action_step = 18; 
                 } else {
-                    pince->gros_pos.stall_count = 0;
+                    // On est encore en mouvement, on demande la valeur du couple (load)
+                    pince->action_step = 162;
                 }
 
-                printf("pince %d : pos=%d / cible=%d / delta=%d / stall=%d\n",
-                    pince->id,
-                    pince->gros_pos.current_position,
-                    pince->gros_pos.ramasser_pos,
-                    delta,
-                    pince->gros_pos.stall_count);
-
-                // CAS 1 : stall avant la cible → contact objet confirmé
-                if(pince->gros_pos.stall_count >= STALL_CYCLES_NEEDED &&
-                pince->gros_pos.current_position < (pince->gros_pos.ramasser_pos - OVERREACH_MARGIN)){
-                    #ifdef DEBUG_FEETECH_ACTION
-                        printf("pince %d : Contact objet détecté par stall (pos=%d)\n",
-                            pince->id, pince->gros_pos.current_position);
-                    #endif
-                    pince->gros_pos.stall_count = 0;
-                    pince->action_step = 18; // → analyse pompes
+                if(Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
+                    printf("pince %d : Timeout descente (pos=%d)\n", pince->id, pince->gros_pos.current_position);
+                    pince->action_step = 500;
                 }
-                // CAS 2 : atteint la cible librement → rien sous la pince, on tente quand même
-                else if(pince->gros_pos.current_position >= 
-                        (pince->gros_pos.ramasser_pos - OVERREACH_MARGIN)){
-                    #ifdef DEBUG_FEETECH_ACTION
-                        printf("pince %d : Cible atteinte librement, pas d'objet détecté (pos=%d)\n",
-                            pince->id, pince->gros_pos.current_position);
-                    #endif
-                    pince->gros_pos.stall_count = 0;
-                    pince->action_step = 18; // on laisse les pompes décider
-                }
-                // CAS 3 : encore en mouvement, on reboucle
-                else {
-                    pince->action_step = 16;
-                }
-            }
-
-            if(Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
-                printf("pince %d : Timeout descente (pos=%d)\n",
-                    pince->id, pince->gros_pos.current_position);
-                pince->action_step = 500;
             }
             break;
 
-        case 17:
+        case 162: // Lancer la lecture du couple (Load)
+            GetFEETECH_Ext_Done(pince->id_gros, FEETECH_PRESENT_LOAD_L, &pince->gros_pos.present_load, &pince->action_done);
+            pince->action_step = 17;
+            break;
+
+        case 17: // Analyser le couple pour confirmer l'appui sur le palet
             if(pince->action_done){
                 pince->action_done = 0;
+                
+                // On extrait la magnitude du couple en masquant le bit de direction (10ème bit)
                 uint16_t load_magnitude = pince->gros_pos.present_load & ADDR_LOAD_MASK;
-                printf("pince %d : pos=%d / cible=%d / load=%d\n",
-                    pince->id,
-                    pince->gros_pos.current_position,
-                    pince->gros_pos.ramasser_pos,
-                    load_magnitude);
 
                 if(load_magnitude >= LOAD_THRESHOLD_CONTACT){
-                    // Contact confirmé : le bras appuie sur l'objet
+                    // Contact confirmé : la pince écrase bien le palet !
                     #ifdef DEBUG_FEETECH_ACTION
-                        printf("pince %d : Contact objet détecté (load=%d)\n",
-                            pince->id, load_magnitude);
+                        printf("pince %d : Contact objet detecte par le couple (load=%d)\n", pince->id, load_magnitude);
                     #endif
+                    
+                    // SÉCURITÉ : On fige le servo à sa position actuelle pour éviter qu'il ne force indéfiniment dans le palet (overload)
+                    PutFEETECH(pince->id_gros, FEETECH_GOAL_POSITION_L, pince->gros_pos.current_position);
+                    
                     // Init buffer moyenne glissante pour analyse pompes
                     pince->pump_right.sum_current = 0;
                     pince->pump_left.sum_current  = 0;
@@ -340,20 +323,11 @@ void pince_action_loop(Pince_t *pince){
                         pince->pump_left.samples[i]  = 0;
                     }
                     pince->action_timer = 0;
-                    pince->action_step = 18; // → analyse pompes
+                    pince->action_step = 18; // → on passe à l'analyse du vide des ventouses
                 } else {
-                    // Pas encore en contact, on continue de surveiller
+                    // Pas encore assez de couple, on retourne lire la position pour continuer le suivi de la descente
                     pince->action_step = 16;
                 }
-            }
-
-            // Timeout global inchangé
-            if(Timer_ms1 - pince->gros_pos.cmd_timer >= 3000){
-                #ifdef DEBUG_FEETECH_ACTION
-                    printf("pince %d : Timeout contact (load=%d)\n",
-                        pince->id, pince->gros_pos.present_load & ADDR_LOAD_MASK);
-                #endif
-                pince->action_step = 500;
             }
             break;
         case 18: // Demande de mesure continue
@@ -434,6 +408,11 @@ void pince_action_loop(Pince_t *pince){
                     } else {
                         pince->action_step = 18;
                     }
+                } else {
+                    // ---> LE CORRECTIF EST ICI <---
+                    // Si on n'a pas encore NBR_VALUES_FOR_MEAN échantillons, 
+                    // il faut absolument reboucler sur 18 pour demander la valeur suivante.
+                    pince->action_step = 18;
                 }
             }
             break;
