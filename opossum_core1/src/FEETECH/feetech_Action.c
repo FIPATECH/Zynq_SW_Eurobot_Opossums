@@ -269,19 +269,24 @@ void pince_action_loop(Pince_t *pince){
             pince->action_step = 161;
             break;
 
-        case 161: // Vérifier si on a percuté le sol sans rien trouver
+        case 161:
             if(pince->action_done){
                 pince->action_done = 0;
 
-                // Si on a atteint la consigne finale d'overshoot librement, le terrain est vide (pas de palet)
                 if(ABS_DIFF(pince->gros_pos.current_position, pince->gros_pos.last_position) < 50){
                     #ifdef DEBUG_FEETECH_ACTION
-                        printf("pince %d : Cible overshoot atteinte librement, pas de palet (pos=%d)\n", pince->id, pince->gros_pos.current_position);
+                        printf("pince %d : Cible overshoot atteinte librement, pas de palet (pos=%d)\n",
+                            pince->id, pince->gros_pos.current_position);
                     #endif
-                    // On passe quand même à l'étape 18 pour laisser la logique de courant des pompes confirmer l'échec et remonter la pince proprement
-                    pince->action_step = 18; 
+                    // *** RESET OBLIGATOIRE : sample_idx vaut encore NBR_VALUES_FOR_MEAN après le baseline ***
+                    pince->sample_idx = 0;
+                    pince->buffer_full = 0;
+                    for(int i = 0; i < NBR_VALUES_FOR_MEAN; i++){
+                        pince->pump_left.samples[i]  = 0;
+                        pince->pump_right.samples[i] = 0;
+                    }
+                    pince->action_step = 18;
                 } else {
-                    // On est encore en mouvement, on demande la valeur du couple (load)
                     pince->action_step = 162;
                 }
 
@@ -337,77 +342,99 @@ void pince_action_loop(Pince_t *pince){
             pince->action_step = 19;
             break;
 
-        case 19: // Acquisition et Décision (Analyse par Pic Maximum)
+        case 19: // Acquisition et Décision (Analyse par Pic Maximum ET Minimum)
             if(pince->action_done){
                 pince->action_done = 0;
                 
                 // 1. On stocke l'échantillon courant
-                pince->pump_left.samples[pince->sample_idx] = pince->pump_left.pump_current;
+                pince->pump_left.samples[pince->sample_idx]  = pince->pump_left.pump_current;
                 pince->pump_right.samples[pince->sample_idx] = pince->pump_right.pump_current;
 
                 #ifdef DEBUG_FEETECH_ACTION
-                    printf("pince : %d : Sample %d - Mesure courante (G:%d, D:%d)\n", pince->id, pince->sample_idx, pince->pump_left.pump_current, pince->pump_right.pump_current);
+                    printf("pince : %d : Sample %d - Mesure courante (G:%d, D:%d)\n",
+                        pince->id, pince->sample_idx,
+                        pince->pump_left.pump_current, pince->pump_right.pump_current);
                 #endif
 
                 pince->sample_idx++;
                 
-                // 2. Tant qu'on n'a pas nos 40 échantillons, on retourne lire à l'étape 18
+                // 2. Tant qu'on n'a pas les N échantillons, on continue de lire
                 if (pince->sample_idx < NBR_VALUES_FOR_MEAN) {
                     pince->action_step = 18; 
                 } 
-                // 3. Quand on a les 40 échantillons, on prend la décision
+                // 3. Buffer plein : on prend la décision
                 else {
-                    uint16_t max_left = 0;
-                    uint16_t max_right = 0;
+                    uint16_t max_left  = 0,      min_left  = 0xFFFF;
+                    uint16_t max_right = 0,      min_right = 0xFFFF;
                     
-                    // On cherche le pic d'effort de la pompe (le moment où le vide s'est créé)
-                    for(int i=0; i<NBR_VALUES_FOR_MEAN; i++){
-                        if(pince->pump_left.samples[i] > max_left) max_left = pince->pump_left.samples[i];
+                    // Chercher MAX ET MIN pour chaque côté
+                    // (certaines pompes chutent en courant quand le vide est formé,
+                    //  d'autres montent — on capture les deux comportements)
+                    for(int i = 0; i < NBR_VALUES_FOR_MEAN; i++){
+                        if(pince->pump_left.samples[i]  > max_left)  max_left  = pince->pump_left.samples[i];
+                        if(pince->pump_left.samples[i]  < min_left)  min_left  = pince->pump_left.samples[i];
                         if(pince->pump_right.samples[i] > max_right) max_right = pince->pump_right.samples[i];
+                        if(pince->pump_right.samples[i] < min_right) min_right = pince->pump_right.samples[i];
                     }
 
-                    // Calcul de la variation en % (cast en uint32_t obligatoire pour éviter l'overflow de *100 !)
+                    // Delta = la plus grande déviation dans un sens ou dans l'autre
                     uint32_t delta_pct_l = 0;
-                    if(max_left > pince->pump_left.baseline_current) {
-                        delta_pct_l = ((uint32_t)(max_left - pince->pump_left.baseline_current) * 100) / (pince->pump_left.baseline_current + 1);
+                    if(max_left > pince->pump_left.baseline_current){
+                        uint32_t d = ((uint32_t)(max_left - pince->pump_left.baseline_current) * 100)
+                                    / (pince->pump_left.baseline_current + 1);
+                        if(d > delta_pct_l) delta_pct_l = d;
                     }
-                    
-                    uint32_t delta_pct_r = 0;
-                    if(max_right > pince->pump_right.baseline_current) {
-                        delta_pct_r = ((uint32_t)(max_right - pince->pump_right.baseline_current) * 100) / (pince->pump_right.baseline_current + 1);
+                    if(min_left < pince->pump_left.baseline_current){
+                        uint32_t d = ((uint32_t)(pince->pump_left.baseline_current - min_left) * 100)
+                                    / (pince->pump_left.baseline_current + 1);
+                        if(d > delta_pct_l) delta_pct_l = d;
                     }
 
-                    pince->succes_left = 0;
+                    uint32_t delta_pct_r = 0;
+                    if(max_right > pince->pump_right.baseline_current){
+                        uint32_t d = ((uint32_t)(max_right - pince->pump_right.baseline_current) * 100)
+                                    / (pince->pump_right.baseline_current + 1);
+                        if(d > delta_pct_r) delta_pct_r = d;
+                    }
+                    if(min_right < pince->pump_right.baseline_current){
+                        uint32_t d = ((uint32_t)(pince->pump_right.baseline_current - min_right) * 100)
+                                    / (pince->pump_right.baseline_current + 1);
+                        if(d > delta_pct_r) delta_pct_r = d;
+                    }
+
+                    pince->succes_left  = 0;
                     pince->succes_right = 0;
 
                     // Validation du succès par rapport au seuil
                     if(pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL){
-                        pince->succes_left = (delta_pct_l >= CURRENT_RATIO_CATCH_PCT);
+                        pince->succes_left  = (delta_pct_l >= CURRENT_RATIO_CATCH_PCT);
                     }
                     if(pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL){
                         pince->succes_right = (delta_pct_r >= CURRENT_RATIO_CATCH_PCT);
                     }
 
-                    // --- COUPURE DES POMPES QUI ONT RATE ---
+                    // Coupure des pompes qui ont raté + ouverture valve pour casser le vide inutile
                     if(pince->current_command == CMD_RAMASSER_G || pince->current_command == CMD_RAMASSER_ALL){
-                        if(pince->succes_left == 0) {
+                        if(!pince->succes_left){
                             PutFEETECH(pince->id_pump, PUMP_CMD_1, PUMP_OFF);
                             PutFEETECH(pince->id_pump, VALVE_CMD_1, VALVE_ON);
                         }
                     }
                     if(pince->current_command == CMD_RAMASSER_D || pince->current_command == CMD_RAMASSER_ALL){
-                        if(pince->succes_right == 0) {
+                        if(!pince->succes_right){
                             PutFEETECH(pince->id_pump, PUMP_CMD_2, PUMP_OFF);
                             PutFEETECH(pince->id_pump, VALVE_CMD_2, VALVE_ON);
                         }
                     }
 
                     #ifdef DEBUG_FEETECH_ACTION
-                        printf("pince %d : Analyse terminee. Max_G:%d (Delta %d%%) -> Succes:%d | Max_D:%d (Delta %d%%) -> Succes:%d\n", 
-                               pince->id, max_left, (int)delta_pct_l, pince->succes_left, max_right, (int)delta_pct_r, pince->succes_right);
+                        printf("pince %d : G max=%d min=%d baseline=%d delta=%d%% -> Succes:%d | D max=%d min=%d baseline=%d delta=%d%% -> Succes:%d\n",
+                            pince->id,
+                            max_left,  min_left,  pince->pump_left.baseline_current,  (int)delta_pct_l, pince->succes_left,
+                            max_right, min_right, pince->pump_right.baseline_current, (int)delta_pct_r, pince->succes_right);
                     #endif
 
-                    // 4. On passe à l'étape de remontée de la pince
+                    // 4. On passe à la remontée
                     pince->action_step = 20;
                 }
             }
