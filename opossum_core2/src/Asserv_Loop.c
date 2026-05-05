@@ -156,9 +156,12 @@ void Asserv_Loop(void)
         local_data.kalman_out.t = kalman_current_state.x[2];
 
         local_data.speed_robot = speed_robot_asserv;
-
+        local_data.cmd_speed_constrained = speed_order_constrained;
+ 
         SEND_FIELD(&local_data, kalman_out);
         SEND_FIELD(&local_data, speed_robot);
+        SEND_FIELD(&local_data, cmd_speed_constrained);
+
         Asserv_State = 10;
     
     } else if (Asserv_State == 10) {
@@ -198,6 +201,15 @@ void Asserv_Loop(void)
                         #ifdef DEBUG_TIMING
                         tampon4 += Timer_us1 - tampon3;
                         #endif
+
+        printf("ROBOTDATA %.4f %.4f %.4f %.4f %.4f %.4f\n",
+           (double)speed_order_constrained.vx,
+           (double)speed_order_constrained.vy,
+           (double)speed_order_constrained.vt,
+           (double)speed_robot_asserv.vx,
+           (double)speed_robot_asserv.vy,
+           (double)speed_robot_asserv.vt);
+           
         Asserv_State = 30;
 
     } else if (Asserv_State == 30) {

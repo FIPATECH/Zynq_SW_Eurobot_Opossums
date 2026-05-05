@@ -104,6 +104,8 @@ int main()
         Std_Com_Loop();
         Print_Position_loop();
 
+        Speed_Timed_Loop();
+
         if(AU_state == 1){
             LED_AU();
             AU_pinces();

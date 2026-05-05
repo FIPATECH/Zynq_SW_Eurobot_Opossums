@@ -280,3 +280,109 @@ void Print_Position_loop(void) {
         }
     }
 }
+
+/*############################################################################*/
+/*                         SPEEDTEST - Réglage PID vitesse                    */
+/*                                                                            */
+/* Commande : SPEEDTEST vx vy vt duration_ms [print_period_ms]               */
+/*   - vx, vy, vt       : consigne de vitesse robot (m/s, m/s, rad/s)        */
+/*   - duration_ms      : durée d'application de la consigne (ms)            */
+/*   - print_period_ms  : période d'impression (ms, défaut = 10)             */
+/*                                                                            */
+/* Format de sortie :                                                         */
+/*   ROBOTDATA vx_cmd vy_cmd vt_cmd vx vy vt                                 */
+/*     - vx/vy/vt_cmd : consigne contrainte (après limiteur d'accélération)  */
+/*     - vx/vy/vt     : vitesse mesurée par odométrie                        */
+/*############################################################################*/
+ 
+// Variables d'état internes de la commande SPEEDTEST
+static int      speed_timed_active     = 0;
+static uint32_t speed_timed_end_time   = 0;  // Timer_ms1 à partir duquel on passe en FREE
+static uint32_t speed_timed_last_print = 0;  // dernier instant d'impression
+static uint32_t speed_timed_print_per  = 10; // période entre deux prints (ms)
+ 
+// SPEEDTEST vx vy vt duration_ms [print_period_ms]
+uint8_t Speed_Timed_Cmd(void) {
+    if (AU_state) {
+        printf("INVALID COMMAND : AU\n");
+        return 0;
+    }
+ 
+    // --- Paramètres obligatoires
+    float vx, vy, vt;
+    uint32_t duration_ms;
+ 
+    if (Get_Param_Float(&vx))        return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&vy))        return PARAM_ERROR_CODE;
+    if (Get_Param_Float(&vt))        return PARAM_ERROR_CODE;
+    if (Get_Param_u32(&duration_ms)) return PARAM_ERROR_CODE;
+ 
+    // --- Paramètre optionnel : période d'impression
+    uint32_t print_period_ms = 10;
+    Get_Param_u32(&print_period_ms); // ignoré si absent
+ 
+    // --- Envoi de la consigne vers Core1 via mémoire partagée
+    local_data.cmd_speed.vx = vx;
+    local_data.cmd_speed.vy = vy;
+    local_data.cmd_speed.vt = vt;
+    SEND_FIELD(&local_data, cmd_speed);
+ 
+    // --- Armement du timer
+    speed_timed_end_time   = Timer_ms1 + duration_ms;
+    speed_timed_print_per  = (print_period_ms > 0) ? print_period_ms : 10;
+    speed_timed_last_print = Timer_ms1;
+    speed_timed_active     = 1;
+ 
+    printf("SPEEDTEST START vx=%.3f vy=%.3f vt=%.3f dur=%lums print=%lums\n",
+           (double)vx, (double)vy, (double)vt,
+           (unsigned long)duration_ms,
+           (unsigned long)speed_timed_print_per);
+ 
+    return 0;
+}
+ 
+// À appeler dans le main loop au même niveau que Print_Position_loop()
+void Speed_Timed_Loop(void) {
+    if (!speed_timed_active) return;
+ 
+    uint32_t now = Timer_ms1;
+ 
+    // Rafraîchissement des données Core1 → Core0 dans local_data
+    // (CHECK_FIELD consomme le flag : on ne lit que si une nouvelle valeur est dispo)
+    CHECK_FIELD(&local_data, cmd_speed_constrained);
+    CHECK_FIELD(&local_data, speed_robot);
+ 
+    // --- Fin de durée : passage en FREE
+    if ((int32_t)(now - speed_timed_end_time) >= 0) {
+        speed_timed_active = 0;
+ 
+        local_data.asserv_mode = 0; // FREE
+        SEND_FIELD(&local_data, asserv_mode);
+ 
+        // Dernier print avec les valeurs courantes
+        // printf("ROBOTDATA %.4f %.4f %.4f %.4f %.4f %.4f\n",
+        //        (double)local_data.cmd_speed_constrained.vx,
+        //        (double)local_data.cmd_speed_constrained.vy,
+        //        (double)local_data.cmd_speed_constrained.vt,
+        //        (double)local_data.speed_robot.vx,
+        //        (double)local_data.speed_robot.vy,
+        //        (double)local_data.speed_robot.vt);
+ 
+        printf("SPEEDTEST DONE\n");
+        return;
+    }
+ 
+    // --- Print périodique
+    if ((now - speed_timed_last_print) >= speed_timed_print_per) {
+        speed_timed_last_print = now;
+ 
+        // Format : ROBOTDATA vx_cmd vy_cmd vt_cmd vx_meas vy_meas vt_meas
+        // printf("ROBOTDATA %.4f %.4f %.4f %.4f %.4f %.4f\n",
+        //        (double)local_data.cmd_speed_constrained.vx,  // consigne contrainte X
+        //        (double)local_data.cmd_speed_constrained.vy,  // consigne contrainte Y
+        //        (double)local_data.cmd_speed_constrained.vt,  // consigne contrainte Theta
+        //        (double)local_data.speed_robot.vx,             // vitesse mesurée X
+        //        (double)local_data.speed_robot.vy,             // vitesse mesurée Y
+        //        (double)local_data.speed_robot.vt);            // vitesse mesurée Theta
+    }
+}

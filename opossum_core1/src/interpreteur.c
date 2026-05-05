@@ -65,6 +65,7 @@ const Command Command_List[] = {
     { "FREE", FREE_Cmd},
     { "BLOCK", BLOCK_Cmd},
     { "PWM", PWM_Func},
+    { "SPEEDTEST", Speed_Timed_Cmd},
 
     { "GETPOS", Get_Pos_Cmd}
 };

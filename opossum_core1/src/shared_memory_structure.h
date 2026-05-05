@@ -38,7 +38,7 @@ typedef struct {
     volatile uint32_t flag_set_camera_1_valid; // CORE0 -> CORE1: 1 if camera data is valid, 0 otherwise
     volatile uint32_t flag_set_camera_1_ack;   // CORE1 -> CORE0: 1 new camera data taken into account, 0 otherwise
     Set_camera set_camera_1; // camera 1
-
+    
     volatile uint32_t flag_set_camera_2_valid; // CORE0 -> CORE1: 1 if camera data is valid, 0 otherwise
     volatile uint32_t flag_set_camera_2_ack;   // CORE1 -> CORE0: 1 new camera data taken into account, 0 otherwise
     Set_camera set_camera_2; // camera 2
@@ -92,7 +92,14 @@ typedef struct {
 
     volatile uint32_t flag_speed_robot_valid; // CORE1 -> CORE0: 1 if speed robot is valid, 0 otherwise
     volatile uint32_t flag_speed_robot_ack;   // CORE0 -> CORE1: 1 new speed robot taken into account, 0 otherwise  
-    Speed speed_robot; // speed of the robot in the world frame
+    Speed speed_robot; // speed of the robot in the robot frame (measured by odometry)
+
+    // Consigne de vitesse contrainte (après limiteurs de vitesse et d'accélération)
+    // Envoyée par Core1 à chaque cycle d'asservissement pour permettre à Core0
+    // de logger la vraie consigne vue par le PID (utile pour le réglage des gains).
+    volatile uint32_t flag_cmd_speed_constrained_valid; // CORE1 -> CORE0
+    volatile uint32_t flag_cmd_speed_constrained_ack;   // CORE0 -> CORE1
+    Speed cmd_speed_constrained; // consigne vitesse après rampe d'accélération (repère robot)
 
     // ********************************* Timer variables *********************************
     volatile uint32_t flag_Timer_ms_valid; // CORE1 -> CORE0: 1 if timer is valid, 0 otherwise

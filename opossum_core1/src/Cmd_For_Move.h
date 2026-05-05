@@ -14,9 +14,7 @@ extern uint32_t Last_Timer_print_pos; // dernier envoi de la position
  * @return uint8_t 
  */
 uint8_t Move_Cmd(void);
-uint8_t Speed_Cmd(void);
 
-uint8_t Absolute_Speed_Cmd(void);
 /**
  * @brief Interpreter function for the SPEED command.
  * 
@@ -24,7 +22,7 @@ uint8_t Absolute_Speed_Cmd(void);
  * 
  * @return uint8_t 
  */
-uint8_t SPEED_Cmd(void);
+uint8_t Speed_Cmd(void);
 
 /**
  * @brief Interpreter function for the Absolute SPEED command.
@@ -33,7 +31,7 @@ uint8_t SPEED_Cmd(void);
  * 
  * @return uint8_t 
  */
-uint8_t Absolute_SPEED_Cmd(void);
+uint8_t Absolute_Speed_Cmd(void);
 
 /**
  * @brief Interpreter function for the FREE command.
@@ -213,4 +211,7 @@ uint8_t Activate_Position_Sending_Func(void);
  * at regular intervals defined by `auto_printpos_delay`.
  */
 void Print_Position_loop(void);
+
+uint8_t Speed_Timed_Cmd(void);
+void    Speed_Timed_Loop(void);
 #endif
