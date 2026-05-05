@@ -14,7 +14,7 @@
 // Valeurs infimes, juste pour éviter que la matrice P ne devienne numériquement nulle
 #define PROCESS_NOISE_ODOM_BASE_X      0.0001f // m par pas de temps
 #define PROCESS_NOISE_ODOM_BASE_Y      0.0001f
-#define PROCESS_NOISE_ODOM_BASE_THETA  0.0001f // rad par pas de temps
+#define PROCESS_NOISE_ODOM_BASE_THETA  0.005f // rad par pas de temps
 
 // 2. Facteur de patinage (Robot en mouvement)
 // Représente le pourcentage d'erreur généré par la vitesse.
@@ -29,7 +29,7 @@
 
 #define PROCESS_NOISE_LIDAR_X       0.03f
 #define PROCESS_NOISE_LIDAR_Y       0.03f
-#define PROCESS_NOISE_LIDAR_THETA   0.05f
+#define PROCESS_NOISE_LIDAR_THETA   0.03f
 
 #define PROCESS_NOISE_CAMERA_X      0.05f
 #define PROCESS_NOISE_CAMERA_Y      0.05f
