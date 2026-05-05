@@ -19,17 +19,17 @@
 // 2. Facteur de patinage (Robot en mouvement)
 // Représente le pourcentage d'erreur généré par la vitesse.
 // Ex: 0.05f signifie que 5% de la vitesse se transforme en incertitude de position.
-#define PROCESS_NOISE_ODOM_VEL_X       0.05f   
-#define PROCESS_NOISE_ODOM_VEL_Y       0.05f
-#define PROCESS_NOISE_ODOM_VEL_THETA   0.05f
+#define PROCESS_NOISE_ODOM_VEL_X       0.01f   // était 0.05
+#define PROCESS_NOISE_ODOM_VEL_Y       0.01f   // était 0.05
+#define PROCESS_NOISE_ODOM_VEL_THETA   0.02f   // était 0.05
 
 #define PROCESS_NOISE_ODOM_VX       0.02f
 #define PROCESS_NOISE_ODOM_VY       0.02f
 #define PROCESS_NOISE_ODOM_VTHETA   0.05f
 
-#define PROCESS_NOISE_LIDAR_X       0.3f
-#define PROCESS_NOISE_LIDAR_Y       0.3f
-#define PROCESS_NOISE_LIDAR_THETA   0.2f
+#define PROCESS_NOISE_LIDAR_X       0.03f
+#define PROCESS_NOISE_LIDAR_Y       0.03f
+#define PROCESS_NOISE_LIDAR_THETA   0.05f
 
 #define PROCESS_NOISE_CAMERA_X      0.05f
 #define PROCESS_NOISE_CAMERA_Y      0.05f
