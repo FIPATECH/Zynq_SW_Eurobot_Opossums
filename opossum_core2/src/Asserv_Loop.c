@@ -202,14 +202,14 @@ void Asserv_Loop(void)
                         tampon4 += Timer_us1 - tampon3;
                         #endif
 
-        printf("ROBOTDATA %.4f %.4f %.4f %.4f %.4f %.4f\n",
-           (double)speed_order_constrained.vx,
-           (double)speed_order_constrained.vy,
-           (double)speed_order_constrained.vt,
-           (double)speed_robot_asserv.vx,
-           (double)speed_robot_asserv.vy,
-           (double)speed_robot_asserv.vt);
-           
+        // printf("ROBOTDATA %.4f %.4f %.4f %.4f %.4f %.4f\n",
+        //    (double)speed_order_constrained.vx,
+        //    (double)speed_order_constrained.vy,
+        //    (double)speed_order_constrained.vt,
+        //    (double)speed_robot_asserv.vx,
+        //    (double)speed_robot_asserv.vy,
+        //    (double)speed_robot_asserv.vt);
+
         Asserv_State = 30;
 
     } else if (Asserv_State == 30) {
