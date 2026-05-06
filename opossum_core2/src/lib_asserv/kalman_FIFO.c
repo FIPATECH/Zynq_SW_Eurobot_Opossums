@@ -101,8 +101,10 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, floa
         // 3. Si une mesure Caméra avait eu lieu à 'next_i', on la réapplique ! 
         for(int cam_id = 0; cam_id < 3; cam_id++) {
             if (fifo->observations[next_i].has_camera[cam_id]) {
-                // printf("ERROR: Repropagation camera %d at index %d (has_camera=%d)\n", cam_id, next_i, fifo->observations[next_i].has_camera[cam_id]);
-                kalman_update(next, fifo->observations[next_i].z_camera[cam_id], fifo->observations[next_i].r_camera[cam_id], 1);
+                kalman_update(next, 
+                              fifo->observations[next_i].z_camera[cam_id], 
+                              fifo->observations[next_i].r_camera[cam_id], 
+                              fifo->observations[next_i].bypass_camera_rejection[cam_id]); // Fini le '1' en dur
             }
         }
 
