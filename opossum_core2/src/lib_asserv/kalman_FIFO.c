@@ -81,7 +81,7 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, floa
         KalmanState* current = &fifo->buffer[i];
         KalmanState* next = &fifo->buffer[next_i];
 
-        Speed* speed = &fifo->speed_robot[i];
+        Speed* speed = &fifo->speed_robot[next_i];
 
          // Calcul prédictif sur l’état "next" basé sur "current"
         memcpy(next, current, sizeof(KalmanState)); // Copie une fois
