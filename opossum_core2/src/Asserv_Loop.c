@@ -56,9 +56,11 @@ int tampon4 = 0;
 // Définition des profils de bruit
 float R_lidar[3];
 
-float R_camera[3] = {PROCESS_NOISE_CAMERA_X * PROCESS_NOISE_CAMERA_X,
-                     PROCESS_NOISE_CAMERA_Y * PROCESS_NOISE_CAMERA_Y, 
-                     PROCESS_NOISE_CAMERA_THETA * PROCESS_NOISE_CAMERA_THETA};
+float R_camera[3] = {R_CAMERA_MIN_XY * R_CAMERA_MIN_XY,
+                     R_CAMERA_MIN_XY * R_CAMERA_MIN_XY, 
+                     R_CAMERA_MIN_T * R_CAMERA_MIN_T};
+
+uint8_t camera_consecutive_rejections[3] = {0, 0, 0};
 
 void Init_Asserv(void) {
     Consigne.command1 = 0;
@@ -81,7 +83,7 @@ void Init_Asserv(void) {
     R_lidar[2]  = PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA;
 
     en_kalman.enable_lidar_kalman = 1;
-    en_kalman.enable_camera_kalman = 1;
+    en_kalman.enable_camera_kalman = 0;
 
     asserv_init();
 
@@ -366,13 +368,10 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
     position_camera.y = set_camera.camera_position_y;
     position_camera.t = set_camera.camera_position_t;
 
-    #define R_CAMERA_MIN_XY 0.05f //(0.02f * 0.02f)  // 2cm minimum, ajuste selon ta caméra
-    #define R_CAMERA_MIN_T 0.08f //(0.05f * 0.05f)   // 5° minimum, ajuste selon ta caméra
-
     float R_diag_dynamic[3] = {
-        fmaxf(set_camera.noise_x * set_camera.noise_x, R_CAMERA_MIN_XY),
-        fmaxf(set_camera.noise_y * set_camera.noise_y, R_CAMERA_MIN_XY),
-        fmaxf(set_camera.noise_t * set_camera.noise_t, R_CAMERA_MIN_T)
+        R_CAMERA_MIN_XY * R_CAMERA_MIN_XY,
+        R_CAMERA_MIN_XY * R_CAMERA_MIN_XY,
+        R_CAMERA_MIN_T * R_CAMERA_MIN_T
     };
 
     if (!en_kalman.enable_camera_kalman) return;
@@ -389,6 +388,20 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
     int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
     if (delay_index < 0) return; 
 
+    // ---------------------------------------------------------
+    // 1. FILTRE EUCLIDIEN (Le Garde-fou)
+    // ---------------------------------------------------------
+    float dx = position_camera.x - kalman_fifo.buffer[delay_index].x[0];
+    float dy = position_camera.y - kalman_fifo.buffer[delay_index].x[1];
+    float distance_sq = dx * dx + dy * dy;
+
+    // Seuil strict : Si la caméra est à plus de 20 cm de la position estimée, on jette direct
+    // Ajuste ce 0.20f en fonction de la vitesse max de ton robot et de la latence
+    if (distance_sq > (0.20f * 0.20f)) {
+        // printf("WARNING : Outlier massif de la camera %d ignoré (Saut de %.2f m)\n", camera_id, sqrtf(distance_sq));
+        return; 
+    }
+
     kalman_fifo.observations[delay_index].has_camera[camera_id] = 1;
     kalman_fifo.observations[delay_index].z_camera[camera_id][0] = position_camera.x;
     kalman_fifo.observations[delay_index].z_camera[camera_id][1] = position_camera.y;
@@ -400,9 +413,28 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
     
     float z[3] = {position_camera.x, position_camera.y, position_camera.t};
     
-    uint8_t result = kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag_dynamic, 1);
-    // printf("ERROR : CAM update result: %d (0=ok, 1=rejected, 2=NaN, 3=singular)\n", result);
+    // ---------------------------------------------------------
+    // 2. FILTRE DE MAHALANOBIS (L'élégance statistique)
+    // ---------------------------------------------------------
+    // Si la caméra dérive doucement mais sûrement, on finit par lui faire confiance (10 rejets = bypass)
+    uint8_t bypass_rejection = (camera_consecutive_rejections[camera_id] > 10);
+    kalman_fifo.observations[delay_index].bypass_camera_rejection[camera_id] = bypass_rejection;
 
+    uint8_t result = kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag_dynamic, bypass_rejection);
+
+    if (result == 1) {
+        // La mesure a été rejetée proprement par les maths de Kalman (hors de la zone de confiance à 99%)
+        camera_consecutive_rejections[camera_id]++;
+        return; // Inutile de repropager l'historique si l'état n'a pas été modifié !
+    } else if (result == 0) {
+        // La mesure est acceptée
+        camera_consecutive_rejections[camera_id] = 0;
+    } else {
+        // Erreur critique (NaN ou matrice singulière), on annule
+        return;
+    }
+
+    // On ne repropage que si la mesure a été acceptée et intégrée à l'état
     kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
     kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
 }

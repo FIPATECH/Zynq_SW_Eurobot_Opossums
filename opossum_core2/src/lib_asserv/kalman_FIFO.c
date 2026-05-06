@@ -30,9 +30,9 @@ void kalman_fifo_init(KalmanFIFO* fifo) {
             fifo->observations[i].z_camera[cam_id][1] = 0.0f;
             fifo->observations[i].z_camera[cam_id][2] = 0.0f;
 
-            fifo->observations[i].r_camera[cam_id][0] = PROCESS_NOISE_CAMERA_X * PROCESS_NOISE_CAMERA_X;
-            fifo->observations[i].r_camera[cam_id][1] = PROCESS_NOISE_CAMERA_Y * PROCESS_NOISE_CAMERA_Y;
-            fifo->observations[i].r_camera[cam_id][2] = PROCESS_NOISE_CAMERA_THETA * PROCESS_NOISE_CAMERA_THETA;
+            fifo->observations[i].r_camera[cam_id][0] = R_CAMERA_MIN_XY * R_CAMERA_MIN_XY;
+            fifo->observations[i].r_camera[cam_id][1] = R_CAMERA_MIN_XY * R_CAMERA_MIN_XY;
+            fifo->observations[i].r_camera[cam_id][2] = R_CAMERA_MIN_T * R_CAMERA_MIN_T;
         }
     }
 }
