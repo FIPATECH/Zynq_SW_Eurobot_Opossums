@@ -23,7 +23,7 @@
 
 #define CURRENT_VARIATION_CATCH 100 //62
 
-#define CURRENT_RATIO_CATCH_PCT  10 // 10% variabtion on current
+#define CURRENT_RATIO_CATCH_PCT  12 // 12% variabtion on current
 #define CONFIRM_CYCLES_NEEDED  5 
 
 #define RETRY_COUNT_MAX 5
