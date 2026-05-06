@@ -357,9 +357,8 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
     if(AU_state) return; 
 
     if(set_camera.delay < 0 || set_camera.delay > 200) {
-        // Optionnel : afficher quelle caméra pose problème
-        // printf("ERROR: Camera %d delay out of range\n", camera_id);
-        return; 
+        printf("ERROR: Camera delay out of range\n");
+        return;
     }
 
     Position position_camera;
@@ -367,34 +366,45 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
     position_camera.y = set_camera.camera_position_y;
     position_camera.t = set_camera.camera_position_t;
 
-    float R_diag_dynamic[3]= {set_camera.noise_x * set_camera.noise_x, 
-                                set_camera.noise_y * set_camera.noise_y, 
-                                set_camera.noise_t * set_camera.noise_t};
+    #define R_CAMERA_MIN_XY 0.05f //(0.02f * 0.02f)  // 2cm minimum, ajuste selon ta caméra
+    #define R_CAMERA_MIN_T 0.08f //(0.05f * 0.05f)   // 5° minimum, ajuste selon ta caméra
 
-    if(en_kalman.enable_camera_kalman && kalman_initialized) {
-        // Les caméras n'initialisent pas le kalman, on attend que le lidar l'ait fait
-        
-        int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
-        if (delay_index < 0) return; 
+    float R_diag_dynamic[3] = {
+        fmaxf(set_camera.noise_x * set_camera.noise_x, R_CAMERA_MIN_XY),
+        fmaxf(set_camera.noise_y * set_camera.noise_y, R_CAMERA_MIN_XY),
+        fmaxf(set_camera.noise_t * set_camera.noise_t, R_CAMERA_MIN_T)
+    };
 
-        kalman_fifo.observations[delay_index].has_camera[camera_id] = 1;
-        kalman_fifo.observations[delay_index].z_camera[camera_id][0] = position_camera.x;
-        kalman_fifo.observations[delay_index].z_camera[camera_id][1] = position_camera.y;
-        kalman_fifo.observations[delay_index].z_camera[camera_id][2] = position_camera.t;
+    if (!en_kalman.enable_camera_kalman) return;
 
-        kalman_fifo.observations[delay_index].r_camera[camera_id][0] = R_diag_dynamic[0];
-        kalman_fifo.observations[delay_index].r_camera[camera_id][1] = R_diag_dynamic[1];
-        kalman_fifo.observations[delay_index].r_camera[camera_id][2] = R_diag_dynamic[2];
-        
-        float z[3] = {position_camera.x, position_camera.y, position_camera.t};
-        
-        // On met à jour avec le bruit spécifique aux caméras
-        kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag_dynamic, 0);
-
-        // Repropagation
-        kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
-        kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
+    if (!kalman_initialized) {
+        if (!en_kalman.enable_lidar_kalman) {
+            kalman_init_with_lidar(&kalman_fifo, &position_camera);
+            kalman_initialized = 1;
+        } else {
+            return; // lidar activé mais pas encore initialisé : on attend
+        }
     }
+
+    int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
+    if (delay_index < 0) return; 
+
+    kalman_fifo.observations[delay_index].has_camera[camera_id] = 1;
+    kalman_fifo.observations[delay_index].z_camera[camera_id][0] = position_camera.x;
+    kalman_fifo.observations[delay_index].z_camera[camera_id][1] = position_camera.y;
+    kalman_fifo.observations[delay_index].z_camera[camera_id][2] = position_camera.t;
+
+    kalman_fifo.observations[delay_index].r_camera[camera_id][0] = R_diag_dynamic[0];
+    kalman_fifo.observations[delay_index].r_camera[camera_id][1] = R_diag_dynamic[1];
+    kalman_fifo.observations[delay_index].r_camera[camera_id][2] = R_diag_dynamic[2];
+    
+    float z[3] = {position_camera.x, position_camera.y, position_camera.t};
+    
+    uint8_t result = kalman_update(&kalman_fifo.buffer[delay_index], z, R_diag_dynamic, 1);
+    // printf("ERROR : CAM update result: %d (0=ok, 1=rejected, 2=NaN, 3=singular)\n", result);
+
+    kalman_fifo_repropagate(&kalman_fifo, delay_index, 0.001f, R_lidar);
+    kalman_current_state = kalman_fifo.buffer[(kalman_fifo.head - 1 + KALMAN_FIFO_LEN) % KALMAN_FIFO_LEN];
 }
 
 #define PWM_MIN_ACTIF 30 // seuil pour lequel on considère que la consigne est active (en dessous, on la met à 0 pour éviter de rester dans la zone morte du moteur)

@@ -29,6 +29,10 @@ void kalman_fifo_init(KalmanFIFO* fifo) {
             fifo->observations[i].z_camera[cam_id][0] = 0.0f;
             fifo->observations[i].z_camera[cam_id][1] = 0.0f;
             fifo->observations[i].z_camera[cam_id][2] = 0.0f;
+
+            fifo->observations[i].r_camera[cam_id][0] = PROCESS_NOISE_CAMERA_X * PROCESS_NOISE_CAMERA_X;
+            fifo->observations[i].r_camera[cam_id][1] = PROCESS_NOISE_CAMERA_Y * PROCESS_NOISE_CAMERA_Y;
+            fifo->observations[i].r_camera[cam_id][2] = PROCESS_NOISE_CAMERA_THETA * PROCESS_NOISE_CAMERA_THETA;
         }
     }
 }
@@ -89,15 +93,16 @@ void kalman_fifo_repropagate(KalmanFIFO* fifo, int delay_index, float dt_s, floa
         // 1. Prédiction odométrique classique
         kalman_predict(next, speed, dt_s);
 
-        // 2. CORRECTION : Si une mesure Lidar avait eu lieu à 'next_i', on la réapplique !
+        // 2. Si une mesure Lidar avait eu lieu à 'next_i', on la réapplique !
         if (fifo->observations[next_i].has_lidar) {
             kalman_update(next, fifo->observations[next_i].z_lidar, R_lidar, fifo->observations[next_i].bypass_lidar_rejection);
         }
 
-        // 3. CORRECTION : Si une mesure Caméra avait eu lieu à 'next_i', on la réapplique ! 
+        // 3. Si une mesure Caméra avait eu lieu à 'next_i', on la réapplique ! 
         for(int cam_id = 0; cam_id < 3; cam_id++) {
             if (fifo->observations[next_i].has_camera[cam_id]) {
-                kalman_update(next, fifo->observations[next_i].z_camera[cam_id], fifo->observations[next_i].r_camera[cam_id], 0);
+                // printf("ERROR: Repropagation camera %d at index %d (has_camera=%d)\n", cam_id, next_i, fifo->observations[next_i].has_camera[cam_id]);
+                kalman_update(next, fifo->observations[next_i].z_camera[cam_id], fifo->observations[next_i].r_camera[cam_id], 1);
             }
         }
 

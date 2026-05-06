@@ -232,19 +232,19 @@ void check_for_cmd_loop(void){
                 break;
             case 12: 
                 if(CHECK_FIELD(&local_data, set_camera_1)){
-                    Set_Camera_Cmd(local_data.set_camera_1, 1);                        
+                    Set_Camera_Cmd(local_data.set_camera_1, 0);                        
                 }
                 check_for_cmd_state++;
                 break;
             case 13: 
                 if(CHECK_FIELD(&local_data, set_camera_2)){
-                    Set_Camera_Cmd(local_data.set_camera_2, 2);                        
+                    Set_Camera_Cmd(local_data.set_camera_2, 1);                        
                 }
                 check_for_cmd_state++;
                 break;
             case 14: 
                 if(CHECK_FIELD(&local_data, set_camera_3)){
-                    Set_Camera_Cmd(local_data.set_camera_3, 3);                        
+                    Set_Camera_Cmd(local_data.set_camera_3, 2);                        
                 }
                 check_for_cmd_state++;
                 break;
