@@ -214,7 +214,7 @@ void pos_asserv_step(void) {
     float y_o = Wanted_Pos.y;
     float t_o = Wanted_Pos.t;
 
-    // --- État actuel
+    // --- État actuel (Kalman)
     float x = kalman_current_state.x[0];
     float y = kalman_current_state.x[1];
     float t = kalman_current_state.x[2];
@@ -222,40 +222,85 @@ void pos_asserv_step(void) {
     // --- Erreurs
     float rdx = x_o - x;
     float rdy = y_o - y;
-    float d = sqrtf(rdx*rdx + rdy*rdy);             // Erreur positionnelle
-    float dt = principal_angle(t_o - t);            // Erreur angulaire
+    float d   = sqrtf(rdx*rdx + rdy*rdy);       // Distance à la cible
+    float dt  = principal_angle(t_o - t);        // Erreur angulaire
 
     float cos_t = cosf(t);
     float sin_t = sinf(t);
 
-    float angle = atan2f(rdy, rdx);
+    float angle = atan2f(rdy, rdx);              // Direction vers la cible (repère monde)
 
-    // --- Calcul de la vitesse radiale
-    float speed_order_d = radial_speed_calculation(d); // vitesse de consigne radiale
-    
-    // Décomposition en X/Y monde
-    float vx_world = speed_order_d * cosf(angle);
-    float vy_world = speed_order_d * sinf(angle);
+    // -----------------------------------------------------------------------
+    // Vitesse radiale courante du robot (composante vers la cible)
+    // -----------------------------------------------------------------------
+    // Vitesse robot → repère monde
+    float vx_world_cur = speed_robot_asserv.vx * cos_t - speed_robot_asserv.vy * sin_t;
+    float vy_world_cur = speed_robot_asserv.vx * sin_t + speed_robot_asserv.vy * cos_t;
 
-    // Transformation vers repère robot
-    speed_order.vx = vx_world * cos_t + vy_world * sin_t;
-    speed_order.vy = - vx_world * sin_t + vy_world * cos_t;
+    // Projection sur la direction cible (vitesse "vers la cible")
+    float v_toward_target = vx_world_cur * cosf(angle) + vy_world_cur * sinf(angle);
+    v_toward_target = fmaxf(v_toward_target, 0.0f); // on ignore la composante en recul
 
-    // --- Calcul de la vitesse angulaire
-    speed_order.vt =  angular_speed_calculation(dt);;
+    // -----------------------------------------------------------------------
+    // Profil de vitesse radiale conscient de la dynamique
+    // -----------------------------------------------------------------------
+    // 1. Vitesse du profil sqrt(2*a*d) avec marge réduite à 0.85
+    //    (était 0.95 : trop peu de marge pour absorber les sauts Kalman)
+    float v_profile = radial_speed_calculation(d);
 
-    // --- Activation de l’asservissement vitesse
+    // 2. Limite physique de freinage : v_max pour pouvoir s'arrêter pile à d=0
+    //    Si le robot va déjà plus vite que ça → il ne peut plus s'arrêter à temps
+    //    On force v_cmd = 0 pour déclencher un freinage max via l'acceleration_constrainer
+    float v_braking_limit = sqrtf(2.0f * robot_a_max * d); // sans marge = limite physique dure
+
+    float v_cmd;
+    if (v_toward_target > v_braking_limit * 1.05f) {
+        // Le robot va trop vite pour s'arrêter (ex: saut Kalman qui a réduit d brusquement)
+        // → forcer 0 pour que l'acceleration_constrainer décélère au max
+        v_cmd = 0.0f;
+    } else {
+        v_cmd = fminf(v_profile, v_max);
+    }
+
+    // -----------------------------------------------------------------------
+    // Décomposition directionnelle et transformation repère robot
+    // -----------------------------------------------------------------------
+    float vx_world = v_cmd * cosf(angle);
+    float vy_world = v_cmd * sinf(angle);
+
+    speed_order.vx =  vx_world * cos_t + vy_world * sin_t;
+    speed_order.vy = -vx_world * sin_t + vy_world * cos_t;
+
+    // Vitesse angulaire (inchangée)
+    speed_order.vt = angular_speed_calculation(dt);
+
+    // Activation PID vitesse
     Pid_Speed_En = 1;
 
-    // --- Stop condition globale (position + angle atteints)
-    if ((d < current_stop_distance) && (fabs(dt) < DEFAULT_STOP_ANGLE)) {
+    // -----------------------------------------------------------------------
+    // Condition d'arrêt : position + angle + vitesse physique faible
+    // -----------------------------------------------------------------------
+    // Ajout du critère vitesse : évite de déclarer "arrivé" alors que
+    // le robot passe encore sur la cible à v > 0
+    float v_now = sqrtf(speed_robot_asserv.vx * speed_robot_asserv.vx +
+                        speed_robot_asserv.vy * speed_robot_asserv.vy);
+
+    if ((d     < current_stop_distance)        &&
+        (fabsf(dt) < DEFAULT_STOP_ANGLE)       &&
+        (v_now < DEFAULT_SPEED_LIN_STOP * 0.5f)) {
         motion_free();
         printf("Pos,done\n");
     }
 }
 
 float radial_speed_calculation(float distance) {
-    return sqrtf(2.0f * robot_a_max * distance * 0.95f);
+    float v_profile  = sqrtf(2.0f * robot_a_max * distance * 0.90f);
+    float v_physical = sqrtf(speed_robot_asserv.vx*speed_robot_asserv.vx + 
+                             speed_robot_asserv.vy*speed_robot_asserv.vy);
+    // Ne jamais demander plus que ce qu'on peut freiner
+    return fminf(v_profile, fmaxf(v_physical, 0.0f)); 
+    // Note: si v_physical > v_profile, on ne ralentit pas instantanément
+    // c'est le rôle de l'acceleration_constrainer de lisser ça
 }
 
 float angular_speed_calculation(float angle) {
