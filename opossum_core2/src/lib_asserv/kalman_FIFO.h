@@ -14,6 +14,7 @@ typedef struct {
     float r_camera[3][3];        // Le bruit de la caméra
 
     uint8_t bypass_lidar_rejection;
+    uint8_t bypass_camera_rejection[3];
 } Observations;
 
 typedef struct {
