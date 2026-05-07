@@ -83,7 +83,7 @@ void Init_Asserv(void) {
     R_lidar[2]  = PROCESS_NOISE_LIDAR_THETA * PROCESS_NOISE_LIDAR_THETA;
 
     en_kalman.enable_lidar_kalman = 1;
-    en_kalman.enable_camera_kalman = 0;
+    en_kalman.enable_camera_kalman = 1;
 
     asserv_init();
 
@@ -385,7 +385,9 @@ void Set_Camera_Cmd(Set_camera set_camera, uint8_t camera_id) {
         }
     }
 
-    int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
+    // int delay_index = kalman_fifo_get_delay(&kalman_fifo, set_camera.delay, 1);
+        int delay_index = kalman_fifo_get_delay(&kalman_fifo, 130, 1);
+
     if (delay_index < 0) return; 
 
     // ---------------------------------------------------------

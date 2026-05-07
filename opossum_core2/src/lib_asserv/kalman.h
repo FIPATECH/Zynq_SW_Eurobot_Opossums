@@ -32,7 +32,7 @@
 #define PROCESS_NOISE_LIDAR_THETA   0.03f
 
 #define R_CAMERA_MIN_XY 0.1f 
-#define R_CAMERA_MIN_T 0.15f  
+#define R_CAMERA_MIN_T 0.3f  
 
 #define S_INV_EPS 1e-6f
 
