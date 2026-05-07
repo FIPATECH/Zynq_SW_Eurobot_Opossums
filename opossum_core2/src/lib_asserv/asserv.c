@@ -233,7 +233,6 @@ void pos_asserv_step(void) {
     // -----------------------------------------------------------------------
     // --- Vitesse radiale : profil sqrt clampé par la limite physique de freinage
     // -----------------------------------------------------------------------
-    // Profil idéal avec marge réduite à 0.85 (était 0.95)
     float v_profile = radial_speed_calculation(d);
 
     // Limite physique dure : vitesse max pour pouvoir s'arrêter sur d avec a_max
